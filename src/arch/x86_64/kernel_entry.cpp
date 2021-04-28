@@ -49,9 +49,6 @@ extern "C" int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
         kernel_start, kernel_end, multiboot_start, multiboot_end
     );
     area_frame_allocator frame_allocator = area_frame_allocator(kernel_start, kernel_end, multiboot_start, multiboot_end, mmap);
-    int index =0;
-    while(1) {
-        frame allocated_frame = frame_allocator.allocate_frame();
-        printf("Allocated Frame 0x%x\n", allocated_frame * 4096);
-    }
+
+    printf("OS SUSPENDED!\n");
 }
