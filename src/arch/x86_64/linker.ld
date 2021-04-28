@@ -1,7 +1,8 @@
 ENTRY(start)
 OUTPUT_FORMAT(elf64-x86-64)
 
-KERNEL_OFFSET = 0xFFFFFFFF80000000;
+/* KERNEL_OFFSET = 0xFFFFFFFF80000000; */
+KERNEL_OFFSET = 0;
 
 SECTIONS {
     . = 1M;
@@ -13,6 +14,7 @@ SECTIONS {
     }
 
     . += KERNEL_OFFSET;
+    . += 0x10000;
 
     /* code section */
     .text ALIGN(4K) : AT(ADDR(.text) - KERNEL_OFFSET)
@@ -42,6 +44,13 @@ SECTIONS {
     .bss ALIGN(4K) : AT(ADDR(.bss) - KERNEL_OFFSET)
     {
         *(.bss .bss.*)
+    }
+
+    . = ALIGN(2M);
+	. = . + 2M; /* make space for a 2MiB stack guard page */
+    .kernel_stack ALIGN(4K) : AT(ADDR(.kernel_stack) - KERNEL_OFFSET)
+    {
+        *(.kernel_stack)
     }
 
     /* extended page table for kernel usage */

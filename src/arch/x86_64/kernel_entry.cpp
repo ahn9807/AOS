@@ -1,102 +1,57 @@
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
+#include "vga_text.h"
+#include "multiboot2.h"
+#include "area_frame_allocator.h"
 
-enum vga_color {
-        VGA_COLOR_BLACK = 0,
-        VGA_COLOR_BLUE = 1,
-        VGA_COLOR_GREEN = 2,
-        VGA_COLOR_CYAN = 3,
-        VGA_COLOR_RED = 4,
-        VGA_COLOR_MAGENTA = 5,
-        VGA_COLOR_BROWN = 6,
-        VGA_COLOR_LIGHT_GREY = 7,
-        VGA_COLOR_DARK_GREY = 8,
-        VGA_COLOR_LIGHT_BLUE = 9,
-        VGA_COLOR_LIGHT_GREEN = 10,
-        VGA_COLOR_LIGHT_CYAN = 11,
-        VGA_COLOR_LIGHT_RED = 12,
-        VGA_COLOR_LIGHT_MAGENTA = 13,
-        VGA_COLOR_LIGHT_BROWN = 14,
-        VGA_COLOR_WHITE = 15,
-};
-
-static inline uint8_t vga_entry_color(enum vga_color fg, enum vga_color bg)
+extern "C" int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
 {
-        return fg | bg << 4;
-}
-
-static inline uint16_t vga_entry(unsigned char uc, uint8_t color)
-{
-        return (uint16_t) uc | (uint16_t) color << 8;
-}
-
-size_t strlen(const char* str)
-{
-        size_t len = 0;
-        while (str[len])
-                len++;
-        return len;
-}
-
-static const size_t VGA_WIDTH = 80;
-static const size_t VGA_HEIGHT = 25;
-
-size_t terminal_row;
-size_t terminal_column;
-uint8_t terminal_color;
-uint16_t* terminal_buffer;
-
-void terminal_initialize(void)
-{
-        terminal_row = 0;
-        terminal_column = 0;
-        terminal_color = vga_entry_color(VGA_COLOR_LIGHT_GREY, VGA_COLOR_BLACK);
-        terminal_buffer = (uint16_t*) 0xB8000;
-        for (size_t y = 0; y < VGA_HEIGHT; y++) {
-                for (size_t x = 0; x < VGA_WIDTH; x++) {
-                        const size_t index = y * VGA_WIDTH + x;
-                        terminal_buffer[index] = vga_entry(' ', terminal_color);
-                }
-        }
-}
-
-void terminal_setcolor(uint8_t color)
-{
-        terminal_color = color;
-}
-
-void terminal_putentryat(char c, uint8_t color, size_t x, size_t y)
-{
-        const size_t index = y * VGA_WIDTH + x;
-        terminal_buffer[index] = vga_entry(c, color);
-}
-
-void terminal_putchar(char c)
-{
-        terminal_putentryat(c, terminal_color, terminal_column, terminal_row);
-        if (++terminal_column == VGA_WIDTH) {
-                terminal_column = 0;
-                if (++terminal_row == VGA_HEIGHT)
-                        terminal_row = 0;
-        }
-}
-
-void terminal_write(const char* data, size_t size)
-{
-        for (size_t i = 0; i < size; i++)
-                terminal_putchar(data[i]);
-}
-
-void terminal_writestring(const char* data)
-{
-        terminal_write(data, strlen(data));
-}
-
-extern "C" int kernel_entry() {
-    char hello[] = "Hello From Kernel! \n This is message from kernel";
     terminal_initialize();
-    terminal_writestring(hello);
 
-    return 0;
+    if (magic != MULTIBOOT2_BOOTLOADER_MAGIC)
+    {
+        printf("Multiboot2 ...");
+    }
+    else
+    {
+        printf("AOS init started!\n");
+    }
+
+    unsigned size;
+
+    if (multiboot_addr & 7)
+    {
+        printf("Unaligned mbi: 0x%x\n", multiboot_addr);
+        panic("kernel panic");
+    }
+
+    uint64_t multiboot_start = multiboot_addr;
+    uint64_t multiboot_end = multiboot_start + *(unsigned *)multiboot_addr;
+    uint64_t kernel_start = UINT64_MAX;
+    uint64_t kernel_end = 0;
+
+    debug_multiboot2(multiboot_addr);
+    multiboot_tag_mmap* mmap = (multiboot_tag_mmap*)parse_multiboot(MULTIBOOT_TAG_TYPE_MMAP, multiboot_addr);
+    multiboot_tag_basic_meminfo* available_mmap = (multiboot_tag_basic_meminfo*)parse_multiboot(MULTIBOOT_TAG_TYPE_BASIC_MEMINFO, multiboot_addr);
+    multiboot_tag_elf_sections* elf_section = (multiboot_tag_elf_sections*)parse_multiboot(MULTIBOOT_TAG_TYPE_ELF_SECTIONS, multiboot_addr);
+    printf("entsize: 0x%x, num: 0x%x, shndx: 0x%x, size: 0x%x\n", elf_section->entsize, elf_section->num, elf_section->shndx, elf_section->size);
+    for(int i=0;i<elf_section->num;i++) {
+        multiboot_elf64_shdr* shdr = (multiboot_elf64_shdr*)((uintptr_t)elf_section->sections + elf_section->entsize * i);
+        printf("Kernel ELF Addr: 0x%d Len: 0x%0x\n", shdr->addr, shdr->size);
+        if(shdr->size == 0x0)
+            continue;
+        if(shdr->addr + shdr->size > kernel_end) {
+            kernel_end = shdr->addr + shdr->size;
+        }
+        if(shdr->addr < kernel_start) {
+            kernel_start = shdr->addr;
+        }
+    }
+    printf("[ Allocate Frames ] kernel_start: 0x%x kernel_end: 0x%x \n[ Allocate Frames ] multiboot_start: 0x%0x multiboot_end: 0x%x\n",
+        kernel_start, kernel_end, multiboot_start, multiboot_end
+    );
+    area_frame_allocator frame_allocator = area_frame_allocator(kernel_start, kernel_end, multiboot_start, multiboot_end, mmap);
+    int index =0;
+    while(1) {
+        frame allocated_frame = frame_allocator.allocate_frame();
+        printf("Allocated Frame 0x%x\n", allocated_frame * 4096);
+    }
 }

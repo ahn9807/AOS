@@ -1,11 +1,26 @@
 global start
 extern long_mode_start
-KERNEL_OFFSET equ 0xFFFFFFFF80000000
+extern kernel_entry
+; KERNEL_OFFSET equ 0xFFFFFFFF80000000
+KERNEL_OFFSET equ 0x0
 
 section .bootstrap.boot32
 bits 32
+
+; After booting Multiboot
+; EAX 0x2BADB002 EBX 32-bit physical address of the Multiboot information
+; CS 32-bit r/w code segment Offset 0 Limit 0xFFFFFFF
+; DS, ES, FS, GS, SS 32-bit r/w data segment Offset 0 Limit 0xFFFFFFF
+; A20 gate enabled
+; CR0 PG 0 PE 1 (Others - undefined)
+; EFLAGS VM 0 IF 0 (Others - undefined)
+; ESP undefined
+; GDTR can be invalid
+; IDTR undefined
 start:
     mov esp, stack_top
+    mov edi, eax ; multiboot2 specification
+    mov esi, ebx ; multiboot2 specification
 
     call check_multiboot
     call check_cpuid
@@ -15,7 +30,6 @@ start:
     call enable_paging
 
     lgdt [gdt64.ptr_low - KERNEL_OFFSET]
-
     jmp gdt64.code:long_mode_start
 
     ; print `OK` to screen
@@ -148,6 +162,21 @@ stack_top:
 
 bits 64
 
+section .bootstrap.boot64
+long_mode_start:
+    mov ax, 0
+    mov ss, ax
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+    mov rsp, stack_top
+    call kernel_entry - KERNEL_OFFSET
+    hlt
+
+section .kernel_stack
+align 4096
+
 section .rodata
 gdt64:
 	dq 0 ; zero entry
@@ -164,6 +193,10 @@ gdt64:
 	dq gdt64
 
 section .page_table nobits alloc noexec write
+global pt_table
+global p3_table
+global p2_table
+
 align 4096
 p4_table:
     resb 4096
