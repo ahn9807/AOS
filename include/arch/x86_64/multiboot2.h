@@ -429,7 +429,7 @@ struct multiboot_elf64_shdr
 };
 
 void debug_multiboot2(unsigned long multiboot_addr);
-multiboot_tag* parse_multiboot(uint8_t  multiboot_tag_type, unsigned long multiboot_addr);
+struct multiboot_tag* parse_multiboot(uint8_t  multiboot_tag_type, unsigned long multiboot_addr);
 
 #endif /*  ! ASM_FILE */
 

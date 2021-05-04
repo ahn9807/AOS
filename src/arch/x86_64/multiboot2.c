@@ -28,22 +28,21 @@ void debug_multiboot2(unsigned long multiboot_addr) {
 
             for (mmap = ((struct multiboot_tag_mmap *)tag)->entries;
                 (multiboot_uint8_t *)mmap < (multiboot_uint8_t *)tag + tag->size;
-                mmap = (multiboot_memory_map_t *)((unsigned long)mmap + ((struct multiboot_tag_mmap *)tag)->entry_size))
-                printf(" base_addr = 0x%x%x,"
-                       " length = 0x%x%x, type = 0x%x\n",
-                       (unsigned)(mmap->addr >> 32),
-                       (unsigned)(mmap->addr & 0xffffffff),
-                       (unsigned)(mmap->len >> 32),
-                       (unsigned)(mmap->len & 0xffffffff),
-                       (unsigned)mmap->type);
+                mmap = (multiboot_memory_map_t *)((unsigned long)mmap + ((struct multiboot_tag_mmap *)tag)->entry_size)) {
+                    printf(" base_addr = 0x%x%x, length = 0x%x%x, type = 0x%x\n",
+                        (unsigned)(mmap->addr),
+                        (unsigned)(mmap->len),
+                        (unsigned)(mmap->type)
+                    );
+                }
         }
         if(tag->type == MULTIBOOT_TAG_TYPE_ELF_SECTIONS) {
-            multiboot_tag_elf_sections* elf_section = (multiboot_tag_elf_sections*)tag;
+            struct multiboot_tag_elf_sections* elf_section = (struct multiboot_tag_elf_sections*)tag;
             printf("entsize: 0x%x, num: 0x%x, shndx: 0x%x, size: 0x%x\n", elf_section->entsize, elf_section->num, elf_section->shndx, elf_section->size);
 
             for(int i=0;i<elf_section->num;i++) {
-                multiboot_elf64_shdr* shdr = (multiboot_elf64_shdr*)((uintptr_t)elf_section->sections + elf_section->entsize * i);
-                printf("Kernel ELF Addr: 0x%d Len: 0x%0x\n", shdr->addr, shdr->size);
+                struct multiboot_elf64_shdr* shdr = (struct multiboot_elf64_shdr*)((uintptr_t)elf_section->sections + elf_section->entsize * i);
+                printf("Kernel ELF Addr: 0x%d Len: 0x%x\n", shdr->addr, shdr->size);
             }
 
             printf("sections = %s\n", elf_section->sections);
@@ -51,7 +50,7 @@ void debug_multiboot2(unsigned long multiboot_addr) {
     }
 }
 
-multiboot_tag* parse_multiboot(uint8_t  multiboot_tag_type, unsigned long multiboot_addr) {
+struct multiboot_tag* parse_multiboot(uint8_t  multiboot_tag_type, unsigned long multiboot_addr) {
     struct multiboot_tag *tag = (struct multiboot_tag *)(multiboot_addr);
 
     for (tag = (struct multiboot_tag *)(multiboot_addr + 8);

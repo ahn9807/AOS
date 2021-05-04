@@ -1,10 +1,14 @@
 global start
+
 extern long_mode_start
 extern kernel_entry
-; KERNEL_OFFSET equ 0xFFFFFFFF80000000
-KERNEL_OFFSET equ 0x0
+KERNEL_OFFSET equ 0xFFFFFF8000000000
+PAGE_PRESENT equ 1 << 0
+PAGE_WRITEABLE equ 1 << 1
+PAGE_GLOBAL equ 1 << 8
+; KERNEL_OFFSET equ 0x0
 
-section .bootstrap.boot32
+section .bootstrap
 bits 32
 
 ; After booting Multiboot
@@ -26,7 +30,7 @@ start:
     call check_cpuid
     call check_long_mode
 
-    call set_up_page_tables
+    ; call set_up_page_tables
     call enable_paging
 
     lgdt [gdt64.ptr_low - KERNEL_OFFSET]
@@ -170,12 +174,37 @@ long_mode_start:
     mov es, ax
     mov fs, ax
     mov gs, ax
-    mov rsp, stack_top
-    call kernel_entry - KERNEL_OFFSET
+    mov rax, kernel_address_space
+    jmp rax
     hlt
 
+section .text
+kernel_address_space:
+    mov rax, KERNEL_OFFSET
+    add rsp, KERNEL_OFFSET
+
+    mov rax, gdt64.ptr
+    lgdt [rax]
+    mov rax, 0
+    mov ss, rax
+    mov ds, rax
+    mov es, rax
+    mov fs, rax
+    mov gs, rax
+    mov rax, qword _kernel_entry
+    push qword 0x8
+    push rax
+    retfq
+    hlt
+
+_kernel_entry:
+    mov rax, kernel_entry
+    call rax
 section .kernel_stack
 align 4096
+kernel_stack_bottom:
+    times 4096 dq 0
+kernel_stack_top:
 
 section .rodata
 gdt64:
@@ -192,15 +221,27 @@ gdt64:
 	dw .end - gdt64 - 1
 	dq gdt64
 
-section .page_table nobits alloc noexec write
-global pt_table
+; temporary page table for booting
+section .kernel_page_table
+global p4_table
 global p3_table
 global p2_table
+global p1_table
 
 align 4096
 p4_table:
-    resb 4096
+    dq p3_table - KERNEL_OFFSET + (PAGE_PRESENT | PAGE_WRITEABLE)
+    times 510 dq 0
+    dq p3_table - KERNEL_OFFSET + (PAGE_PRESENT | PAGE_WRITEABLE | PAGE_GLOBAL)
 p3_table:
-    resb 4096
+    dq p2_table - KERNEL_OFFSET + (PAGE_PRESENT | PAGE_WRITEABLE | PAGE_GLOBAL)
+    times 511 dq 0
 p2_table:
-    resb 4096
+    dq p1_table - KERNEL_OFFSET + (PAGE_PRESENT | PAGE_WRITEABLE | PAGE_GLOBAL)
+    times 511 dq 0
+p1_table:
+%assign i 0
+%rep 512
+    dq (i << 12) + (PAGE_PRESENT | PAGE_WRITEABLE | PAGE_GLOBAL)
+%assign i i+1
+%endrep

@@ -1,8 +1,8 @@
 ENTRY(start)
 OUTPUT_FORMAT(elf64-x86-64)
 
-/* KERNEL_OFFSET = 0xFFFFFFFF80000000; */
-KERNEL_OFFSET = 0;
+KERNEL_OFFSET = 0xFFFFFF8000000000;
+/* KERNEL_OFFSET = 0; */
 
 SECTIONS {
     . = 1M;
@@ -54,9 +54,9 @@ SECTIONS {
     }
 
     /* extended page table for kernel usage */
-    .page_table ALIGN(4K) : AT(ADDR(.page_table) - KERNEL_OFFSET)
+    .kernel_page_table ALIGN(4K) : AT(ADDR(.kernel_page_table) - KERNEL_OFFSET)
     {
-        *(.page_table)
+        *(.kernel_page_table)
     }
 
     .gcc_except_table ALIGN(4K) : AT(ADDR(.gcc_except_table) - KERNEL_OFFSET)

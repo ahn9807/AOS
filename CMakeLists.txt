@@ -12,15 +12,14 @@ set(CMAKE_BINARY_DIR ${PROJECT_SOURCE_DIR}/build)
 set(LINKER_SCRIPT ${PROJECT_SOURCE_DIR}/src/arch/x86_64/linker.ld)
 set(GRUB_CFG ${PROJECT_SOURCE_DIR}/src/arch/x86_64/grub.cfg)
 
-set(CMAKE_ASM_NASM_OBJECT_FORMAT "elf64")
-
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mno-red-zone -mcmodel=large -mno-sse -ffreestanding -fno-exceptions -fno-rtti -nostdlib")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mno-red-zone -mcmodel=large -mno-sse -ffreestanding")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -mno-red-zone -mcmodel=large -mno-sse -ffreestanding -nostdlib -fno-pic -fno-pie")
 SET(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "")
 SET(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
-set(CMAKE_ASM_FLAGS "{CMAKE_ASM_FLAGS} -felf64")
+set(CMAKE_ASM_NASM_FLAGS "${CMAKE_ASM_NASM_FLAGS} -felf64")
 set(CMAKE_LINKER_FLAGS "-n -T ${LINKER_SCRIPT}")
 set(CMAKE_CXX_LINK_EXECUTABLE "<CMAKE_LINKER> ${CMAKE_LINKER_FLAGS} <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
+set(CMAKE_C_LINK_EXECUTABLE "<CMAKE_LINKER> ${CMAKE_LINKER_FLAGS} <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
 
 set(CMAKE_C_COMPILER "/usr/bin/gcc")
 set(CMAKE_CXX_COMPILER "/usr/bin/g++")
@@ -33,6 +32,7 @@ enable_language(ASM_NASM)
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/include/arch/x86_64
     ${CMAKE_CURRENT_SOURCE_DIR}/include/arch/memory
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/util
 )
 
 add_executable(
@@ -43,15 +43,23 @@ add_executable(
     include/arch/x86_64/vga_text.h
     include/arch/x86_64/multiboot2.h
     include/arch/memory/area_frame_allocator.h
+    include/arch/memory/page_table.h
+    include/arch/memory/virtual_memory.h
+    include/arch/memory/x86.h
+    include/arch/memory/mm.h
+    include/util/common.h
 
     # Source files
-    src/arch/x86_64/kernel_entry.cpp
-    src/arch/x86_64/vga_text.cpp
+    src/arch/x86_64/kernel_entry.c
+    src/arch/x86_64/vga_text.c
     src/arch/x86_64/multiboot2_boot.asm
     src/arch/x86_64/multiboot2_header.asm
-    src/arch/x86_64/multiboot2.cpp
-
-    src/arch/memory/area_frame_allocator.cpp
+    src/arch/x86_64/multiboot2.c
+    src/arch/memory/page_table.c
+    src/arch/memory/virtual_memory.c
+    src/arch/memory/area_frame_allocator.c
+    src/arch/memory/mm.c
+    src/util/common.c
 )
 
 set_target_properties(${KERNEL_BIN} PROPERTIES CMAKE_LINKER "/usr/bin/ld")
