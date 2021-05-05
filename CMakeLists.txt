@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.17)
+cmake_minimum_required(VERSION 2.8)
 
 project(kernell)
 set(PROJECT_VERSION_MAJOR 0)
@@ -29,37 +29,24 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 
 enable_language(ASM_NASM)
 
+file(GLOB_RECURSE kernel_SRC "*.h" "*.c")
+file(GLOB_RECURSE kernel_ASM "*.asm" "*.S" "*.s")
+
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/include/arch/x86_64
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/arch/memory
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/memory
     ${CMAKE_CURRENT_SOURCE_DIR}/include/util
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/drivers
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/sync
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/process
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/thread
 )
 
 add_executable(
     ${KERNEL_BIN}
 
-    # Header files
-    include/arch/x86_64/kernel_entry.h
-    include/arch/x86_64/vga_text.h
-    include/arch/x86_64/multiboot2.h
-    include/arch/memory/area_frame_allocator.h
-    include/arch/memory/page_table.h
-    include/arch/memory/virtual_memory.h
-    include/arch/memory/x86.h
-    include/arch/memory/mm.h
-    include/util/common.h
-
-    # Source files
-    src/arch/x86_64/kernel_entry.c
-    src/arch/x86_64/vga_text.c
-    src/arch/x86_64/multiboot2_boot.asm
-    src/arch/x86_64/multiboot2_header.asm
-    src/arch/x86_64/multiboot2.c
-    src/arch/memory/page_table.c
-    src/arch/memory/virtual_memory.c
-    src/arch/memory/area_frame_allocator.c
-    src/arch/memory/mm.c
-    src/util/common.c
+    ${kernel_SRC}
+    ${kernel_ASM}
 )
 
 set_target_properties(${KERNEL_BIN} PROPERTIES CMAKE_LINKER "/usr/bin/ld")

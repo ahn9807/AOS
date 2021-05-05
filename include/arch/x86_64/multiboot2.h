@@ -428,8 +428,12 @@ struct multiboot_elf64_shdr
         uint64_t entsize;
 };
 
+static struct multiboot_tag *boot_mmap;
+
 void debug_multiboot2(unsigned long multiboot_addr);
 struct multiboot_tag* parse_multiboot(uint8_t  multiboot_tag_type, unsigned long multiboot_addr);
+int multiboot_init(uint64_t magic, unsigned long multiboot_addr, uint64_t *kernel_start, uint64_t *kernel_end, uint64_t *multiboot_start, uint64_t *multiboot_end);
+int multiboot_get_memory_area(uint64_t count, uintptr_t *start, uintptr_t *end, uint32_t *type);
 
 #endif /*  ! ASM_FILE */
 
