@@ -2,6 +2,7 @@
 #include "multiboot2.h"
 #include "vmm.h"
 #include "vga_text.h"
+#include "frame_allocator.h"
 
 uint64_t kernel_P4;
 
@@ -16,18 +17,17 @@ void memory_init(uintptr_t kernel_start, uintptr_t kernel_end, uintptr_t multibo
 		printf("0x%x 0x%x 0x%x\n", start, end, type);
 		for (uint64_t p = start; p < end; p += PAGE_SIZE)
 		{
-			printf("0x%x 0x%x 0x%x 0x%x\n", kernel_start, kernel_end, multiboot_start, multiboot_end);
 			if (p >= kernel_start && p < kernel_end)
 				continue;
 			if (p >= multiboot_start && p < multiboot_end)
 				continue;
 
 			uint64_t addr = (uint64_t)P2V(p);
-			printf("current page: 0x%x\n", 0xFFFFFF8000000000);
-			panic("halt");
+			kernel_P4 = pmm_calloc();
 			uint64_t page = vmm_get_page(kernel_P4, addr);
 			if (!PAGE_EXIST(page) || !(page & PAGE_PRESENT))
 			{
+				printf("PA: 0x%x -> VA: 0x%xs\n", p, addr);
 				uint16_t flags = PAGE_GLOBAL | PAGE_WRITE;
 				vmm_set_page(kernel_P4, addr, p, flags | PAGE_PRESENT);
 			}

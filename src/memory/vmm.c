@@ -38,7 +38,6 @@ static int touch_page(uint64_t P4, uint64_t addr, uint16_t flags)
 
 uint64_t vmm_get_page(uint64_t P4, uint64_t addr)
 {
-	printf("halt");
 	if (page_exists(P4, addr))
 	{
 		return P1E;

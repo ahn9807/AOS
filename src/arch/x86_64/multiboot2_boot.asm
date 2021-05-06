@@ -168,12 +168,12 @@ bits 64
 
 section .bootstrap.boot64
 long_mode_start:
-    mov ax, 0
-    mov ss, ax
-    mov ds, ax
-    mov es, ax
-    mov fs, ax
-    mov gs, ax
+    mov eax, 0
+    mov ss, eax
+    mov ds, eax
+    mov es, eax
+    mov fs, eax
+    mov gs, eax
     mov rax, kernel_address_space
     jmp rax
     hlt
@@ -185,12 +185,14 @@ kernel_address_space:
 
     mov rax, gdt64.ptr
     lgdt [rax]
+
     mov rax, 0
     mov ss, rax
     mov ds, rax
     mov es, rax
     mov fs, rax
     mov gs, rax
+
     mov rax, qword _kernel_entry
     push qword 0x8
     push rax
@@ -222,11 +224,12 @@ gdt64:
 	dq gdt64
 
 ; temporary page table for booting
-section .kernel_page_table
+section .data
 global p4_table
 global p3_table
 global p2_table
 global p1_table
+global temp_table
 
 align 4096
 p4_table:
@@ -245,3 +248,6 @@ p1_table:
     dq (i << 12) + (PAGE_PRESENT | PAGE_WRITEABLE | PAGE_GLOBAL)
 %assign i i+1
 %endrep
+
+temp_table:
+    resb 4096

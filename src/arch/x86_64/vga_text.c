@@ -101,7 +101,7 @@ void cls(void)
 /*  Convert the integer D to a string and save the string in BUF. If
    BASE is equal to ’d’, interpret that D is decimal, and if BASE is
    equal to ’x’, interpret that D is hexadecimal. */
-static void itoa(char *buf, int base, int d)
+static void itoa(char *buf, int64_t base, int64_t d)
 {
 	char *p = buf;
 	char *p1, *p2;
@@ -121,7 +121,7 @@ static void itoa(char *buf, int base, int d)
 	/*  Divide UD by DIVISOR until UD == 0. */
 	do
 	{
-		int remainder = ud % divisor;
+		uint64_t remainder = ud % divisor;
 
 		*p++ = (remainder < 10) ? remainder + '0' : remainder + 'a' - 10;
 	} while (ud /= divisor);
@@ -151,7 +151,7 @@ void printf(const char *format, ...)
 	int c;
 	char buf[20];
 	char *arg;
-	int int_arg;
+	int64_t int_arg;
 
 	while ((c = *format++) != 0)
 	{
@@ -180,7 +180,7 @@ void printf(const char *format, ...)
 				case 'd':
 				case 'u':
 				case 'x':
-					int_arg = va_arg(argument_list, int);
+					int_arg = va_arg(argument_list, int64_t);
 					itoa(buf, c, int_arg);
 					p = buf;
 					goto string;
@@ -202,7 +202,7 @@ void printf(const char *format, ...)
 
 				default:
 					arg = va_arg(argument_list, char*);
-					putchar(*((int *)arg++));
+					putchar(*((uint64_t *)arg++));
 					break;
 			}
 		}

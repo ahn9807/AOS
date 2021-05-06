@@ -42,12 +42,12 @@ void debug_multiboot2(unsigned long multiboot_addr)
 		if (tag->type == MULTIBOOT_TAG_TYPE_ELF_SECTIONS)
 		{
 			struct multiboot_tag_elf_sections *elf_section = (struct multiboot_tag_elf_sections *)tag;
-			printf("entsize: 0x%x, num: 0x%x, shndx: 0x%x, size: 0x%x\n", elf_section->entsize, elf_section->num, elf_section->shndx, elf_section->size);
+			printf("entsize: 0x%x, num: 0x%x, shndx: 0x%x, size: 0x%x\n", (uint64_t)elf_section->entsize, (uint64_t)elf_section->num, (uint64_t)elf_section->shndx, (uint64_t)elf_section->size);
 
 			for (int i = 0; i < elf_section->num; i++)
 			{
 				struct multiboot_elf64_shdr *shdr = (struct multiboot_elf64_shdr *)((uintptr_t)elf_section->sections + elf_section->entsize * i);
-				printf("Kernel ELF Addr: 0x%d Len: 0x%x\n", shdr->addr, shdr->size);
+				printf("Kernel ELF Addr: 0x%x Len: 0x%x\n", (uint64_t)shdr->addr, (uint64_t)shdr->size);
 			}
 		}
 	}
