@@ -12,11 +12,15 @@ void memory_init(uintptr_t kernel_start, uintptr_t kernel_end, uintptr_t multibo
 	uint64_t start, end;
 	uint32_t type, i = 1;
 
+	init_pmm(kernel_start, kernel_end, multiboot_start, multiboot_end, boot_mmap);
+
 	while (!multiboot_get_memory_area(i++, &start, &end, &type))
 	{
 		printf("0x%x 0x%x 0x%x\n", start, end, type);
 		for (uint64_t p = start; p < end; p += PAGE_SIZE)
 		{
+			if(type != 0x1)
+				continue;
 			if (p >= kernel_start && p < kernel_end)
 				continue;
 			if (p >= multiboot_start && p < multiboot_end)
@@ -27,7 +31,6 @@ void memory_init(uintptr_t kernel_start, uintptr_t kernel_end, uintptr_t multibo
 			uint64_t page = vmm_get_page(kernel_P4, addr);
 			if (!PAGE_EXIST(page) || !(page & PAGE_PRESENT))
 			{
-				printf("PA: 0x%x -> VA: 0x%xs\n", p, addr);
 				uint16_t flags = PAGE_GLOBAL | PAGE_WRITE;
 				vmm_set_page(kernel_P4, addr, p, flags | PAGE_PRESENT);
 			}
