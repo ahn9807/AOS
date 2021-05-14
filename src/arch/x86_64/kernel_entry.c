@@ -17,5 +17,7 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
     memory_init(kernel_start, kernel_end, multiboot_start, multiboot_end);
     interrupt_init();
 
+    __asm__ __volatile__ ("int3\n");
+
     panic("OS SUSPENDED!\n");
 }

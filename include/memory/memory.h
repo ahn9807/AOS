@@ -36,11 +36,13 @@
 
 extern uint64_t kernel_P4;
 
-typedef uint64_t physical_address_t;
-typedef uint64_t virtual_address_t;
+struct frame {
 
-typedef uint64_t frame_t;
-typedef uint64_t page_t;
+};
+
+struct page {
+
+};
 
 int multiboot_init(uint64_t magic, unsigned long multiboot_addr, uint64_t *kernel_start, uint64_t *kernel_end, uint64_t *multiboot_start, uint64_t *multiboot_end);
 void *memcpy(void *dst, const void *src, size_t n);

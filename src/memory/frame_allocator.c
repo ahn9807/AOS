@@ -31,7 +31,7 @@ void init_pmm(uint64_t kernel_start, uint64_t kernel_end, uint64_t multiboot_sta
 
 void pmm_free(uint64_t page)
 {
-  //do nothing
+  // do nothing
 }
 
 uint64_t pmm_alloc()
