@@ -168,18 +168,18 @@ bits 64
 
 section .bootstrap.boot64
 long_mode_start:
-    mov eax, 0
-    mov ss, eax
-    mov ds, eax
-    mov es, eax
-    mov fs, eax
-    mov gs, eax
-    mov rax, kernel_address_space
-    jmp rax
-    hlt
+;     mov eax, 0
+;     mov ss, eax
+;     mov ds, eax
+;     mov es, eax
+;     mov fs, eax
+;     mov gs, eax
+;     mov rax, kernel_address_space
+;     jmp rax
+;     hlt
 
-section .text
-kernel_address_space:
+; section .text
+; kernel_address_space:
     mov rax, KERNEL_OFFSET
     add rsp, KERNEL_OFFSET
 

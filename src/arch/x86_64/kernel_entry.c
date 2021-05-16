@@ -5,17 +5,12 @@
 #include "interrupt.h"
 #include "pic8259.h"
 #include "port.h"
+#include "keyboard.h"
 
 extern uint64_t p4_table;
 extern uint64_t temp_table;
 
 void timer_interrupt(struct intr_frame *f) {
-    printf(".");
-    pic_end_of_interrupt(f->vec_no);
-}
-
-void keyboard_interrupt(struct intr_frame *f) {
-    printf("%d", inb(0x60));
     pic_end_of_interrupt(f->vec_no);
 }
 
@@ -28,8 +23,9 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
     memory_init(kernel_start, kernel_end, multiboot_start, multiboot_end);
     interrupt_init();
     pic_init();
+    keyboard_init();
+
     bind_interrupt_with_name(0x20, &timer_interrupt, "Timer");
-    bind_interrupt_with_name(0x21, &keyboard_interrupt, "Keyboard");
 
     enable_interrupt();
 

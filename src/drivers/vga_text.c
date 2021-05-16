@@ -199,7 +199,9 @@ void printf(const char *format, ...)
 					while (*p)
 						putchar(*p++);
 					break;
-
+				case 'c':
+					putchar(va_arg(argument_list, uint64_t));
+					break;
 				default:
 					arg = va_arg(argument_list, char*);
 					putchar(*((uint64_t *)arg++));
