@@ -58,3 +58,7 @@ add_custom_command(TARGET ${KERNEL_BIN} POST_BUILD
     COMMAND grub-mkrescue -o kernel.iso ${CMAKE_BINARY_DIR}/build/isofiles
     COMMAND rm -r ${CMAKE_BINARY_DIR}/build/
 )
+
+add_custom_target(run
+    qemu-system-x86_64 -cdrom kernel.iso -vnc localhost:1 -m 500M
+)

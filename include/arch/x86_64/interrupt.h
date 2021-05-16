@@ -92,4 +92,8 @@ struct idt_entry {
 typedef struct intr_frame *(*intr_handler_t)(struct intr_frame *);
 
 void interrupt_init();
+void enable_interrupt();
+void disable_interrupt();
 intr_handler_t bind_interrupt(uint32_t num, intr_handler_t fn);
+intr_handler_t bind_interrupt_with_name(uint32_t num, intr_handler_t fn, const char* name);
+void debug_intr_frame(struct intr_frame *frame);
