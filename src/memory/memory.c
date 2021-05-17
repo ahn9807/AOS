@@ -16,7 +16,6 @@ void memory_init(uintptr_t kernel_start, uintptr_t kernel_end, uintptr_t multibo
 
 	while (!multiboot_get_memory_area(i++, &start, &end, &type))
 	{
-		printf("0x%x 0x%x 0x%x\n", start, end, type);
 		for (uint64_t p = start; p < end; p += PAGE_SIZE)
 		{
 			if(type != 0x1)

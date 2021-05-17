@@ -168,30 +168,31 @@ bits 64
 
 section .bootstrap.boot64
 long_mode_start:
-;     mov eax, 0
-;     mov ss, eax
-;     mov ds, eax
-;     mov es, eax
-;     mov fs, eax
-;     mov gs, eax
-;     mov rax, kernel_address_space
-;     jmp rax
-;     hlt
+    lgdt [gdt64.ptr - KERNEL_OFFSET]
+    mov rax, kernel_address_space
+    jmp rax
+    hlt
 
-; section .text
-; kernel_address_space:
-    mov rax, KERNEL_OFFSET
+section .text
+kernel_address_space:
     add rsp, KERNEL_OFFSET
 
     mov rax, gdt64.ptr
     lgdt [rax]
 
-    mov rax, 0
+    mov ax, gdt64.data
     mov ss, rax
     mov ds, rax
     mov es, rax
     mov fs, rax
     mov gs, rax
+
+    xor eax, eax
+    xor edx, edx
+    mov ecx, 0xc0000100
+    wrmsr
+    mov ecx, 0xc0000102
+    wrmsr
 
     mov rax, qword _kernel_entry
     push qword 0x8
