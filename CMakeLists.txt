@@ -35,7 +35,7 @@ file(GLOB_RECURSE kernel_ASM "*.asm" "*.S" "*.s")
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/include/arch/x86_64
     ${CMAKE_CURRENT_SOURCE_DIR}/include/memory
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/util
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/lib
     ${CMAKE_CURRENT_SOURCE_DIR}/include/drivers
     ${CMAKE_CURRENT_SOURCE_DIR}/include/sync
     ${CMAKE_CURRENT_SOURCE_DIR}/include/process

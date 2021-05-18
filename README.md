@@ -39,4 +39,9 @@ osdev project for studying purposes. First target is pintos and second is run gc
 - [ ] kernel stdlib
 - [ ] List
 - [ ] Bitmap
+## Filesystem
+- [ ] Ext4
+- [ ] VFS
+- [ ] Journaling
 ## ETC
+- [x] Assert, Panic, Debug
