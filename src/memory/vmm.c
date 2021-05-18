@@ -55,6 +55,7 @@ int vmm_set_page(uint64_t P4, uint64_t addr, uint64_t page, uint16_t flags)
 	}
 
 	P1E = page | flags;
+
 	return 0;
 }
 

@@ -41,10 +41,12 @@ SECTIONS {
     }
 
     /* Read-write data (uninitialized) and stack */
+    _start_bss = .;
     .bss ALIGN(4K) : AT(ADDR(.bss) - KERNEL_OFFSET)
     {
         *(.bss .bss.*)
     }
+    _end_bss = .;
 
     . = ALIGN(2M);
 	. = . + 2M; /* make space for a 2MiB stack guard page */

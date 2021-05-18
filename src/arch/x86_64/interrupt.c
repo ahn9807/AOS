@@ -16,6 +16,7 @@ struct {
 
 static intr_handler_t temp_int_handler(struct intr_frame *frame) {
     debug_intr_frame(frame);
+    panic("halt");
 }
 
 void interrupt_init() {

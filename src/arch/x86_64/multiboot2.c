@@ -4,8 +4,6 @@
 
 #include <stdint.h>
 
-static struct multiboot_tag *boot_mmap;
-
 void debug_multiboot2(unsigned long multiboot_addr)
 {
 	struct multiboot_tag *tag = (struct multiboot_tag *)(multiboot_addr);

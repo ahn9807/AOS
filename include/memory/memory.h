@@ -9,7 +9,7 @@
 #define VA_TO_PAGE(a) ((uint64_t)(a) / PAGE_SIZE)
 #define PAGE_TO_VA(a) ((uint64_t)(a) * PAGE_SIZE)
 #define PA_TO_FRAME(a) ((uint64_t)(a) / PAGE_SIZE)
-#define FRAME_TO_PA(a) ((uinte64_t)(a) * PAGE_SIZE)
+#define FRAME_TO_PA(a) ((uint64_t)(a) * PAGE_SIZE)
 
 #define incptr(p, n) ((void *)(((uintptr_t)(p)) + (n)))
 
@@ -44,7 +44,9 @@ struct page {
 
 };
 
-int multiboot_init(uint64_t magic, unsigned long multiboot_addr, uint64_t *kernel_start, uint64_t *kernel_end, uint64_t *multiboot_start, uint64_t *multiboot_end);
+uintptr_t memory_init(uintptr_t kernel_start, uintptr_t kernel_end, uintptr_t multiboot_start, uintptr_t multiboot_end, uintptr_t multiboot_addr);
+void bss_init();
+uintptr_t kvm_init();
 void *memcpy(void *dst, const void *src, size_t n);
 void *memset(void *s, int c, size_t n);
 void *memmove(void *dest, const void *src, size_t n);
