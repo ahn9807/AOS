@@ -2,6 +2,8 @@
 #include "pmm.h"
 #include "multiboot2.h"
 
+// https://github.com/evanw/buddy-malloc/blob/master/buddy-malloc.c
+
 // Virtual addres of next free page
 uint64_t next = 0;
 
@@ -70,6 +72,10 @@ uint64_t pmm_alloc()
 	return 0;
 }
 
+uint64_t pmm_malloc(size_t size) {
+	
+}
+
 uint64_t pmm_calloc()
 {
 	uint64_t page = pmm_alloc();
@@ -87,7 +93,7 @@ static void choose_next_area()
 		 mmap = (multiboot_memory_map_t *)((unsigned long)mmap + ((struct multiboot_tag_mmap *)pmm_frame_list.memory_pool)->entry_size))
 	{
 		uint64_t address = PA_TO_FRAME(mmap->addr + mmap->len - 1);
-		if (address >= pmm_frame_list.next_free_frame && min_address > mmap->addr && mmap->type != 0x1)
+		if (address >= pmm_frame_list.next_free_frame && min_address > mmap->addr && mmap->type == 0x1)
 		{
 			min_address = mmap->addr;
 			pmm_frame_list.current_pool = mmap;

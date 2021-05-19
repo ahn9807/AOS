@@ -1,12 +1,19 @@
 # AOS
 osdev project for studying purposes. First target is pintos and second is run gcc at my os.
 
+# Current Developing
+kmalloc (sync, bitmap allocator), list, queue, thread
+
+Have to change pmm to whatever support pmm_malloc and pmm_free
+Also have to change kmalloc.c and implement sync
+
 # Basic Todo List
 ## X86_64
 - [ ] GDT
 - [ ] TSS
 - [ ] LDT
 ## Memory
+- [ ] Implement kmalloc
 - [ ] User, Kernel Pool
 - [ ] Bitmap Allocator
 - [ ] Buddy Allocator
@@ -15,7 +22,9 @@ osdev project for studying purposes. First target is pintos and second is run gc
 - [ ] MMAP
 - [ ] Swap in and out
 - [ ] Cpoy on write
-## Process
+## User Process
+- [ ] Elf Loader
+- [ ] Dynamic Linker
 - [ ] Argument Passing
 - [ ] User Memory
 - [ ] System calls
@@ -37,9 +46,11 @@ osdev project for studying purposes. First target is pintos and second is run gc
 ## Library
 - [ ] Small LibC
 - [ ] kernel stdlib
-- [ ] List
+- [ ] List, Queue
 - [ ] Bitmap
+- [ ] Btree+
 ## Filesystem
+- [ ] Ext2
 - [ ] Ext4
 - [ ] VFS
 - [ ] Journaling

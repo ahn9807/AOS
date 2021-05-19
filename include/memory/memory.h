@@ -5,7 +5,7 @@
 
 #define KERNEL_OFFSET 0xFFFFFF8000000000
 #define V2P(a) ((uintptr_t)(a) & ~KERNEL_OFFSET)
-#define P2V(a) ((void *)((uintptr_t)(a) | KERNEL_OFFSET))
+#define P2V(a) (((uintptr_t)(a) | KERNEL_OFFSET))
 #define VA_TO_PAGE(a) ((uint64_t)(a) / PAGE_SIZE)
 #define PAGE_TO_VA(a) ((uint64_t)(a) * PAGE_SIZE)
 #define PA_TO_FRAME(a) ((uint64_t)(a) / PAGE_SIZE)

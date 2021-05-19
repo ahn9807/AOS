@@ -7,7 +7,7 @@ void debug_panic (const char *file, int line, const char *function,
 	static int level;
 	va_list args;
 
-	disable_interrupt();
+	intr_disable();
 
 	level++;
 	if (level == 1) {

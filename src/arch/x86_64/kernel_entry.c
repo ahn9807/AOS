@@ -13,7 +13,6 @@ extern uint64_t p4_table;
 extern uint64_t temp_table;
 
 void timer_interrupt(struct intr_frame *f) {
-    pic_end_of_interrupt(f->vec_no);
 }
 
 int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
@@ -22,6 +21,7 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
     terminal_initialize();
     interrupt_init();
     multiboot_init(magic, multiboot_addr, &kernel_start, &kernel_end, &multiboot_start, &multiboot_end) != 0 ? panic("check multiboot2 magic!\n") : 0;
+    debug_multiboot2(multiboot_addr);
     memory_init(kernel_start, kernel_end, multiboot_start, multiboot_end, multiboot_addr);
     pic_init();
     keyboard_init();
@@ -29,7 +29,7 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
 
     bind_interrupt_with_name(0x20, &timer_interrupt, "Timer");
 
-    enable_interrupt();
+    intr_enable();
 
     PANIC("OS SUSPENDED!\n");
 }

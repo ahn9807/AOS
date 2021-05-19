@@ -1,5 +1,7 @@
 #include "interrupt.h"
 #include "intrinsic.h"
+#include "pic8259.h"
+#include <stdbool.h>
 
 #define INTERRUPT_LEN 256
 #define FLAG_IF (1<<9)
@@ -9,13 +11,15 @@ static intr_handler_t intr_handlers[INTERRUPT_LEN];
 static const char *intr_names[INTERRUPT_LEN];
 extern uintptr_t intr_vectors[];
 
+static bool in_hardware_interrupt = false;
+
 struct {
     uint16_t len;
     struct idt_entry *addr;
 } __attribute__ ((packed)) idtr;
 
 static intr_handler_t temp_int_handler(struct intr_frame *frame) {
-    debug_intr_frame(frame);
+    intr_debug(frame);
     panic("halt");
 }
 
@@ -51,23 +55,48 @@ intr_handler_t bind_interrupt_with_name(uint32_t num, intr_handler_t fn, const c
     return bind_interrupt(num, fn);
 }
 
-struct intr_frame* interrupt_handler(struct intr_frame *frame) {
-    if(intr_handlers[frame->vec_no])
-        return intr_handlers[frame->vec_no](frame);
+// Handlers for all interrupts, faults, and exceptions. 
+// This function is bind to intr_vectors.asm
+// DO NOT CHANGE NAME OR PARAMETERS!!
+void interrupt_handler(struct intr_frame *frame) {
+    bool is_hardware = false;
 
-    debug_intr_frame(frame);
-    panic("UNHANDLED INTERRUPT OCCURRED!");
+    // This interrupt is originated from pic (hardware interrupt)
+    // This interrupt must be handle one at a time.
+    is_hardware = frame->vec_no >= 0x20 && frame->vec_no < 0x30;
+    if(is_hardware) {
+        in_hardware_interrupt = true;
+    }
+
+    // INTR is not NULL
+    if(intr_handlers[frame->vec_no]) {
+        intr_handlers[frame->vec_no](frame);
+    }
+    // INTR is NULL. Panic and debug INTR
+    else {
+        intr_debug(frame);
+        panic("UNHANDLED INTERRUPT OCCURRED!");
+    }
+
+    if(is_hardware) {
+        in_hardware_interrupt = false;
+        pic_end_of_interrupt(frame->vec_no);
+    }
 }
 
-void enable_interrupt() {
+bool intr_context() {
+    return in_hardware_interrupt;
+}
+
+void intr_enable() {
     __asm__ __volatile__ ("sti\n");
 }
 
-void disable_interrupt() {
+void intr_disable() {
     __asm__ __volatile__ ("cld\n");
 }
 
-void debug_intr_frame(struct intr_frame *f) {
+void intr_debug(struct intr_frame *f) {
 	/* CR2 is the linear address of the last page fault.
 	   See [IA32-v2a] "MOV--Move to/from Control Registers" and
 	   [IA32-v3a] 5.14 "Interrupt 14--Page Fault Exception

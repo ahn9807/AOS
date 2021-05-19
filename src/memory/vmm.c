@@ -1,5 +1,6 @@
 #include "memory.h"
 #include "vmm.h"
+#include "pmm.h"
 #include "vga_text.h"
 
 uint64_t new_P4()
@@ -106,7 +107,7 @@ size_t memcpy_to_p4(uint64_t P4, void *dst, void *src, size_t n)
 		if (!PAGE_EXIST(page))
 			return copied;
 
-		void *to = P2V(MASK_FLAGS(page) + offset(dst));
+		void *to = (void*)P2V(MASK_FLAGS(page) + offset(dst));
 		memcpy(to, src, bytes);
 
 		copied += bytes;
@@ -127,7 +128,7 @@ size_t memcpy_from_p4(void *dst, uint64_t P4, void *src, size_t n)
 		if (!PAGE_EXIST(page))
 			return copied;
 
-		void *from = P2V(MASK_FLAGS(page) + offset(src));
+		void *from = (void*)P2V(MASK_FLAGS(page) + offset(src));
 		memcpy(dst, from, bytes);
 
 		copied += bytes;

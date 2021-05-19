@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <stdbool.h>
 #include "vga_text.h"
 
 enum intr_level {
@@ -89,11 +90,12 @@ struct idt_entry {
 #define install_interrupt(idt, function, d) install_idt((idt), (function), (d), 14)
 #define install_trap(idt, function, d) install_idt((idt), (function), (d), 15)
 
-typedef struct intr_frame *(*intr_handler_t)(struct intr_frame *);
+typedef void *(*intr_handler_t)(struct intr_frame *);
 
 void interrupt_init();
-void enable_interrupt();
-void disable_interrupt();
+void intr_enable();
+void intr_disable();
+bool intr_context();
 intr_handler_t bind_interrupt(uint32_t num, intr_handler_t fn);
 intr_handler_t bind_interrupt_with_name(uint32_t num, intr_handler_t fn, const char* name);
-void debug_intr_frame(struct intr_frame *frame);
+void intr_debug(struct intr_frame *frame);
