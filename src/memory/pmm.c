@@ -72,8 +72,19 @@ uint64_t pmm_alloc()
 	return 0;
 }
 
-uint64_t pmm_malloc(size_t size) {
-	
+// Must be changed!!!
+uint64_t pmm_alloc_pages(size_t size) {
+	uint64_t first_addr = pmm_alloc();
+	size -=1;
+	while (size != 0) {
+		pmm_alloc();
+		size -= 1;
+	}
+	return first_addr;
+}
+
+uint64_t pmm_free_pages(uint64_t s_addr, size_t size) {
+	// do nothing
 }
 
 uint64_t pmm_calloc()

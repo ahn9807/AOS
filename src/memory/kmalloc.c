@@ -2,6 +2,7 @@
 #include "vga_text.h"
 #include "interrupt.h"
 #include "pmm.h"
+#include "spin_lock.h"
 
 /**  Durand's Ridiculously Amazing Super Duper Memory functions.  */
 
@@ -32,6 +33,8 @@ unsigned int l_inuse = 0;     //< The amount of memory in use (kmalloc'ed).
 static int l_initialized = 0; //< Flag to indicate initialization.
 static int l_pageSize = 4096; //< Individual page size
 static int l_pageCount = 16;  //< Minimum number of pages to allocate.
+
+static spinlock_t lock; // lock for spin lock
 
 // ***********   HELPER FUNCTIONS  *******************************
 
@@ -511,19 +514,23 @@ void *krealloc(void *p, size_t size)
 }
 
 int liballoc_lock() {
-    intr_disable();
+    spin_lock_irq(&lock);
     return 0;
 }
 
 int liballoc_unlock() {
-    intr_enable();
+    spin_unlock_irq(&lock);
     return 0;
 }
 
 void* liballoc_alloc(int size) {
-    return NULL;
+    #include "vga_text.h"
+    uint64_t temp = P2V(pmm_alloc_pages(size));
+    printf("ALLOC: 0x%x size: %d", temp, size);
+    return (void*)temp;
 }
 
 int liballoc_free(void* addr,int size) {
-
+    pmm_free_pages(addr, size);
+    return 0;
 }

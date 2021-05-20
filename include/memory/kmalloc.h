@@ -71,7 +71,7 @@ void* liballoc_alloc(int);
  */
 int liballoc_free(void*,int);
 
-void     *kalloc(size_t);				//< The standard function.
+void     *kmalloc(size_t);				//< The standard function.
 void     *krealloc(void *, size_t);		//< The standard function.
 void     *kcalloc(size_t, size_t);		//< The standard function.
 void      kfree(void *);					//< The standard function.

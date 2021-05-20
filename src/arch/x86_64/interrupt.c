@@ -35,11 +35,30 @@ void interrupt_init() {
     idtr.addr = idt;
     idtr.len = sizeof(idt) -1;
 
-    bind_interrupt_with_name(3, &temp_int_handler, "#BP");
-    bind_interrupt_with_name(14, &temp_int_handler, "#PF");
-    bind_interrupt_with_name(8, &temp_int_handler, "#DF");
-    bind_interrupt_with_name(13, &temp_int_handler, "#GP");
+    bind_interrupt_with_name(3, &temp_int_handler, "#BP Breakpoint Exception");
+    bind_interrupt_with_name(14, &temp_int_handler, "#PF Page-Fault Exception");
+    bind_interrupt_with_name(8, &temp_int_handler, "#DF Double Fault Exception");
+    bind_interrupt_with_name(13, &temp_int_handler, "#GP General Protection Exception");
     // bind_interrupt_with_name(0, &temp_int_handler, "DE");
+    intr_names[0] = "#DE Divide Error";
+	intr_names[1] = "#DB Debug Exception";
+	intr_names[2] = "NMI Interrupt";
+	intr_names[3] = "#BP Breakpoint Exception";
+	intr_names[4] = "#OF Overflow Exception";
+	intr_names[5] = "#BR BOUND Range Exceeded Exception";
+	intr_names[6] = "#UD Invalid Opcode Exception";
+	intr_names[7] = "#NM Device Not Available Exception";
+	intr_names[8] = "#DF Double Fault Exception";
+	intr_names[9] = "Coprocessor Segment Overrun";
+	intr_names[10] = "#TS Invalid TSS Exception";
+	intr_names[11] = "#NP Segment Not Present";
+	intr_names[12] = "#SS Stack Fault Exception";
+	intr_names[13] = "#GP General Protection Exception";
+	intr_names[14] = "#PF Page-Fault Exception";
+	intr_names[16] = "#MF x87 FPU Floating-Point Error";
+	intr_names[17] = "#AC Alignment Check Exception";
+	intr_names[18] = "#MC Machine-Check Exception";
+	intr_names[19] = "#XF SIMD Floating-Point Exception";
 
     lidt(&idtr);
 }
@@ -55,7 +74,7 @@ intr_handler_t bind_interrupt_with_name(uint32_t num, intr_handler_t fn, const c
     return bind_interrupt(num, fn);
 }
 
-// Handlers for all interrupts, faults, and exceptions. 
+// Handlers for all interrupts, faults, and exceptions.
 // This function is bind to intr_vectors.asm
 // DO NOT CHANGE NAME OR PARAMETERS!!
 void interrupt_handler(struct intr_frame *frame) {
