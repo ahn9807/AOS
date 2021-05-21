@@ -16,7 +16,7 @@ extern uint64_t p4_table;
 extern uint64_t temp_table;
 
 void timer_interrupt(struct intr_frame *f) {
-    printf(".");
+    // printf(".");
 }
 
 int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
@@ -30,24 +30,6 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
     pic_init();
     keyboard_init();
     bind_interrupt_with_name(0x20, &timer_interrupt, "Timer");
-
-    printf("pmm: 0x%x\n", pmm_alloc());
-    printf("pmm: 0x%x\n", pmm_alloc());
-    printf("pmm: 0x%x\n", pmm_alloc());
-    printf("pmm: 0x%x\n", pmm_alloc());
-
-    uint64_t* temp = pmm_alloc();
-
-    temp[0] = 123;
-
-    printf("%d\n", temp[0]);
-
-    printf("0x%x\n", kmalloc(1));
-    printf("0x%x\n", kmalloc(1));
-    printf("0x%x\n", kmalloc(1));
-    printf("0x%x\n", kmalloc(1));
-    printf("0x%x\n", kmalloc(1));
-    printf("0x%x\n", kmalloc(1));
 
     intr_enable();
 

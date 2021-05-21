@@ -109,7 +109,7 @@ static void itoa(char *buf, int64_t base, int64_t d)
 	int divisor = 10;
 
 	/*  If %d is specified and D is minus, put ‘-’ in the head. */
-	if (base == 'd' && d < 0)
+	if ((base == 'd' || base == 'i') && d < 0)
 	{
 		*p++ = '-';
 		buf++;
@@ -180,6 +180,7 @@ void printf(const char *format, ...)
 				case 'd':
 				case 'u':
 				case 'x':
+				case 'i':
 					int_arg = va_arg(argument_list, int64_t);
 					itoa(buf, c, int_arg);
 					p = buf;
