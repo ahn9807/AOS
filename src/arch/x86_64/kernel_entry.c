@@ -15,8 +15,15 @@
 extern uint64_t p4_table;
 extern uint64_t temp_table;
 
+static int timer_intr = 0;
+
+static char* gatsby_quote = "In my younger . . . years my father gave me some advice . . . Whenever you feel like criticizing any one . . . just remember that all the people in this world haven't had the advantages that you've had. \0";
+
 void timer_interrupt(struct intr_frame *f) {
-    // printf(".");
+    if(gatsby_quote[timer_intr] == '\0') {
+        timer_intr = 0;
+    }
+    printf("%c", gatsby_quote[timer_intr ++]);
 }
 
 int kernel_entry(unsigned long magic, unsigned long multiboot_addr)

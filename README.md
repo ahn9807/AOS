@@ -2,10 +2,8 @@
 osdev project for studying purposes. First target is pintos and second is run gcc at my os.
 
 # Current Developing
-kmalloc (sync, bitmap allocator), list, queue, thread
-
-Have to change pmm to whatever support pmm_malloc and pmm_free
-Also have to change kmalloc.c and implement sync
+1. Now palloc and malloc is implemented. But, palloc have to be changed to bitmap allocator.
+2. May have to Start implementing thread
 
 # Basic Todo List
 ## X86_64
@@ -36,7 +34,7 @@ Also have to change kmalloc.c and implement sync
 - [ ] Basic Scheduler
 - [ ] Basic thread implementation
 ## Sync
-- [ ] Spin lock
+- [x] Spin lock
 - [ ] Mutex
 - [ ] Semaphore
 ## Driver
@@ -46,7 +44,7 @@ Also have to change kmalloc.c and implement sync
 ## Library
 - [ ] Small LibC
 - [ ] kernel stdlib
-- [ ] List, Queue
+- [x] List, Queue
 - [ ] Bitmap
 - [ ] Btree+
 ## Filesystem
