@@ -1,6 +1,7 @@
 #include "memory.h"
 #include "pmm.h"
 #include "multiboot2.h"
+#include "string.h"
 
 // https://github.com/evanw/buddy-malloc/blob/master/buddy-malloc.c
 

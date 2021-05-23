@@ -11,6 +11,7 @@
 #include "spin_lock.h"
 #include "kmalloc.h"
 #include "pmm.h"
+#include "thread.h"
 
 extern uint64_t p4_table;
 extern uint64_t temp_table;
@@ -30,6 +31,7 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
 {
     uint64_t kernel_start, kernel_end, multiboot_start, multiboot_end;
     terminal_initialize();
+    printf("asdf");
     interrupt_init();
     multiboot_init(magic, multiboot_addr, &kernel_start, &kernel_end, &multiboot_start, &multiboot_end) != 0 ? panic("check multiboot2 magic!\n") : 0;
     debug_multiboot2(multiboot_addr);
@@ -37,6 +39,7 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
     pic_init();
     keyboard_init();
     bind_interrupt_with_name(0x20, &timer_interrupt, "Timer");
+    thread_init();
 
     intr_enable();
 

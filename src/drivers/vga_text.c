@@ -1,4 +1,5 @@
 #include "vga_text.h"
+#include "string.h"
 
 size_t terminal_row = 0;
 size_t terminal_column = 0;
@@ -13,14 +14,6 @@ static inline uint8_t vga_entry_color(enum vga_color fg, enum vga_color bg)
 static inline uint16_t vga_entry(unsigned char uc, uint8_t color)
 {
 	return (uint16_t)uc | (uint16_t)color << 8;
-}
-
-size_t strlen(const char *str)
-{
-	size_t len = 0;
-	while (str[len])
-		len++;
-	return len;
 }
 
 void terminal_initialize(void)

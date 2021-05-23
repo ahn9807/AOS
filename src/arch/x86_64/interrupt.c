@@ -1,6 +1,7 @@
 #include "interrupt.h"
 #include "intrinsic.h"
 #include "pic8259.h"
+#include "string.h"
 #include <stdbool.h>
 
 #define INTERRUPT_LEN 256

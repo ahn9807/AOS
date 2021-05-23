@@ -2,6 +2,7 @@
 #include "vmm.h"
 #include "pmm.h"
 #include "vga_text.h"
+#include "string.h"
 
 uint64_t new_P4()
 {
