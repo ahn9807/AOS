@@ -5,8 +5,11 @@
 #include "intrinsic.h"
 #include "memory.h"
 #include "string.h"
+#include "pmm.h"
 
 #define THREAD_MAGIC 0xaaaeaa
+
+extern uint64_t kernel_stack_top;
 
 static tid_t next_tid = 1;
 
@@ -19,20 +22,20 @@ struct {
 // And start Scheduler and push to the scheduler top
 // Also initialize list and etc...
 void thread_init() {
+    intr_disable();
     struct thread_info *kernel_entry_th = current_thread();
 
-    // Change kernel_entry.c to thread
     initialize_thread(kernel_entry_th, "initd");
-    // Init scheduler
 
-    // Push kernel_entry.c thread to scheduler
+    kernel_entry_th->status = THREAD_RUNNUNG;
+    kernel_entry_th->tid = next_tid++;
 
-    // WarmUP
+    intr_enable();
 }
 
 // Create new thread
 tid_t thread_create(const char* name, thread_func* func, void * aux) {
-    struct thread_info *th = kmalloc(sizeof(struct thread_info));
+    struct thread_info *th = P2V(pmm_alloc_pages(1));
 
     ASSERT(func != NULL);
     ASSERT(name != NULL);
@@ -44,8 +47,16 @@ tid_t thread_create(const char* name, thread_func* func, void * aux) {
 }
 
 static void initialize_thread(struct thread_info *th, const char *name) {
+    ASSERT(th != NULL);
+    ASSERT(name != NULL);
+
     memset(th, 0, sizeof(struct thread_info));
+
+    //This allocate stack pointer to the start of the given stack
+    th->thread_frame.rsp = (uint64_t)th + PAGE_SIZE - sizeof(void *);
     strcpy(th->name, name);
+    th->status = THREAD_EMBRYO;
+    th->magic = THREAD_MAGIC;
 }
 
 // void thread_start();

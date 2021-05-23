@@ -48,8 +48,6 @@ SECTIONS {
     }
     _end_bss = .;
 
-    . = ALIGN(2M);
-	. = . + 2M; /* make space for a 2MiB stack guard page */
     .kernel_stack ALIGN(4K) : AT(ADDR(.kernel_stack) - KERNEL_OFFSET)
     {
         *(.kernel_stack)

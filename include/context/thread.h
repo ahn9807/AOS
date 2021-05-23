@@ -5,13 +5,14 @@
 #include "interrupt.h"
 #include "intrinsic.h"
 
-#define current_thread() ((struct thread_info*)(rrsp() << 12))
+#define current_thread() ((struct thread_info*)((rrsp()) & ~((uint64_t)((1<<12) - 1))))
 
 typedef uint32_t tid_t;
 
 enum thread_status {
-    THREAD_RUNNUNG,
+    THREAD_EMBRYO,
     THREAD_READY,
+    THREAD_RUNNUNG,
     THREAD_BLOCKED,
     THREAD_DYING,
 };

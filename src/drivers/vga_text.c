@@ -16,7 +16,7 @@ static inline uint16_t vga_entry(unsigned char uc, uint8_t color)
 	return (uint16_t)uc | (uint16_t)color << 8;
 }
 
-void terminal_initialize(void)
+void vga_init(void)
 {
 	terminal_row = 0;
 	terminal_column = 0;

@@ -1,4 +1,5 @@
 global start
+global kernel_stack_top
 
 extern long_mode_start
 extern kernel_entry
@@ -22,7 +23,7 @@ bits 32
 ; GDTR can be invalid
 ; IDTR undefined
 start:
-    mov esp, stack_top
+    mov esp, kernel_stack_top - KERNEL_OFFSET
     mov edi, eax ; multiboot2 specification
     mov esi, ebx ; multiboot2 specification
 
@@ -160,12 +161,7 @@ error:
     mov byte  [0xb800a], al
     hlt
 
-stack_bottom:
-    times 4096 dw 0
-stack_top:
-
 bits 64
-
 section .bootstrap.boot64
 long_mode_start:
     lgdt [gdt64.ptr - KERNEL_OFFSET]
@@ -175,7 +171,8 @@ long_mode_start:
 
 section .text
 kernel_address_space:
-    add rsp, KERNEL_OFFSET
+    mov rax, KERNEL_OFFSET
+    add rsp, rax
 
     mov rax, gdt64.ptr
     lgdt [rax]
