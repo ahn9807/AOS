@@ -49,3 +49,4 @@ void do_iret(struct intr_frame*);
 
 static void launch_thread(struct thread_info *th);
 static void initialize_thread(struct thread_info *th, const char *name);
+static void idle_thread();

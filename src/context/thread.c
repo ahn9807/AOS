@@ -191,8 +191,39 @@ static void launch_thread(struct thread_info *th) {
     );
 }
 
-// void thread_start();
-// void thread_block();
-// void thread_unblock(struct thread_info *);
-// struct thread_info* thread_current();
-// void thread_yield();
+static void idle_thread() {
+    while(1) {
+        asm volatile ( "sti\n" "hlt\n" );
+    }
+}
+
+// This Function Initialize per-cpu thread
+// Each CPU must have at least one idle thread
+void thread_start() {
+    // create idle_thread and push to the scheduler
+    thread_create("idle", &idle_thread, NULL);
+
+    // register created thread to the scheudler
+}
+
+void thread_block() {
+    thread_current()->status = THREAD_BLOCKED;
+    // schedule to next thread
+}
+
+void thread_unblock(struct thread_info *th) {
+    // push to the shceduler ready list
+    th->status = THREAD_READY;
+}
+
+// Safely get current thread
+struct thread_info* thread_current_s() {
+    ASSERT(thread_current()->magic == THREAD_MAGIC);
+    return thread_current();
+}
+
+void thread_yield() {
+    struct thread_info *cur_thread = thread_current_s();
+
+    // schedule to next thread
+}
