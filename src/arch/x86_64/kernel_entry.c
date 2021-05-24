@@ -1,7 +1,6 @@
 #include "debug.h"
 #include "vga_text.h"
 #include "multiboot2.h"
-#include "x86.h"
 #include "memory.h"
 #include "interrupt.h"
 #include "pic8259.h"
@@ -27,6 +26,10 @@ void timer_interrupt(struct intr_frame *f) {
     printf("%c", gatsby_quote[timer_intr ++]);
 }
 
+void temp_thread() {
+    printf("cur thread name: %s\n", thread_current()->name);
+}
+
 int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
 {
     uint64_t kernel_start, kernel_end, multiboot_start, multiboot_end;
@@ -39,8 +42,9 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
     keyboard_init();
     bind_interrupt_with_name(0x20, &timer_interrupt, "Timer");
     thread_init();
+    thread_create("temp th", &temp_thread, NULL);
 
-    printf("cur thread name: %s\n", current_thread()->name);
+    printf("cur thread name: %s\n", thread_current()->name);
 
     intr_enable();
 
