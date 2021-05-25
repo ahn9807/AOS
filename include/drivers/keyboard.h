@@ -42,4 +42,4 @@ const static char kbdus[128] = {
 
 void keyboard_init();
 
-static void keyboard_handler(struct intr_frame *f);
+static enum irq_handler_result keyboard_handler();

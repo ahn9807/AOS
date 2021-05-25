@@ -8,6 +8,7 @@
 #include "pmm.h"
 #include "layout.h"
 #include "cpu_flags.h"
+#include "sched.h"
 
 #define THREAD_MAGIC 0xaaaeaa
 
@@ -29,17 +30,16 @@ void thread_init() {
     intr_disable();
     struct thread_info *kernel_entry_th = thread_current();
 
-    list_init(&runnung_list);
-    list_init(&read_list);
+    sched_init();
 
     initialize_thread(kernel_entry_th, "initd");
 
     kernel_entry_th->status = THREAD_RUNNUNG;
-    // Have to change to sched_push_thread()
-    list_push_back(&runnung_list, &(kernel_entry_th->elem));
     kernel_entry_th->tid = next_tid++;
 
     intr_enable();
+
+    launch_thread(kernel_entry_th);
 }
 
 // Create new thread
@@ -65,15 +65,10 @@ tid_t thread_create(const char* name, thread_func* func, void * aux) {
     th->magic = THREAD_MAGIC;
     th->status = THREAD_READY;
 
-    // Have to change to sched_push_thread()
-    list_push_back(&runnung_list, &(th->elem));
-
-    launch_thread(th);
+    sched_push(th);
 
     return th->tid;
 }
-
-
 
 static void initialize_thread(struct thread_info *th, const char *name) {
     ASSERT(th != NULL);
@@ -97,13 +92,11 @@ static void thread_entry(thread_func *func, void* aux) {
 }
 
 void thread_exit() {
-    intr_disable();
     // move thread to exit list
     // temp scheduler have to change!!!
-    list_pop_back(&runnung_list);
-    struct thread_info *next_thread = list_entry(list_pop_front(&runnung_list), struct thread_info, elem);
-    launch_thread(next_thread);
-    // lauch scheduler
+    intr_disable();
+    thread_current_s()->status = THREAD_EXITED;
+    sched_do();
 }
 
 void thread_validate() {
@@ -139,7 +132,7 @@ void do_iret (struct intr_frame *tf) {
     );
 }
 
-static void launch_thread(struct thread_info *th) {
+void launch_thread(struct thread_info *th) {
     uint64_t current_thread = (uint64_t)(&thread_current()->thread_frame);
     uint64_t incomming_thread = (uint64_t)(&th->thread_frame);
 
@@ -202,18 +195,18 @@ static void idle_thread() {
 void thread_start() {
     // create idle_thread and push to the scheduler
     thread_create("idle", &idle_thread, NULL);
-
-    // register created thread to the scheudler
 }
 
 void thread_block() {
     thread_current()->status = THREAD_BLOCKED;
     // schedule to next thread
+    sched_do();
 }
 
 void thread_unblock(struct thread_info *th) {
     // push to the shceduler ready list
     th->status = THREAD_READY;
+    sched_push(th);
 }
 
 // Safely get current thread
@@ -223,7 +216,6 @@ struct thread_info* thread_current_s() {
 }
 
 void thread_yield() {
-    struct thread_info *cur_thread = thread_current_s();
-
     // schedule to next thread
+    sched_do();
 }

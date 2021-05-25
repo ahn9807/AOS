@@ -16,7 +16,7 @@ enum thread_status {
     THREAD_RUNNUNG,
     THREAD_SLEEP,
     THREAD_BLOCKED,
-    THREAD_DYING,
+    THREAD_EXITED,
 };
 
 struct thread_info {
@@ -31,12 +31,6 @@ struct thread_info {
 
 typedef void thread_func (void *aux);
 
-struct list read_list;
-struct list runnung_list;
-struct list sleep_list;
-struct list blocked_list;
-struct list dying_list;
-
 void thread_init();
 void thread_validate();
 tid_t thread_create(const char* name, thread_func*, void *);
@@ -46,7 +40,8 @@ void thread_unblock(struct thread_info *);
 void thread_exit();
 void thread_yield();
 void do_iret(struct intr_frame*);
+struct thread_info* thread_current_s();
+void launch_thread(struct thread_info *th);
 
-static void launch_thread(struct thread_info *th);
 static void initialize_thread(struct thread_info *th, const char *name);
 static void idle_thread();

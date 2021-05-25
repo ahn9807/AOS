@@ -11,6 +11,7 @@
 #include "kmalloc.h"
 #include "pmm.h"
 #include "thread.h"
+#include "sched.h"
 
 extern uint64_t p4_table;
 extern uint64_t temp_table;
@@ -19,15 +20,36 @@ static int timer_intr = 0;
 
 static char* gatsby_quote = "In my younger . . . years my father gave me some advice . . . Whenever you feel like criticizing any one . . . just remember that all the people in this world haven't had the advantages that you've had. \0";
 
-void timer_interrupt(struct intr_frame *f) {
-    if(gatsby_quote[timer_intr] == '\0') {
+enum irq_handler_result timer_interrupt(struct intr_frame *f) {
+    // if(gatsby_quote[timer_intr] == '\0') {
+    //     timer_intr = 0;
+    // }
+    // printf("%c", gatsby_quote[timer_intr ++]);
+    if(timer_intr ++ == 10) {
         timer_intr = 0;
+        return YIELD_ON_RETURN;
     }
-    printf("%c", gatsby_quote[timer_intr ++]);
+    return OK;
 }
 
 void temp_thread() {
-    printf("cur thread name: %s\n", thread_current()->name);
+    int tick = 0;
+    while(1) {
+        if(tick++ % 100000000 == 0)
+            printf("Thread #%d, tick = %d\n", thread_current_s()->tid, tick / 10000);
+    }
+}
+
+void temp_thread2() {
+    int tick = 0;
+    while(1) {
+        if(tick++ % 100000000 == 0)
+            printf("Thread #%d, tick = %d\n", thread_current_s()->tid, tick / 10000);
+    }
+}
+
+void temp_thread3() {
+
 }
 
 int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
@@ -42,11 +64,13 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
     keyboard_init();
     bind_interrupt_with_name(0x20, &timer_interrupt, "Timer");
     thread_init();
+    intr_enable();
+
     thread_create("temp th", &temp_thread, NULL);
+    thread_create("temp th2", &temp_thread2, NULL);
+    thread_create("temp th3", &temp_thread3, NULL);
 
     printf("cur thread name: %s\n", thread_current()->name);
-
-    intr_enable();
 
     PANIC("OS SUSPENDED!\n");
 }

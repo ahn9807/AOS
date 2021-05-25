@@ -3,7 +3,7 @@
 #include "port.h"
 #include "pic8259.h"
 
-static void keyboard_handler(struct intr_frame *f) {
+static enum irq_handler_result keyboard_handler(struct intr_frame *f) {
     uint8_t scan_code = inb(0x60);
 
     // Key Released

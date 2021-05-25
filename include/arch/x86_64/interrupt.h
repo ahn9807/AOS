@@ -70,6 +70,13 @@ struct idt_entry {
 	uint32_t rsv2;
 };
 
+enum irq_handler_result {
+	OK,
+	YIELD_ON_RETURN,
+	KILL_ON_RETURN,
+	FAILED,
+};
+
 #define install_idt(idt, function, d, t) \
 { \
     *(idt) = (struct idt_entry) { \
@@ -90,7 +97,8 @@ struct idt_entry {
 #define install_interrupt(idt, function, d) install_idt((idt), (function), (d), 14)
 #define install_trap(idt, function, d) install_idt((idt), (function), (d), 15)
 
-typedef void *(*intr_handler_t)(struct intr_frame *);
+typedef enum irq_handler_result (*intr_handler_t)(struct intr_frame *);
+typedef void (*intr_handler_void_t)(struct intr_frame *);
 
 void interrupt_init();
 void intr_enable();

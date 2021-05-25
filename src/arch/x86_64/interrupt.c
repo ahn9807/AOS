@@ -1,8 +1,10 @@
+#include <stdbool.h>
 #include "interrupt.h"
 #include "intrinsic.h"
 #include "pic8259.h"
 #include "string.h"
-#include <stdbool.h>
+#include "sched.h"
+#include "debug.h"
 
 #define INTERRUPT_LEN 256
 #define FLAG_IF (1<<9)
@@ -19,9 +21,10 @@ struct {
     struct idt_entry *addr;
 } __attribute__ ((packed)) idtr;
 
-static intr_handler_t temp_int_handler(struct intr_frame *frame) {
+static enum irq_handler_result temp_int_handler(struct intr_frame *frame) {
     intr_debug(frame);
-    panic("halt");
+    PANIC("NON void INTERRUPT");
+    return OK;
 }
 
 void interrupt_init() {
@@ -80,6 +83,7 @@ intr_handler_t bind_interrupt_with_name(uint32_t num, intr_handler_t fn, const c
 // DO NOT CHANGE NAME OR PARAMETERS!!
 void interrupt_handler(struct intr_frame *frame) {
     bool is_hardware = false;
+    enum irq_handler_result return_val = OK;
 
     // This interrupt is originated from pic (hardware interrupt)
     // This interrupt must be handle one at a time.
@@ -90,7 +94,7 @@ void interrupt_handler(struct intr_frame *frame) {
 
     // INTR is not NULL
     if(intr_handlers[frame->vec_no]) {
-        intr_handlers[frame->vec_no](frame);
+        return_val = intr_handlers[frame->vec_no](frame);
     }
     // INTR is NULL. Panic and debug INTR
     else {
@@ -101,6 +105,24 @@ void interrupt_handler(struct intr_frame *frame) {
     if(is_hardware) {
         in_hardware_interrupt = false;
         pic_end_of_interrupt(frame->vec_no);
+    }
+
+    switch (return_val)
+    {
+        case OK:
+            // do noting
+            break;
+        case YIELD_ON_RETURN:
+            sched_tick();
+            break;
+        case KILL_ON_RETURN:
+            PANIC("NOT IMPLEMENTED");
+            break;
+        case FAILED:
+            PANIC("FAILED TO HANDLE INTERRUPT");
+            break;
+        default:
+            break;
     }
 }
 

@@ -39,7 +39,6 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/include/drivers
     ${CMAKE_CURRENT_SOURCE_DIR}/include/sync
     ${CMAKE_CURRENT_SOURCE_DIR}/include/context
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/context
 )
 
 add_executable(

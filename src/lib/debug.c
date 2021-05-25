@@ -1,5 +1,6 @@
 #include "vga_text.h"
 #include "interrupt.h"
+#include "debug.h"
 #include <stdarg.h>
 
 void debug_panic (const char *file, int line, const char *function,
