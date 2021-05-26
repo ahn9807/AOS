@@ -44,10 +44,6 @@ void temp_thread2() {
     }
 }
 
-void temp_thread3() {
-
-}
-
 int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
 {
     uint64_t kernel_start, kernel_end, multiboot_start, multiboot_end;
@@ -64,7 +60,6 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
 
     thread_create("temp th", &temp_thread, NULL);
     thread_create("temp th2", &temp_thread2, NULL);
-    thread_create("temp th3", &temp_thread3, NULL);
 
     printf("cur thread name: %s\n", thread_current()->name);
 

@@ -32,7 +32,7 @@ void thread_init() {
 
     sched_init();
 
-    initialize_thread(kernel_entry_th, "initd");
+    initialize_thread(kernel_entry_th, "thread_start");
 
     kernel_entry_th->status = THREAD_RUNNUNG;
     kernel_entry_th->tid = next_tid++;

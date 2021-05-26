@@ -40,12 +40,13 @@ osdev project for studying purposes. First target is pintos and second is run gc
 ## Driver
 - [ ] Serial
 - [ ] Graphic Driver
-- [ ] ACPI
+- [ ] APIC
 ## Library
 - [ ] Small LibC
 - [ ] kernel stdlib
 - [x] List, Queue
 - [ ] Bitmap
+- [ ] Hash
 - [ ] Btree+
 ## Filesystem
 - [ ] Ext2
