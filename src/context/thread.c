@@ -38,7 +38,6 @@ void thread_init() {
     kernel_entry_th->tid = next_tid++;
 
     intr_enable();
-
     launch_thread(kernel_entry_th);
 }
 
@@ -97,6 +96,7 @@ void thread_exit() {
     intr_disable();
     thread_current_s()->status = THREAD_EXITED;
     sched_do();
+    NOT_REACHED();
 }
 
 void thread_validate() {
@@ -199,14 +199,19 @@ void thread_start() {
 
 void thread_block() {
     thread_current()->status = THREAD_BLOCKED;
-    // schedule to next thread
+    enum intr_level prev_level = intr_disable();
     sched_do();
+    intr_set_level(prev_level);
 }
 
 void thread_unblock(struct thread_info *th) {
+    ASSERT(th->status == THREAD_BLOCKED);
+
+    enum intr_level prev_level = intr_disable();
     // push to the shceduler ready list
     th->status = THREAD_READY;
     sched_push(th);
+    intr_set_level(prev_level);
 }
 
 // Safely get current thread
@@ -216,6 +221,10 @@ struct thread_info* thread_current_s() {
 }
 
 void thread_yield() {
+    ASSERT(!intr_context());
+
+    enum intr_level prev_level = intr_disable();
     // schedule to next thread
     sched_do();
+    intr_set_level(prev_level);
 }

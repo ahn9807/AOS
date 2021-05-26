@@ -2,6 +2,7 @@
 #include "list.h"
 #include "spin_lock.h"
 #include "thread.h"
+#include "debug.h"
 
 struct list read_list;
 struct list runnung_list;
@@ -38,6 +39,8 @@ void sched_push(struct thread_info *th) {
 
 // Reschedule the current thread
 void sched_do() {
+    ASSERT(intr_get_level() == INTR_OFF);
+
     struct thread_info *cur_thread = thread_current_s();
     if(cur_thread->status == THREAD_RUNNUNG) {
         cur_thread->status = THREAD_READY;
@@ -48,7 +51,6 @@ void sched_do() {
     next_thread->status = THREAD_RUNNUNG;
 
     intr_enable();
-
     launch_thread(next_thread);
 }
 

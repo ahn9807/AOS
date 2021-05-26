@@ -101,8 +101,10 @@ typedef enum irq_handler_result (*intr_handler_t)(struct intr_frame *);
 typedef void (*intr_handler_void_t)(struct intr_frame *);
 
 void interrupt_init();
-void intr_enable();
-void intr_disable();
+enum intr_level intr_get_level();
+enum intr_level intr_set_level(enum intr_level irl);
+enum intr_level intr_enable();
+enum intr_level intr_disable();
 bool intr_context();
 intr_handler_t bind_interrupt(uint32_t num, intr_handler_t fn);
 intr_handler_t bind_interrupt_with_name(uint32_t num, intr_handler_t fn, const char* name);

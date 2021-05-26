@@ -25,15 +25,11 @@ enum irq_handler_result timer_interrupt(struct intr_frame *f) {
     //     timer_intr = 0;
     // }
     // printf("%c", gatsby_quote[timer_intr ++]);
-    if(timer_intr ++ == 10) {
-        timer_intr = 0;
-        return YIELD_ON_RETURN;
-    }
-    return OK;
+    return YIELD_ON_RETURN;
 }
 
 void temp_thread() {
-    int tick = 0;
+    uint64_t tick = 0;
     while(1) {
         if(tick++ % 100000000 == 0)
             printf("Thread #%d, tick = %d\n", thread_current_s()->tid, tick / 10000);
@@ -41,7 +37,7 @@ void temp_thread() {
 }
 
 void temp_thread2() {
-    int tick = 0;
+    uint64_t tick = 0;
     while(1) {
         if(tick++ % 100000000 == 0)
             printf("Thread #%d, tick = %d\n", thread_current_s()->tid, tick / 10000);

@@ -7,7 +7,6 @@ KERNEL_OFFSET equ 0xFFFFFF8000000000
 PAGE_PRESENT equ 1 << 0
 PAGE_WRITEABLE equ 1 << 1
 PAGE_GLOBAL equ 1 << 8
-; KERNEL_OFFSET equ 0x0
 
 section .bootstrap
 bits 32

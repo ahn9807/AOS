@@ -1,9 +1,9 @@
 # AOS
 osdev project for studying purposes. First target is pintos and second is run gcc at my os.
 
-# Current Developing
+# Under Developing
 1. Now palloc and malloc is implemented. But, palloc have to be changed to bitmap allocator.
-2. May have to Start implementing thread
+2. Start Implement ext2 File system!!! First to do! VFS.
 
 # Basic Todo List
 ## X86_64
@@ -11,7 +11,7 @@ osdev project for studying purposes. First target is pintos and second is run gc
 - [ ] TSS
 - [ ] LDT
 ## Memory
-- [ ] Implement kmalloc
+- [x] Implement kmalloc
 - [ ] User, Kernel Pool
 - [ ] Bitmap Allocator
 - [ ] Buddy Allocator
@@ -31,8 +31,8 @@ osdev project for studying purposes. First target is pintos and second is run gc
 - [ ] Extend File Descriptor
 ## Thread
 - [ ] Implement Clock
-- [ ] Basic Scheduler
-- [ ] Basic thread implementation
+- [x] Basic Scheduler
+- [x] Basic thread implementation
 ## Sync
 - [x] Spin lock
 - [ ] Mutex
@@ -54,3 +54,4 @@ osdev project for studying purposes. First target is pintos and second is run gc
 - [ ] Journaling
 ## ETC
 - [x] Assert, Panic, Debug
+- [ ] Minish (Bash Like Shell)

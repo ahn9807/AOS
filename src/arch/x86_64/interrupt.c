@@ -126,16 +126,28 @@ void interrupt_handler(struct intr_frame *frame) {
     }
 }
 
+enum intr_level intr_get_level() {
+    return read_eflags() & FLAG_IF ? INTR_ON : INTR_OFF;
+}
+
+enum intr_level intr_set_level(enum intr_level irl) {
+    return irl == INTR_ON ? intr_enable() : intr_disable();
+}
+
 bool intr_context() {
     return in_hardware_interrupt;
 }
 
-void intr_enable() {
+enum intr_level intr_enable() {
+    enum intr_level prev_intr = intr_get_level();
     __asm__ __volatile__ ("sti\n");
+    return prev_intr;
 }
 
-void intr_disable() {
+enum intr_level intr_disable() {
+    enum intr_level prev_intr = intr_get_level();
     __asm__ __volatile__ ("cld\n");
+    return prev_intr;
 }
 
 void intr_debug(struct intr_frame *f) {
