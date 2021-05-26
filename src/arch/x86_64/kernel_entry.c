@@ -68,5 +68,10 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
 
     printf("cur thread name: %s\n", thread_current()->name);
 
-    PANIC("OS SUSPENDED!\n");
+    // Have to call explicitly. Cause without this,
+    // rip goes to the end of the bootloader and
+    // unrecover kernel panic. Also this changes the current kernel_entry
+    // Function to the idle thread.
+    // Rest of the powerup process in done by init.
+    thread_run_idle();
 }

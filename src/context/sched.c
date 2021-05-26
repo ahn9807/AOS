@@ -12,6 +12,8 @@ struct list dying_list;
 
 static spinlock_t sched_lock;
 
+static struct thread_info* idle_thread;
+
 // Initialize the scheduler
 void sched_init() {
     list_init(&read_list);
@@ -48,6 +50,10 @@ void sched_do() {
     }
 
     struct thread_info *next_thread = sched_next();
+    if(next_thread == idle_thread) {
+        sched_push(idle_thread);
+        next_thread = sched_next();
+    }
     next_thread->status = THREAD_RUNNUNG;
 
     intr_enable();
@@ -57,4 +63,8 @@ void sched_do() {
 // Periodic event on kernel timer tick
 void sched_tick() {
     sched_do();
+}
+
+void sched_set_idle(struct thread_info* idle) {
+    idle_thread = idle;
 }

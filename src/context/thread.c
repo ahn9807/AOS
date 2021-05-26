@@ -184,17 +184,13 @@ void launch_thread(struct thread_info *th) {
     );
 }
 
-static void idle_thread() {
+// convert current thread to the idle thread
+void thread_run_idle() {
+    strcpy(thread_current_s()->name, "idle");
+    sched_set_idle(thread_current());
     while(1) {
         asm volatile ( "sti\n" "hlt\n" );
     }
-}
-
-// This Function Initialize per-cpu thread
-// Each CPU must have at least one idle thread
-void thread_start() {
-    // create idle_thread and push to the scheduler
-    thread_create("idle", &idle_thread, NULL);
 }
 
 void thread_block() {

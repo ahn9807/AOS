@@ -44,4 +44,4 @@ struct thread_info* thread_current_s();
 void launch_thread(struct thread_info *th);
 
 static void initialize_thread(struct thread_info *th, const char *name);
-static void idle_thread();
+void thread_run_idle();

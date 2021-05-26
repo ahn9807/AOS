@@ -5,9 +5,9 @@
 #include "string.h"
 #include "sched.h"
 #include "debug.h"
+#include "cpu_flags.h"
 
 #define INTERRUPT_LEN 256
-#define FLAG_IF (1<<9)
 
 static struct idt_entry idt[INTERRUPT_LEN];
 static intr_handler_t intr_handlers[INTERRUPT_LEN];
@@ -146,7 +146,7 @@ enum intr_level intr_enable() {
 
 enum intr_level intr_disable() {
     enum intr_level prev_intr = intr_get_level();
-    __asm__ __volatile__ ("cld\n");
+    __asm__ __volatile__ ("cli\n");
     return prev_intr;
 }
 
