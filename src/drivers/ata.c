@@ -2,11 +2,12 @@
 #include "port.h"
 #include "vga_text.h"
 #include "interrupt.h"
+#include "debug.h"
 
-static struct ata_disk ata_disk_primary_master = {.io_base = 0x1F0, .control = 0x3F6, .is_master = true, .name = "hd0:0"};
-static struct ata_disk ata_disk_primary_slave = {.io_base = 0x1F0, .control = 0x3F6, .is_master = false, .name = "hd0:1"};
-static struct ata_disk ata_disk_secondary_master = {.io_base = 0x170, .control = 0x376, .is_master = true, .name = "hd1:0"};
-static struct ata_disk ata_disk_secondary_slave = {.io_base = 0x170, .control = 0x376, .is_master = false, .name = "hd1:1"};
+static struct ata_disk ata_disk_primary_master = {.io_base = 0x1F0, .control = 0x3F6, .irq_num = 14 + 0x20, .is_master = true, .name = "hd0:0"};
+static struct ata_disk ata_disk_primary_slave = {.io_base = 0x1F0, .control = 0x3F6, .irq_num = 14 + 0x20, .is_master = false, .name = "hd0:1"};
+static struct ata_disk ata_disk_secondary_master = {.io_base = 0x170, .control = 0x376, .irq_num = 15 + 0x20, .is_master = true, .name = "hd1:0"};
+static struct ata_disk ata_disk_secondary_slave = {.io_base = 0x170, .control = 0x376, .irq_num = 15 + 0x20, .is_master = false, .name = "hd1:1"};
 
 static void disk_init(struct ata_disk *disk);
 static void select_disk(const struct ata_disk *disk);
@@ -18,7 +19,13 @@ static void soft_reset(const struct  ata_disk *disk);
 static void intr_handler(struct intr_frame*);
 
 void ata_init() {
+    bind_interrupt_with_name(0x20 + 14, &intr_handler, "ATA HD0");
+    bind_interrupt_with_name(0x20 + 15, &intr_handler, "ATA HD1");
+
     disk_init(&ata_disk_primary_master);
+    disk_init(&ata_disk_primary_slave);
+    disk_init(&ata_disk_secondary_master);
+    disk_init(&ata_disk_secondary_slave);
 }
 
 void ata_disk_read(struct ata_disk *d, size_t offset, size_t len, void* buffer) {
@@ -31,23 +38,35 @@ void ata_disk_write(struct ata_disk *d, size_t offset, size_t len, const void *b
 
 // Initialize ATA device if it exists.
 static void disk_init(struct ata_disk *disk) {
-    // set basic of struct ata_disk
-    if(disk->io_base == 0x1F0) {
-        disk->irq_num = 14 + 0x20;
-    } else {
-        disk->irq_num = 15 + 0x20;
-    }
-
-    bind_interrupt_with_name(disk->irq_num, &intr_handler, disk->name);
-
     spin_lock(&disk->lock);
+    soft_reset(disk);
+    wait_io(disk);
 
     // detect device
     select_disk(disk);
-    outb(disk->io_base + ATA_REG_COMMAND, ATA_CMD_IDENTIFY);
     wait_io(disk);
-    int status = inb(disk->io_base + ATA_REG_COMMAND);
-    printf("[%s] status %d\n", disk->name, status);
+
+    uint8_t error = inb(disk->io_base + ATA_REG_ERROR);
+    uint8_t cl = inb(disk->io_base + ATA_REG_LBA1);
+    uint8_t ch = inb(disk->io_base + ATA_REG_LBA2);
+    uint8_t status = inb(disk->io_base + ATA_REG_STATUS);
+
+    if(cl==0xFF && ch==0xFF) {
+        return 0;
+    } else if((cl == 0x00 && ch == 0x00) || (cl == 0x3c && ch == 0xc3)) {
+        // This is ATA Device (eg. HardDisk)
+        disk->is_active = true;
+        disk->is_atapi = false;
+        printf("HardDisk detected [%s]: err %d cl 0x%x ch 0x%x status %d\n",disk->name, error, cl, ch, status);
+
+    } else if((cl == 0x14 && ch == 0xeb) || (cl == 0x69 && ch == 0x96)) {
+        // This is ATAPI Device (eg. CDROM)
+        disk->is_active = true;
+        disk->is_atapi = true;
+        printf("CDROM detected [%s]: err %d cl 0x%x ch 0x%x status %d\n",disk->name, error, cl, ch, status);
+
+    }
+
     wait_io(disk);
     wait_idle(disk);
 
@@ -102,7 +121,7 @@ static int wait_idle(const struct ata_disk *disk) {
 // ATAPI drives set values on their LBA_LOW and LBA_HIGH IO port.
 static void soft_reset(const struct ata_disk *disk) {
     outb(disk->control, ATA_CR_SRST);
-    wait_busy(disk);
+    wait_io(disk);
     // Have to clear bit manually.
     outb(disk->control, ATA_CR_NA);
 }

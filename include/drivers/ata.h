@@ -23,7 +23,7 @@
 #define ATA_ER_MCR      0x08 // Aborted command
 #define ATA_ER_ABRT     0x04 // Aborted command
 #define ATA_ER_TK0NF    0x02 // Track zero not found
-#define ATA_ER_AMNF     0x01
+#define ATA_ER_AMNF     0x01 // Address mark not found. 
 
 // ATA Command I/O Base + 7 (W)
 #define ATA_CMD_READ_PIO          0x20
@@ -105,7 +105,8 @@ struct ata_disk {
     uint16_t control;
     uint8_t irq_num;
     bool is_master;
-    bool is_ata;
+    bool is_active;
+    bool is_atapi; // 1 for atapi 0 for ata
     spinlock_t lock;
 };
 
