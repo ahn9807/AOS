@@ -53,6 +53,8 @@ osdev project for studying purposes. First target is pintos and second is run gc
 - [ ] Ext4
 - [ ] VFS
 - [ ] Journaling
+- [ ] RamDisk
 ## ETC
+- [ ] PerCPU
 - [x] Assert, Panic, Debug
 - [ ] Minish (Bash Like Shell)

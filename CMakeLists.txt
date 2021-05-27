@@ -60,5 +60,5 @@ add_custom_command(TARGET ${KERNEL_BIN} POST_BUILD
 )
 
 add_custom_target(run
-    qemu-system-x86_64 -cdrom kernel.iso -vnc localhost:1 -m 500M
+    qemu-system-x86_64 -cdrom kernel.iso -vnc localhost:1 -m 500M -drive id=disk,file=disk.img
 )

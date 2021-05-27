@@ -12,6 +12,7 @@
 #include "pmm.h"
 #include "thread.h"
 #include "sched.h"
+#include "ata.h"
 
 extern uint64_t p4_table;
 extern uint64_t temp_table;
@@ -57,9 +58,7 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
     bind_interrupt_with_name(0x20, &timer_interrupt, "Timer");
     thread_init();
     intr_enable();
-
-    thread_create("temp th", &temp_thread, NULL);
-    thread_create("temp th2", &temp_thread2, NULL);
+    ata_init();
 
     printf("cur thread name: %s\n", thread_current()->name);
 
