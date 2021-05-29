@@ -4,6 +4,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "spin_lock.h"
+#include "list.h"
 
 // Status Register I/O Base + 7 (R)
 #define ATA_SR_BSY     0x80 // Busy
@@ -94,6 +95,15 @@
 #define ATA_CR_NIEN 0x1    // Stop sending Interrupt
 #define ATA_CR_SRST 0x04   // Software Reset
 
+// This represent type of disk
+// Currently, SATA is emulated by ATA
+enum ata_disk_type {
+    SATA,
+    SATAPI,
+    PATA,
+    PATAPI,
+};
+
 // This represent actual ata disk we used
 // Primary channel is io_base 0x1F0, control 0x3F6
 // Secondary channel is io_base 0x170, control 0x376
@@ -104,10 +114,12 @@ struct ata_disk {
     uint16_t io_base;
     uint16_t control;
     uint8_t irq_num;
+    bool is_intr_enabled;
     bool is_master;
     bool is_active;
-    bool is_atapi; // 1 for atapi 0 for ata
+    enum ata_disk_type type; // 1 for atapi 0 for ata
     spinlock_t lock;
+    struct list_elem elem;
 };
 
 // Forward defined (Have to changed next)
