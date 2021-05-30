@@ -104,6 +104,27 @@ enum ata_disk_type {
     PATAPI,
 };
 
+// COMMEND_IDENTIFY struct
+struct ata_identity {
+    uint16_t flags;
+	uint16_t unused1[9];
+	char     serial[20];
+	uint16_t unused2[3];
+	char     firmware[8];
+	char     model[40];
+	uint16_t sectors_per_int;
+	uint16_t unused3;
+	uint16_t capabilities[2];
+	uint16_t unused4[2];
+	uint16_t valid_ext_data;
+	uint16_t unused5[5];
+	uint16_t size_of_rw_mult;
+	uint32_t sectors_28;
+	uint16_t unused6[38];
+	uint64_t sectors_48;
+	uint16_t unused7[152];
+} __attribute__((packed));
+
 // This represent actual ata disk we used
 // Primary channel is io_base 0x1F0, control 0x3F6
 // Secondary channel is io_base 0x170, control 0x376
@@ -112,15 +133,18 @@ enum ata_disk_type {
 struct ata_disk {
     char name[8];
     uint16_t io_base;
-    uint16_t control;
+    uint16_t control_base;
     uint8_t irq_num;
     bool is_intr_enabled;
     bool is_master;
     bool is_active;
     enum ata_disk_type type; // 1 for atapi 0 for ata
+    struct ata_identity info;
     spinlock_t lock;
     struct list_elem elem;
 };
+
+
 
 // Forward defined (Have to changed next)
 typedef struct vfs_node {
