@@ -29,8 +29,10 @@ osdev project for studying purposes. First target is pintos and second is run gc
 - [ ] Process Termination Messages
 - [ ] Safty
 - [ ] Extend File Descriptor
+- [ ] IPI
 ## Thread
 - [ ] Implement Clock
+- [ ] Implement RTC
 - [x] Basic Scheduler
 - [x] Basic thread implementation
 ## Sync
@@ -40,13 +42,19 @@ osdev project for studying purposes. First target is pintos and second is run gc
 ## Driver
 - [ ] Serial
 - [ ] Graphic Driver
+- [ ] Soudn Driver
 - [ ] APIC
+- [x] ATA
+- [ ] ATAPI, SATA, SATAPI
+- [ ] USB
+- [ ] NVME
+- [ ] PCI
 ## Library
 - [ ] Small LibC
 - [ ] kernel stdlib
 - [x] List, Queue
 - [ ] Bitmap
-- [ ] Hash
+- [x] Hash
 - [ ] Btree+
 ## Filesystem
 - [ ] Ext2
