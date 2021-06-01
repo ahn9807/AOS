@@ -14,3 +14,6 @@ char *strncpy(char *dst, const char *src, size_t n);
 int strcmp(const char *s1, const char *s2);
 
 char *strcpy_s(char *dst, const char *src, size_t dstSize);
+
+char *strtok(char str[], const char *delims);
+char *strdup(const char *s);

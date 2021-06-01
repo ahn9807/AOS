@@ -48,6 +48,16 @@ void ata_init()
     disk_init(&ata_disk_secondary_master);
     disk_init(&ata_disk_secondary_slave);
 
+    char buffer[1024];
+    ata_disk_read(&ata_disk_primary_master, 1024, 1024, buffer);
+
+    cls();
+    printf("SUPER BLOCK\n");
+    for(int i=0;i<1024;i++) {
+        printf("%c", buffer[i]);
+    }
+    printf("\n");
+
     debug_device();
 }
 

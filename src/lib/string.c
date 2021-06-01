@@ -1,5 +1,6 @@
 #include "string.h"
 #include "vga_text.h"
+#include "kmalloc.h"
 #include <stdint.h>
 
 void *memcpy(void *dst, const void *src, size_t n)
@@ -137,4 +138,12 @@ char *strcpy_s(char *dst, const char *src, size_t dstSize)
     }
 
     return dst;
+}
+
+char *strdup(const char *s)
+{
+    int len = strlen(s);
+    char *ret = kmalloc((len + 1) * sizeof(char));
+    (void) memcpy(ret, s, len + 1);
+    return ret;
 }

@@ -13,6 +13,7 @@
 #include "thread.h"
 #include "sched.h"
 #include "ata.h"
+#include "vfs.h"
 
 extern uint64_t p4_table;
 extern uint64_t temp_table;
@@ -59,8 +60,6 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
     thread_init();
     intr_enable();
     ata_init();
-
-    printf("cur thread name: %s\n", thread_current()->name);
 
     // Have to call explicitly. Cause without this,
     // rip goes to the end of the bootloader and
