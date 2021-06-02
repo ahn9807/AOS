@@ -66,6 +66,7 @@ struct path {
 
 void get_path(struct path *_path, struct inode *root, const char *path);
 int search_path(const struct path *path, const char *s);
+char **tokenize(const char *path);
 
 struct inode_operations;
 struct inode {
@@ -172,7 +173,8 @@ struct vfs_fs {
 /* VFS meta Functions */
 void vfs_init();
 void vfs_mount(const char* path, struct inode* local_root);
-struct path *get_mount_point(char **file_path);
+struct path *vfs_mountpoint(char **file_path);
+int vfs_bind(const char *path, struct inode *target);
 
 /* VFS Functions */
 struct inode *vfs_open(const char *name, uint32_t flags);

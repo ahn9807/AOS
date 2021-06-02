@@ -57,10 +57,11 @@ add_custom_command(TARGET ${KERNEL_BIN} POST_BUILD
     COMMAND cp ${GRUB_CFG} ${CMAKE_BINARY_DIR}/build/isofiles/boot/grub
     COMMAND grub-mkrescue -o kernel.iso ${CMAKE_BINARY_DIR}/build/isofiles
     COMMAND rm -r ${CMAKE_BINARY_DIR}/build/
+    COMMAND cp ${CMAKE_BINARY_DIR}/../trace_stack ./
 )
 
 add_custom_target(run
-    qemu-system-x86_64 -cdrom kernel.iso -vnc localhost:1 -m 500M -drive id=disk,format=raw,file=disk.img
+    qemu-system-x86_64 -cdrom kernel.iso -curses -m 500M -drive id=disk,format=raw,file=disk.img
 )
 
 add_custom_target(count_line
@@ -69,4 +70,8 @@ add_custom_target(count_line
 
 add_custom_target(build_image
     qemu-img create -f raw  -o size=500M disk.img
+)
+
+add_custom_target(trace
+    addr2line -pCfiae ${KERNEL_BIN} ${MAKE}
 )

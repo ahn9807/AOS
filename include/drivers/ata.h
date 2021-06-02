@@ -144,13 +144,6 @@ struct ata_disk {
     struct list_elem elem;
 };
 
-
-
-// Forward defined (Have to changed next)
-typedef struct vfs_node {
-    struct disk *disk;
-} vfs_node_t;
-
 void ata_init();
 void ata_disk_read(struct ata_disk *d, size_t offset, size_t len, void* buffer);
 void ata_disk_write(struct ata_disk *d, size_t offset, size_t len, const void *buffer);

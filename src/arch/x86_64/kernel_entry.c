@@ -60,6 +60,12 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
     thread_init();
     intr_enable();
     ata_init();
+    struct inode in;
+    in.refcount = 123123;
+    printf("%x\n", &in);
+    vfs_bind("/a/b/c/", &in);
+    printf("%d\n", vfs_mountpoint(tokenize("a/b/c/"))->root->refcount);
+
 
     // Have to call explicitly. Cause without this,
     // rip goes to the end of the bootloader and

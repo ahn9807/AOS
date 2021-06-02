@@ -22,7 +22,7 @@ struct {
 } __attribute__ ((packed)) idtr;
 
 static enum irq_handler_result temp_int_handler(struct intr_frame *frame) {
-    intr_debug(frame);
+    // intr_debug(frame);
     PANIC("NON void INTERRUPT");
     return OK;
 }

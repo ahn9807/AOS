@@ -143,7 +143,7 @@ char *strcpy_s(char *dst, const char *src, size_t dstSize)
 char *strdup(const char *s)
 {
     int len = strlen(s);
-    char *ret = kmalloc((len + 1) * sizeof(char));
+    char *ret = kcalloc((len + 1) * sizeof(char), 1);
     (void) memcpy(ret, s, len + 1);
     return ret;
 }

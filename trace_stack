@@ -1,0 +1,1 @@
+addr2line -pCfaie x86_64-kernel.bin $@
