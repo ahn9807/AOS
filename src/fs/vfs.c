@@ -17,27 +17,13 @@ struct vfs_node {
     .inode = NULL,
 };
 
-static struct inode *vfs_root = NULL;
+struct inode *vfs_root = NULL;
 
 void vfs_init() {
 
 }
 
-void vfs_mount(const char *path, struct inode* local_root) {
-    if(!strcmp(path, PATH_SEPARATOR_STRING) == 0) {
-        vfs_root = local_root;
-        return 0;
-    } else {
-        vfs_bind(path, local_root);
-    }
-}
-
-struct inode *vfs_open(const char *name, uint32_t flags) {
-    char *file_name = strdup(name);
-};
-
 struct path *vfs_mountpoint(char **file_path) {
-    cls();
     if(strlen(*file_path) > 1 && (*file_path)[strlen(*file_path) -1] == PATH_SEPARATOR)
         *(file_path)[strlen(*file_path) -1] = '\0';
 
@@ -99,7 +85,7 @@ int vfs_bind(const char *path, struct inode *target)
         return 0;
     }
 
-    char **tokens = tokenize(path);
+    char **tokens = path_tokenize(path);
 
     struct vfs_node *cur_node = &vfs_graph;
 

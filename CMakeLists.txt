@@ -37,9 +37,12 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/include/memory
     ${CMAKE_CURRENT_SOURCE_DIR}/include/lib
     ${CMAKE_CURRENT_SOURCE_DIR}/include/drivers
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/drivers/block_device
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/drivers/char_device
     ${CMAKE_CURRENT_SOURCE_DIR}/include/sync
     ${CMAKE_CURRENT_SOURCE_DIR}/include/context
     ${CMAKE_CURRENT_SOURCE_DIR}/include/fs
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/fs/ext2
 )
 
 add_executable(
@@ -61,7 +64,7 @@ add_custom_command(TARGET ${KERNEL_BIN} POST_BUILD
 )
 
 add_custom_target(run
-    qemu-system-x86_64 -cdrom kernel.iso -curses -m 500M -drive id=disk,format=raw,file=disk.img
+    qemu-system-x86_64 -cdrom kernel.iso -curses -m 4G -drive id=disk,format=raw,file=disk.img
 )
 
 add_custom_target(count_line

@@ -5,15 +5,14 @@
 #include "interrupt.h"
 #include "pic8259.h"
 #include "port.h"
-#include "keyboard.h"
 #include "intrinsic.h"
 #include "spin_lock.h"
 #include "kmalloc.h"
 #include "pmm.h"
 #include "thread.h"
 #include "sched.h"
-#include "ata.h"
 #include "vfs.h"
+#include "string.h"
 
 extern uint64_t p4_table;
 extern uint64_t temp_table;
@@ -46,6 +45,20 @@ void temp_thread2() {
     }
 }
 
+size_t readdir(struct inode* inode, struct dentry** dentries_ret) {
+    struct dentry *d1 = kmalloc(sizeof(struct dentry));
+    struct dentry *d2 = kmalloc(sizeof(struct dentry));
+    struct dentry *d3 = kmalloc(sizeof(struct dentry));
+    d1->name = "a";
+    d2->name = "b";
+    d3->name = "c";
+    dentries_ret = kmalloc(sizeof(struct dentry*) * 3);
+    dentries_ret[0] = d1;
+    dentries_ret[1] = d2;
+    dentries_ret[2] = d2;
+    return 3;
+}
+
 int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
 {
     uint64_t kernel_start, kernel_end, multiboot_start, multiboot_end;
@@ -55,17 +68,31 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
     debug_multiboot2(multiboot_addr);
     memory_init(kernel_start, kernel_end, multiboot_start, multiboot_end, multiboot_addr);
     pic_init();
-    keyboard_init();
     bind_interrupt_with_name(0x20, &timer_interrupt, "Timer");
     thread_init();
     intr_enable();
-    ata_init();
+    vfs_init();
+    dev_init();
     struct inode in;
     in.refcount = 123123;
-    printf("%x\n", &in);
     vfs_bind("/a/b/c/", &in);
-    printf("%d\n", vfs_mountpoint(tokenize("a/b/c/"))->root->refcount);
-
+    printf("pa: %s\n", path_absolute("/a/b/c", "../../../../../a/b/c/.."));
+    struct inode *out = kmalloc(sizeof(struct inode));
+    int index = 0;
+    // while(1) {
+    //     strdup("ASD");
+    //     printf(".");
+    // }
+    printf("iop size: %d", sizeof(struct inode_operations));
+    in.i_op = kmalloc(sizeof(struct inode_operations));
+    in.i_op->readdir = &readdir;
+    out->i_op = kmalloc(sizeof(struct inode_operations));
+    out->i_op->readdir = &readdir;
+    vfs_root->i_op = kmalloc(sizeof(struct inode_operations));
+    vfs_root->i_op->readdir = &readdir;
+    // vfs_root->i_op->readdir(out, NULL);
+    vfs_lookup("/a/b/c", out);
+    printf("oi: %d\n", out->refcount);
 
     // Have to call explicitly. Cause without this,
     // rip goes to the end of the bootloader and

@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include "device.h"
 #include "spin_lock.h"
 #include "list.h"
 
@@ -145,5 +146,5 @@ struct ata_disk {
 };
 
 void ata_init();
-void ata_disk_read(struct ata_disk *d, size_t offset, size_t len, void* buffer);
-void ata_disk_write(struct ata_disk *d, size_t offset, size_t len, const void *buffer);
+static void ata_disk_read(struct ata_disk *d, size_t offset, size_t len, void* buffer);
+static void ata_disk_write(struct ata_disk *d, size_t offset, size_t len, const void *buffer);

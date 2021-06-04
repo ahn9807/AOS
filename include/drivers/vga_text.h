@@ -28,7 +28,6 @@ enum vga_color {
 
 static inline uint8_t vga_entry_color(enum vga_color fg, enum vga_color bg);
 static inline uint16_t vga_entry(unsigned char uc, uint8_t color);
-static void itoa(char *buf, int64_t base, int64_t d);
 
 static const size_t VGA_WIDTH = 80;
 static const size_t VGA_HEIGHT = 25;

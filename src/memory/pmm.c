@@ -104,6 +104,9 @@ static void choose_next_area()
 		 (multiboot_uint8_t *)mmap < (multiboot_uint8_t *)pmm_frame_list.memory_pool + pmm_frame_list.memory_pool->size;
 		 mmap = (multiboot_memory_map_t *)((unsigned long)mmap + ((struct multiboot_tag_mmap *)pmm_frame_list.memory_pool)->entry_size))
 	{
+		if(mmap->addr < 0xffff) {
+			continue;
+		}
 		uint64_t address = PA_TO_FRAME(mmap->addr + mmap->len - 1);
 		if (address >= pmm_frame_list.next_free_frame && min_address > mmap->addr && mmap->type == 0x1)
 		{

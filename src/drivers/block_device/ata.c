@@ -6,6 +6,7 @@
 #include "list.h"
 #include "kmalloc.h"
 #include "string.h"
+#include "device.h"
 
 // #define ASSERT_NO_ERR 0
 
@@ -51,7 +52,6 @@ void ata_init()
     char buffer[1024];
     ata_disk_read(&ata_disk_primary_master, 1024, 1024, buffer);
 
-    cls();
     printf("SUPER BLOCK\n");
     for(int i=0;i<1024;i++) {
         printf("%c", buffer[i]);

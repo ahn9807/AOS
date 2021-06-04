@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "list.h"
+#include "spin_lock.h"
 
 #define PATH_SEPARATOR '/'
 #define PATH_SEPARATOR_STRING "/"
@@ -64,12 +65,14 @@ struct path {
     char **tokens;
 };
 
-void get_path(struct path *_path, struct inode *root, const char *path);
-int search_path(const struct path *path, const char *s);
-char **tokenize(const char *path);
+int path_search(const char *path, const char *s);
+char **path_tokenize(const char *path);
+char *path_absolute(char *cwd, char *path);
+int path_length(char **path);
 
 struct inode_operations;
-struct inode {
+struct file_operations;
+typedef struct inode {
     void *device;
     uint32_t mask;
     uint32_t uid;
@@ -85,14 +88,17 @@ struct inode {
     uint32_t nlink;
     int refcount;
 
+    spinlock_t lock;
+
     struct inode_operations *i_op;
-};
+    struct file_operations *i_fop;
+} inode_t;
 
 struct inode_operations {
     // called by open(2) and create(2) system call.
     int (*create)(struct inode *inode, char *name, uint16_t permission);
-    // loopup an inode in a parent directory;
-    struct dentry* (*lookup)(struct inode*, struct dentry*);
+    // loopup an inode in a parent directory; return size fo dentries (number of directory)
+    size_t (*readdir)(struct inode*, struct dentry**);
     // link(2) system call. Hard link
     int (*link)(struct inode *);
     // symlink(2) system call.
@@ -117,8 +123,8 @@ struct inode_operations {
 
 struct dentry_operations;
 struct dentry {
-    inode_number_t ino;
-    char name[256];
+    struct inode *inode;
+    char* name;
 
     struct dentry_operations *d_op;
 };
@@ -132,13 +138,13 @@ struct file {
     char name[256];
     struct inode* inode;
     uint64_t offset;
-
+    spinlock_t lock;
     struct file_operations *f_op;
 };
 
 struct file_operations {
     // called by the VFS when an inode should be opened. When the VFS opens a file, it creates a new “struct file”
-    int (*open)(struct file *file);
+    int (*open)(struct inode *inode, struct file *file);
     // called when the VFS needs to move the file position index
     uint64_t (*lseek)(struct file *file, size_t offset, int whence);
     // called by read(2) and related system calls
@@ -158,17 +164,25 @@ struct file_operations {
 };
 
 // Represent file system
+struct fs_operations;
 struct vfs_fs {
     char name[256];
-    int (*init)();
-    int (*mount)(const char *dir, int flags, void *data);
 
-    struct file_operations f_op;
-    struct dentry_operations d_op;
-    struct inode_operations i_op;
+    struct fs_operations *fs_op;
+
+    struct file_operations *f_op;
+    struct inode_operations *i_op;
 
     struct list_elem elem;
 };
+
+struct fs_operations {
+    int (*init)();
+    int (*mount)(const char *dir, int flags, void *data);
+};
+
+extern struct inode *vfs_root;
+extern struct list fs_list;
 
 /* VFS meta Functions */
 void vfs_init();
@@ -177,9 +191,10 @@ struct path *vfs_mountpoint(char **file_path);
 int vfs_bind(const char *path, struct inode *target);
 
 /* VFS Functions */
-struct inode *vfs_open(const char *name, uint32_t flags);
-uint64_t vfs_read(struct inode *inode, size_t offset, size_t len, void *buffer);
-uint64_t vfs_write(struct inode *inode, size_t offset, size_t len, void *buffer);
+int vfs_open(struct inode *inode, struct file *file);
+size_t vfs_read(struct file *file, size_t offset, size_t len, void *buffer);
+size_t vfs_write(struct inode *inode, size_t offset, size_t len, void *buffer);
+int vfs_lookup(char* path_abs, struct inode* inode);
 
 // uint32_t vfs_write(struct inode *node, uint32_t offset, uint32_t size, char *buffer);
 // void vfs_open(struct vfs_node *node, uint32_t flags);

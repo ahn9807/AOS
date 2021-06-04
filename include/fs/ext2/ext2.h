@@ -2,6 +2,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include "vfs.h"
 
 /* File metadata */
 #define EXT2_MAGIC 0xEF53
@@ -208,3 +209,9 @@ typedef struct ext2_disk_cache_entry
 	uint8_t dirty;
 	uint8_t *block;
 } ext2_disk_cache_entry_t;
+
+typedef struct ext2_fs {
+	ext2_superblock_t *superblock;
+	ext2_group_desc_t *group_desc;
+	struct inode *mountpoint;
+} ext2_fs_t;
