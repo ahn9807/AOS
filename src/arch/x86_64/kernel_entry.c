@@ -13,6 +13,8 @@
 #include "sched.h"
 #include "vfs.h"
 #include "string.h"
+#include "device.h"
+#include "ata.h"
 
 extern uint64_t p4_table;
 extern uint64_t temp_table;
@@ -83,7 +85,7 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
     //     strdup("ASD");
     //     printf(".");
     // }
-    printf("iop size: %d", sizeof(struct inode_operations));
+    printf("iop size: %d\n", sizeof(struct inode_operations));
     in.i_op = kmalloc(sizeof(struct inode_operations));
     in.i_op->readdir = &readdir;
     out->i_op = kmalloc(sizeof(struct inode_operations));
@@ -91,9 +93,20 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
     vfs_root->i_op = kmalloc(sizeof(struct inode_operations));
     vfs_root->i_op->readdir = &readdir;
     // vfs_root->i_op->readdir(out, NULL);
-    vfs_lookup("/a/b/c", out);
-    printf("oi: %d\n", out->refcount);
+    device_t *reg_dev = vfs_mountpoint(path_tokenize("/dev/disk0"))->root->device;
+    printf("device %s\n", reg_dev == NULL ? "null" : reg_dev->name);
+    printf("device aux name %d\n", ((struct ata_disk *)reg_dev->aux)->is_active);
 
+    char buffer[1024];
+    for(int i=0;i<1024;i++) {
+        buffer[i] = 'a';
+    }
+    dev_read(reg_dev, 1024, 1024, buffer);
+    printf("SUPER BLOCK\n");
+    for(int i=0;i<1024;i++) {
+        printf("%c", buffer[i]);
+    }
+    printf("\n");
     // Have to call explicitly. Cause without this,
     // rip goes to the end of the bootloader and
     // unrecover kernel panic. Also this changes the current kernel_entry

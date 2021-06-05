@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include "list.h"
 #include "spin_lock.h"
+#include "device.h"
 
 #define PATH_SEPARATOR '/'
 #define PATH_SEPARATOR_STRING "/"
@@ -73,7 +74,7 @@ int path_length(char **path);
 struct inode_operations;
 struct file_operations;
 typedef struct inode {
-    void *device;
+    device_t *device;
     uint32_t mask;
     uint32_t uid;
     uint32_t gid;

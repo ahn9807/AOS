@@ -33,6 +33,8 @@ static uint64_t max_offset(struct ata_disk *disk);
 // static void read_one_sector_48(struct ata_disk *disk, uint32_t lba28, void *buffer); // To do...
 // static void write_one_sector_48(struct ata_disk *disk, uint32_t lba28, void *buffer); / To do...
 static void debug_device();
+static size_t get_block_size(device_t *dev);
+static device_t *install_ata_disk(char *name, struct ata_disk *aux);
 
 static struct list active_ata_devices;
 
@@ -48,17 +50,24 @@ void ata_init()
     disk_init(&ata_disk_primary_slave);
     disk_init(&ata_disk_secondary_master);
     disk_init(&ata_disk_secondary_slave);
+}
 
-    char buffer[1024];
-    ata_disk_read(&ata_disk_primary_master, 1024, 1024, buffer);
+static device_t *install_ata_disk(char *name, struct ata_disk *aux) {
+    // Set device default informations
+    device_t *ata_device = kmalloc(sizeof(device_t));
+    ata_device->device_type = DEVICE_BLOCK;
+    ata_device->name = NULL; // Divice name is decied automatically
+    ata_device->aux = aux;
 
-    printf("SUPER BLOCK\n");
-    for(int i=0;i<1024;i++) {
-        printf("%c", buffer[i]);
-    }
-    printf("\n");
+    // Set device operations
+    struct device_operations *dev_ops = kmalloc(sizeof(struct device_operations));
+    dev_ops->block_size = &get_block_size;
+    // dev_ops->init = &ata_init;
+    dev_ops->read = &ata_disk_read;
+    dev_ops->write = &ata_disk_write;
+    ata_device->dev_op = dev_ops;
 
-    debug_device();
+    return ata_device;
 }
 
 // Get MAX Offset of disk
@@ -69,91 +78,23 @@ uint64_t max_offset(struct ata_disk* disk) {
 /* Reads SIZE bytes from INODE into BUFFER, starting at position OFFSET.
  * Returns the number of bytes actually read, which may be less
  * than SIZE if an error occurs or end of file is reached. */
-void ata_disk_read(struct ata_disk *disk, size_t offset, size_t len, void *buffer)
+void ata_disk_read(void *aux, size_t offset, size_t len, void *buffer)
 {
-    uint32_t start_block = offset / 512;
-    uint32_t end_block = (offset + len - 1) / 512;
-
-    uint64_t x_offset = 0;
-
-    uint8_t *buffer_8 = (uint8_t*)buffer;
-
-    char tmp[512];
-
-    if(offset > max_offset(disk)) {
-        return 0;
-    } else if(offset + len > max_offset(disk)) {
-        len = max_offset(disk) - offset;
-    }
-
-    if(offset % 512) {
-        uint32_t prefix_size = (512 - (offset % 512));
-        read_one_sector_28(disk, 0, tmp);
-		memcpy(buffer_8, (void *)((uintptr_t)tmp + ((uintptr_t)offset % 512)), prefix_size);
-
-		x_offset += prefix_size;
-		start_block++;
-    }
-    if((offset + len) % 512 && start_block < end_block) {
-        uint32_t postfix_size = (offset + len) % 512;
-        read_one_sector_28(disk, end_block, tmp);
-		memcpy((void *)((uintptr_t)buffer_8 + len - postfix_size), tmp, postfix_size);
-
-		end_block--;
-    }
-
-    while(start_block <= end_block) {
-        read_one_sector_28(disk, start_block, (void*)((uintptr_t)buffer_8 + x_offset));
-        x_offset += 512;
-        start_block++;
-    }
-
-    return len;
+    struct ata_disk *disk = (struct ata_disk *)aux;
+    return read_one_sector_28(disk, offset, buffer);
 }
 
 /* Writes SIZE bytes from INODE into BUFFER, starting at position OFFSET.
  * Returns the number of bytes actually write, which may be less
  * than SIZE if an error occurs or end of file is reached. */
-void ata_disk_write(struct ata_disk *disk, size_t offset, size_t len, const void *buffer)
+void ata_disk_write(void *aux, size_t offset, size_t len, const void *buffer)
 {
-    uint32_t start_block = offset / 512;
-    uint32_t end_block = (offset + len - 1) / 512;
+    struct ata_disk *disk = (struct ata_disk *)aux;
+    return write_one_sector_28(disk, offset, buffer);
+}
 
-    uint32_t x_offset = 0;
-
-    char tmp[512];
-
-    if(offset > max_offset(disk)) {
-        return 0;
-    } else if(offset + len > max_offset(disk)) {
-        len = max_offset(disk) - offset;
-    }
-
-    if(offset % 512) {
-        uint32_t prefix_size = (512 - (offset % 512));
-        read_one_sector_28(disk, start_block, tmp);
-		memcpy(buffer, (void *)((uintptr_t)tmp + ((uintptr_t)offset % 512)), prefix_size);
-        write_one_sector_28(disk, start_block, tmp);
-
-		x_offset += prefix_size;
-		start_block++;
-    }
-    if((offset + len) % 512 && start_block < end_block) {
-        uint32_t postfix_size = (offset + len) % 512;
-        read_one_sector_28(disk, end_block, tmp);
-		memcpy((void *)((uintptr_t)buffer + len - postfix_size), tmp, postfix_size);
-        write_one_sector_28(disk, end_block, tmp);
-
-		end_block--;
-    }
-
-    while(start_block <= end_block) {
-        write_one_sector_28(disk, start_block, (void*)((uintptr_t)buffer + x_offset));
-        x_offset += 512;
-        start_block++;
-    }
-
-    return len;
+static size_t get_block_size(device_t *dev) {
+    return 512;
 }
 
 static void read_one_sector_28(struct ata_disk *disk, uint32_t lba28, void *buffer)
@@ -251,6 +192,7 @@ static void disk_init(struct ata_disk *disk)
         ata_intr_disable(disk);
         identify_disk(disk);
         list_push_back(&active_ata_devices, &disk->elem);
+        dev_install(install_ata_disk(NULL, disk), NULL);
     }
     else if (cl == 0x3c && ch == 0xc3)
     {

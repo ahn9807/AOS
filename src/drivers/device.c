@@ -5,6 +5,7 @@
 #include "vfs.h"
 #include "kmalloc.h"
 #include "string.h"
+#include "hash.h"
 
 static int current_bdev_index = 0;
 static int current_cdev_index = 0;
@@ -13,7 +14,10 @@ static dev_bwrite(device_t *dev, size_t offset, size_t len, void *buffer);
 static dev_bread(device_t *dev, size_t offset, size_t len, void *buffer);
 static inode_t* get_inode();
 
+static struct list device_list;
+
 void dev_init() {
+    list_init(&device_list);
     ata_init();
     keyboard_init();
 }
@@ -55,7 +59,16 @@ void dev_install(device_t *dev, char* path) {
         PANIC("DEVICE TYPE ERROR %d", dev->device_type);
     }
 
+    dev->name = new_path;
+    root_node->device = dev;
+
+    new_path = kmalloc(strlen(new_path) + strlen(DEVICE_ROOT) + 1);
+    strcpy(new_path, DEVICE_ROOT);
+    strcat(new_path, dev->name);
+
+    list_push_back(&device_list, &dev->elem);
     vfs_bind(new_path, root_node);
+
     kfree(new_path);
 }
 
@@ -63,7 +76,9 @@ void dev_uninstall(device_t *dev) {
     PANIC("NOT IMPLEMENTED");
 }
 
-
+/* Reads SIZE bytes from INODE into BUFFER, starting at position OFFSET.
+ * Returns the number of bytes actually read, which may be less
+ * than SIZE if an error occurs or end of file is reached. */
 size_t dev_read(device_t *dev, size_t offset, size_t size, void *buf) {
     ASSERT(dev != NULL);
     ASSERT(buf != NULL);
@@ -71,7 +86,7 @@ size_t dev_read(device_t *dev, size_t offset, size_t size, void *buf) {
         ASSERT(dev->dev_op->read != NULL);
         return dev_bread(dev, offset, size, buf);
     } else if(dev->device_type == DEVICE_CHARACTER) {
-        return dev->dev_op->read(dev, offset, size, buf);
+        return dev->dev_op->read(dev->aux, offset, size, buf);
     } else {
         PANIC("DEVICE TYPE ERROR %d", dev->device_type);
     }
@@ -79,6 +94,9 @@ size_t dev_read(device_t *dev, size_t offset, size_t size, void *buf) {
     return 0;
 }
 
+/* Writes SIZE bytes from INODE into BUFFER, starting at position OFFSET.
+ * Returns the number of bytes actually write, which may be less
+ * than SIZE if an error occurs or end of file is reached. */
 size_t dev_write(device_t *dev, size_t offset, size_t size, void *buf) {
     ASSERT(dev != NULL);
     ASSERT(buf != NULL);
@@ -86,7 +104,7 @@ size_t dev_write(device_t *dev, size_t offset, size_t size, void *buf) {
         ASSERT(dev->dev_op->write != NULL);
         return dev_bwrite(dev, offset, size, buf);
     } else if(dev->device_type == DEVICE_CHARACTER) {
-        return dev->dev_op->write(dev, offset, size, buf);
+        return dev->dev_op->write(dev->aux, offset, size, buf);
     } else {
         PANIC("DEVICE TYPE ERROR %d", dev->device_type);
     }
@@ -102,7 +120,7 @@ static inode_t* get_inode() {
 }
 
 static dev_bread(device_t *dev, size_t offset, size_t len, void *buffer) {
-    uint32_t block_size = dev->dev_op->block_size(dev);
+    uint32_t block_size = dev->dev_op->block_size(dev->aux);
     uint32_t start_block = offset / block_size;
     uint32_t end_block = (offset + len - 1) / block_size;
 
@@ -114,7 +132,7 @@ static dev_bread(device_t *dev, size_t offset, size_t len, void *buffer) {
 
     if(offset % block_size) {
         uint32_t prefix_size = (block_size - (offset % block_size));
-        dev->dev_op->read(dev, 0, block_size, tmp);
+        dev->dev_op->read(dev->aux, 0, block_size, tmp);
 		memcpy(buffer_8, (void *)((uintptr_t)tmp + ((uintptr_t)offset % block_size)), prefix_size);
 
 		x_offset += prefix_size;
@@ -122,14 +140,14 @@ static dev_bread(device_t *dev, size_t offset, size_t len, void *buffer) {
     }
     if((offset + len) % block_size && start_block < end_block) {
         uint32_t postfix_size = (offset + len) % block_size;
-        dev->dev_op->read(dev, end_block, block_size, tmp);
+        dev->dev_op->read(dev->aux, end_block, block_size, tmp);
 		memcpy((void *)((uintptr_t)buffer_8 + len - postfix_size), tmp, postfix_size);
 
 		end_block--;
     }
 
     while(start_block <= end_block) {
-        dev->dev_op->read(dev, start_block, block_size, (void*)((uintptr_t)buffer_8 + x_offset));
+        dev->dev_op->read(dev->aux, start_block, block_size, (void*)((uintptr_t)buffer_8 + x_offset));
         x_offset += block_size;
         start_block++;
     }
@@ -138,7 +156,7 @@ static dev_bread(device_t *dev, size_t offset, size_t len, void *buffer) {
 }
 
 static dev_bwrite(device_t *dev, size_t offset, size_t len, void *buffer) {
-    uint32_t block_size = dev->dev_op->block_size(dev);
+    uint32_t block_size = dev->dev_op->block_size(dev->aux);
     uint32_t start_block = offset / block_size;
     uint32_t end_block = (offset + len - 1) / block_size;
 
@@ -150,7 +168,7 @@ static dev_bwrite(device_t *dev, size_t offset, size_t len, void *buffer) {
 
     if(offset % block_size) {
         uint32_t prefix_size = (block_size - (offset % block_size));
-        dev->dev_op->write(dev, 0, block_size, tmp);
+        dev->dev_op->write(dev->aux, 0, block_size, tmp);
 		memcpy(buffer_8, (void *)((uintptr_t)tmp + ((uintptr_t)offset % block_size)), prefix_size);
 
 		x_offset += prefix_size;
@@ -158,14 +176,14 @@ static dev_bwrite(device_t *dev, size_t offset, size_t len, void *buffer) {
     }
     if((offset + len) % block_size && start_block < end_block) {
         uint32_t postfix_size = (offset + len) % block_size;
-        dev->dev_op->write(dev, end_block, block_size, tmp);
+        dev->dev_op->write(dev->aux, end_block, block_size, tmp);
 		memcpy((void *)((uintptr_t)buffer_8 + len - postfix_size), tmp, postfix_size);
 
 		end_block--;
     }
 
     while(start_block <= end_block) {
-        dev->dev_op->write(dev, start_block, block_size, (void*)((uintptr_t)buffer_8 + x_offset));
+        dev->dev_op->write(dev->aux, start_block, block_size, (void*)((uintptr_t)buffer_8 + x_offset));
         x_offset += block_size;
         start_block++;
     }
