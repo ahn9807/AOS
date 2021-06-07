@@ -14,7 +14,9 @@
 #include "vfs.h"
 #include "string.h"
 #include "device.h"
+#include "ext2.h"
 #include "ata.h"
+#include "bitmap.h"
 
 extern uint64_t p4_table;
 extern uint64_t temp_table;
@@ -93,20 +95,24 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
     vfs_root->i_op = kmalloc(sizeof(struct inode_operations));
     vfs_root->i_op->readdir = &readdir;
     // vfs_root->i_op->readdir(out, NULL);
-    device_t *reg_dev = vfs_mountpoint(path_tokenize("/dev/disk0"))->root->device;
+    char *dev_path = "/dev/disk0/foo/bar";
+    device_t *reg_dev = vfs_mountpoint(path_tokenize(dev_path))->root->device;
     printf("device %s\n", reg_dev == NULL ? "null" : reg_dev->name);
-    printf("device aux name %d\n", ((struct ata_disk *)reg_dev->aux)->is_active);
+    printf("super: %s\n", dev_path);
 
     char buffer[1024];
     for(int i=0;i<1024;i++) {
         buffer[i] = 'a';
     }
     dev_read(reg_dev, 1024, 1024, buffer);
-    printf("SUPER BLOCK\n");
-    for(int i=0;i<1024;i++) {
-        printf("%c", buffer[i]);
-    }
-    printf("\n");
+    printf("[SUPER BLOCK]\nMAGIC %x\nINODES %d\nBLOCKS %d\n",
+        ((ext2_superblock_t *)buffer)->magic,
+        ((ext2_superblock_t *)buffer)->inodes_count,
+        ((ext2_superblock_t *)buffer)->blocks_count
+    );
+    struct bitmap *bm = bitmap_create(128);
+    bitmap_set(bm, 64, true);
+    bitmap_dump(bm);
     // Have to call explicitly. Cause without this,
     // rip goes to the end of the bootloader and
     // unrecover kernel panic. Also this changes the current kernel_entry

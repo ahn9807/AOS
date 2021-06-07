@@ -186,8 +186,8 @@ typedef struct ext2_inode
 	uint32_t flags; /* File flags */
 	uint32_t osd1; /* OS dependent 1 */
 	uint32_t block[15]; /* Pointers to blocks */
-	uint32_t generation; /* File version */
-	uint32_t file_acl; /* File ACL */
+	uint32_t generation; /* File version (used by NFS) */
+	uint32_t file_acl; /* File ACL (acess control lists) */
 	uint32_t dir_acl; /* Directory ACL */
 	uint32_t faddr; /* Fragment address */
 	uint8_t osd2[12]; /* OS dependent 2 */
@@ -212,6 +212,9 @@ typedef struct ext2_disk_cache_entry
 
 typedef struct ext2_fs {
 	ext2_superblock_t *superblock;
-	ext2_group_desc_t *group_desc;
+	ext2_group_desc_t *group_descs;
+	uint32_t desc_size;
 	struct inode *mountpoint;
 } ext2_fs_t;
+
+typedef size_t inode_number_t;

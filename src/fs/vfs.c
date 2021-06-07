@@ -12,7 +12,7 @@ struct vfs_node {
     struct vfs_node *next;
 
     struct inode *inode;
-} vfs_graph = {
+} vfs_tree = {
     .name  = PATH_SEPARATOR_STRING,
     .inode = NULL,
 };
@@ -33,7 +33,7 @@ struct path *vfs_mountpoint(char **file_path) {
     struct path* path = kmalloc(sizeof(struct path));
     path->tokens = file_path;
 
-    struct vfs_node *cur_node = &vfs_graph;
+    struct vfs_node *cur_node = &vfs_tree;
     struct vfs_node *last_target_node = cur_node;
 
     size_t token_index = 0;
@@ -87,7 +87,7 @@ int vfs_bind(const char *path, struct inode *target)
 
     char **tokens = path_tokenize(path);
 
-    struct vfs_node *cur_node = &vfs_graph;
+    struct vfs_node *cur_node = &vfs_tree;
 
     for (char **token_p = tokens; *token_p; ++token_p) {
         char *token = *token_p;

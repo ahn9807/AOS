@@ -102,7 +102,6 @@ static void read_one_sector_28(struct ata_disk *disk, uint32_t lba28, void *buff
     ASSERT(disk->is_active == true);
     ASSERT(disk->type == PATA);
 
-    printf("lba28: %d, buffer: 0x%x\n", lba28, buffer);
     spin_lock(&disk->lock);
     wait_idle(disk);
 
