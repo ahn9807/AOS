@@ -53,7 +53,7 @@ osdev project for studying purposes. First target is pintos and second is run gc
 - [ ] Small LibC
 - [ ] kernel stdlib
 - [x] List, Queue
-- [ ] Bitmap
+- [x] Bitmap
 - [x] Hash
 - [ ] Btree+
 ## Filesystem
