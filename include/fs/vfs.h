@@ -61,11 +61,6 @@
 
 typedef uint64_t inode_number_t;
 
-struct path {
-    struct inode *root;
-    char **tokens;
-};
-
 int path_search(const char *path, const char *s);
 char **path_tokenize(const char *path);
 char *path_absolute(char *cwd, char *path);
@@ -165,21 +160,27 @@ struct file_operations {
 };
 
 // Represent file system
-struct fs_operations;
+struct fs_operations {
+    int (*init)();
+    int (*mount)(device_t *device, inode_t *super_node, void *aux);
+};
+
 struct vfs_fs {
     char name[256];
 
     struct fs_operations *fs_op;
-
-    struct file_operations *f_op;
-    struct inode_operations *i_op;
-
     struct list_elem elem;
 };
 
-struct fs_operations {
-    int (*init)();
-    int (*mount)(const char *dir, int flags, void *data);
+struct vfs_node {
+    char *name;
+    struct vfs_node *children;
+    struct vfs_node *next;
+
+    struct vfs_fs *fs;
+    struct inode *inode;
+    //file system private data
+    void *aux;
 };
 
 extern struct inode *vfs_root;
@@ -188,8 +189,10 @@ extern struct list fs_list;
 /* VFS meta Functions */
 void vfs_init();
 void vfs_mount(const char* path, struct inode* local_root);
-struct path *vfs_mountpoint(char **file_path);
+struct vfs_node *vfs_mountpoint(char *path);
 int vfs_bind(const char *path, struct inode *target);
+int vfs_install(struct vfs_fs *fs);
+struct vfs_fs *vfs_find(char *name);
 
 /* VFS Functions */
 int vfs_open(struct inode *inode, struct file *file);

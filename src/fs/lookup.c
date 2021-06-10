@@ -6,7 +6,7 @@
 int vfs_lookup(char* path_abs, struct inode* inode) {
     ASSERT(path_abs != NULL);
     PANIC("NOT IMPLEMENTED!");
-    struct inode *root_node = vfs_mountpoint(path_tokenize(path_abs))->root;
+    struct inode *root_node = vfs_mountpoint(path_tokenize(path_abs));
 
     char** paths = path_tokenize(path_abs);
     int current_path_index = 0;

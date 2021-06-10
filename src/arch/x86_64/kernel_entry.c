@@ -1,3 +1,4 @@
+#include <time.h>
 #include "debug.h"
 #include "vga_text.h"
 #include "multiboot2.h"
@@ -17,6 +18,7 @@
 #include "ext2.h"
 #include "ata.h"
 #include "bitmap.h"
+#include "ext2.h"
 
 extern uint64_t p4_table;
 extern uint64_t temp_table;
@@ -77,39 +79,20 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
     intr_enable();
     vfs_init();
     dev_init();
-    struct inode in;
-    in.refcount = 123123;
-    vfs_bind("/a/b/c/", &in);
-    printf("pa: %s\n", path_absolute("/a/b/c", "../../../../../a/b/c/.."));
-    struct inode *out = kmalloc(sizeof(struct inode));
-    int index = 0;
-    // while(1) {
-    //     strdup("ASD");
-    //     printf(".");
-    // }
-    printf("iop size: %d\n", sizeof(struct inode_operations));
-    in.i_op = kmalloc(sizeof(struct inode_operations));
-    in.i_op->readdir = &readdir;
-    out->i_op = kmalloc(sizeof(struct inode_operations));
-    out->i_op->readdir = &readdir;
-    vfs_root->i_op = kmalloc(sizeof(struct inode_operations));
-    vfs_root->i_op->readdir = &readdir;
-    // vfs_root->i_op->readdir(out, NULL);
+    ext2_init();
     char *dev_path = "/dev/disk0/foo/bar";
-    device_t *reg_dev = vfs_mountpoint(path_tokenize(dev_path))->root->device;
+    inode_t *root_node = kmalloc(sizeof(inode_t));
+    device_t *reg_dev = vfs_mountpoint(dev_path)->inode->device;
+    vfs_mount(dev_path, root_node);
     printf("device %s\n", reg_dev == NULL ? "null" : reg_dev->name);
     printf("super: %s\n", dev_path);
-
-    char buffer[1024];
-    for(int i=0;i<1024;i++) {
-        buffer[i] = 'a';
-    }
-    dev_read(reg_dev, 1024, 1024, buffer);
-    printf("[SUPER BLOCK]\nMAGIC %x\nINODES %d\nBLOCKS %d\n",
-        ((ext2_superblock_t *)buffer)->magic,
-        ((ext2_superblock_t *)buffer)->inodes_count,
-        ((ext2_superblock_t *)buffer)->blocks_count
+    printf("[ROOT INODE]\ninode num %x\natime %d\nmtime %d\nsize %d\n",
+        root_node->inode_num,
+        root_node->atime,
+        root_node->mtime,
+        root_node->size
     );
+    kfree(root_node);
     struct bitmap *bm = bitmap_create(128);
     bitmap_set(bm, 64, true);
     bitmap_dump(bm);

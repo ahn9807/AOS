@@ -213,8 +213,11 @@ typedef struct ext2_disk_cache_entry
 typedef struct ext2_fs {
 	ext2_superblock_t *superblock;
 	ext2_group_desc_t *group_descs;
-	uint32_t desc_size;
+	uint32_t desc_len;
+	uint32_t block_size; // (1024 << desc->log_block_size)
 	struct inode *mountpoint;
 } ext2_fs_t;
 
 typedef size_t inode_number_t;
+
+int ext2_init();
