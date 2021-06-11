@@ -86,11 +86,11 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
     vfs_mount(dev_path, root_node);
     printf("device %s\n", reg_dev == NULL ? "null" : reg_dev->name);
     printf("super: %s\n", dev_path);
-    printf("[ROOT INODE]\ninode num %x\natime %d\nmtime %d\nsize %d\n",
+    printf("[ROOT INODE]\ninode num %x\natime %d\nmtime %d\nmode %x\n",
         root_node->inode_num,
         root_node->atime,
         root_node->mtime,
-        root_node->size
+        root_node->mode
     );
     kfree(root_node);
     struct bitmap *bm = bitmap_create(128);
@@ -103,3 +103,5 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
     // Rest of the powerup process in done by init.
     thread_run_idle();
 }
+
+// 0x41ed

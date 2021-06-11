@@ -69,14 +69,15 @@ int path_length(char **path);
 struct inode_operations;
 struct file_operations;
 typedef struct inode {
-    device_t *device;
-    uint32_t mask;
+    device_t *device; /* Real device for this inode */
+    void *file_system; /* Real filesystem for this inode */
+    uint32_t mode; /* Access Permission */
     uint32_t uid;
     uint32_t gid;
-    uint32_t flags;
+    uint32_t flags; /* Inode type (char, directory, file ...) */
     uint32_t inode_num;
-    uint32_t size;
-    uint32_t fs_type;
+    uint32_t size; /* Size in bytes */
+    uint32_t fs_type; /* file system types */
     uint32_t ctime;
     uint32_t atime;
     uint32_t mtime;
@@ -90,6 +91,8 @@ typedef struct inode {
     struct file_operations *i_fop;
 } inode_t;
 
+// File system operations which mainly uses inode_t
+// read_inode or write_inode should be implemented in each file systems
 struct inode_operations {
     // called by open(2) and create(2) system call.
     int (*create)(struct inode *inode, char *name, uint16_t permission);
@@ -118,12 +121,12 @@ struct inode_operations {
 };
 
 struct dentry_operations;
-struct dentry {
+typedef struct dentry {
     struct inode *inode;
     char* name;
 
     struct dentry_operations *d_op;
-};
+} dentry_t;
 
 struct dentry_operations {
 

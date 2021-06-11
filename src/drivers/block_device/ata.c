@@ -81,7 +81,7 @@ uint64_t max_offset(struct ata_disk* disk) {
 void ata_disk_read(void *aux, size_t offset, size_t len, void *buffer)
 {
     struct ata_disk *disk = (struct ata_disk *)aux;
-    return read_one_sector_28(disk, offset, buffer);
+    return read_one_sector_28(disk, offset / 512, buffer);
 }
 
 /* Writes SIZE bytes from INODE into BUFFER, starting at position OFFSET.
@@ -90,7 +90,7 @@ void ata_disk_read(void *aux, size_t offset, size_t len, void *buffer)
 void ata_disk_write(void *aux, size_t offset, size_t len, const void *buffer)
 {
     struct ata_disk *disk = (struct ata_disk *)aux;
-    return write_one_sector_28(disk, offset, buffer);
+    return write_one_sector_28(disk, offset / 512, buffer);
 }
 
 static size_t get_block_size(device_t *dev) {

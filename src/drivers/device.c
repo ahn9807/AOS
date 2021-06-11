@@ -132,7 +132,7 @@ static dev_bread(device_t *dev, size_t offset, size_t len, void *buffer) {
 
     if(offset % block_size) {
         uint32_t prefix_size = (block_size - (offset % block_size));
-        dev->dev_op->read(dev->aux, 0, block_size, tmp);
+        dev->dev_op->read(dev->aux, start_block * block_size, block_size, tmp);
 		memcpy(buffer_8, (void *)((uintptr_t)tmp + ((uintptr_t)offset % block_size)), prefix_size);
 
 		x_offset += prefix_size;
@@ -140,14 +140,14 @@ static dev_bread(device_t *dev, size_t offset, size_t len, void *buffer) {
     }
     if((offset + len) % block_size && start_block < end_block) {
         uint32_t postfix_size = (offset + len) % block_size;
-        dev->dev_op->read(dev->aux, end_block, block_size, tmp);
+        dev->dev_op->read(dev->aux, end_block & block_size, block_size, tmp);
 		memcpy((void *)((uintptr_t)buffer_8 + len - postfix_size), tmp, postfix_size);
 
 		end_block--;
     }
 
     while(start_block <= end_block) {
-        dev->dev_op->read(dev->aux, start_block, block_size, (void*)((uintptr_t)buffer_8 + x_offset));
+        dev->dev_op->read(dev->aux, start_block * block_size, block_size, (void*)((uintptr_t)buffer_8 + x_offset));
         x_offset += block_size;
         start_block++;
     }
@@ -168,7 +168,7 @@ static dev_bwrite(device_t *dev, size_t offset, size_t len, void *buffer) {
 
     if(offset % block_size) {
         uint32_t prefix_size = (block_size - (offset % block_size));
-        dev->dev_op->write(dev->aux, 0, block_size, tmp);
+        dev->dev_op->write(dev->aux, start_block * block_size, block_size, tmp);
 		memcpy(buffer_8, (void *)((uintptr_t)tmp + ((uintptr_t)offset % block_size)), prefix_size);
 
 		x_offset += prefix_size;
@@ -176,14 +176,14 @@ static dev_bwrite(device_t *dev, size_t offset, size_t len, void *buffer) {
     }
     if((offset + len) % block_size && start_block < end_block) {
         uint32_t postfix_size = (offset + len) % block_size;
-        dev->dev_op->write(dev->aux, end_block, block_size, tmp);
+        dev->dev_op->write(dev->aux, end_block * block_size, block_size, tmp);
 		memcpy((void *)((uintptr_t)buffer_8 + len - postfix_size), tmp, postfix_size);
 
 		end_block--;
     }
 
     while(start_block <= end_block) {
-        dev->dev_op->write(dev->aux, start_block, block_size, (void*)((uintptr_t)buffer_8 + x_offset));
+        dev->dev_op->write(dev->aux, start_block * block_size, block_size, (void*)((uintptr_t)buffer_8 + x_offset));
         x_offset += block_size;
         start_block++;
     }
