@@ -85,17 +85,10 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
     device_t *reg_dev = vfs_mountpoint(dev_path)->inode->device;
     vfs_mount(dev_path, root_node);
     printf("device %s\n", reg_dev == NULL ? "null" : reg_dev->name);
-    printf("super: %s\n", dev_path);
-    printf("[ROOT INODE]\ninode num %x\natime %d\nmtime %d\nmode %x\n",
-        root_node->inode_num,
-        root_node->atime,
-        root_node->mtime,
-        root_node->mode
-    );
+    struct dentry dir;
+    temp_ls(root_node);
     kfree(root_node);
-    struct bitmap *bm = bitmap_create(128);
-    bitmap_set(bm, 64, true);
-    bitmap_dump(bm);
+
     // Have to call explicitly. Cause without this,
     // rip goes to the end of the bootloader and
     // unrecover kernel panic. Also this changes the current kernel_entry
@@ -104,4 +97,11 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
     thread_run_idle();
 }
 
-// 0x41ed
+int temp_ls(inode_t *dir_node) {
+    struct dentry dir;
+    int cur_offset = 0;
+    while(vfs_readdir(dir_node, cur_offset, &dir) > 0) {
+        printf("%s ", dir.name);
+        cur_offset++;
+    }
+}

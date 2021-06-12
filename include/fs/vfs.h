@@ -71,10 +71,10 @@ struct file_operations;
 typedef struct inode {
     device_t *device; /* Real device for this inode */
     void *file_system; /* Real filesystem for this inode */
-    uint32_t mode; /* Access Permission */
+    uint32_t permission; /* Access Permission */
     uint32_t uid;
     uint32_t gid;
-    uint32_t flags; /* Inode type (char, directory, file ...) */
+    uint32_t type; /* Inode type (char, directory, file ...) */
     uint32_t inode_num;
     uint32_t size; /* Size in bytes */
     uint32_t fs_type; /* file system types */
@@ -97,7 +97,7 @@ struct inode_operations {
     // called by open(2) and create(2) system call.
     int (*create)(struct inode *inode, char *name, uint16_t permission);
     // loopup an inode in a parent directory; return size fo dentries (number of directory)
-    size_t (*readdir)(struct inode*, struct dentry**);
+    size_t (*readdir)(struct inode*, size_t offset, struct dentry*);
     // link(2) system call. Hard link
     int (*link)(struct inode *);
     // symlink(2) system call.
@@ -122,7 +122,7 @@ struct inode_operations {
 
 struct dentry_operations;
 typedef struct dentry {
-    struct inode *inode;
+    inode_number_t inode_nr;
     char* name;
 
     struct dentry_operations *d_op;
@@ -201,7 +201,7 @@ struct vfs_fs *vfs_find(char *name);
 int vfs_open(struct inode *inode, struct file *file);
 size_t vfs_read(struct file *file, size_t offset, size_t len, void *buffer);
 size_t vfs_write(struct inode *inode, size_t offset, size_t len, void *buffer);
-int vfs_lookup(char* path_abs, struct inode* inode);
+int vfs_readdir(struct inode* p_dir, size_t offset, struct dentry *dir);
 
 // uint32_t vfs_write(struct inode *node, uint32_t offset, uint32_t size, char *buffer);
 // void vfs_open(struct vfs_node *node, uint32_t flags);

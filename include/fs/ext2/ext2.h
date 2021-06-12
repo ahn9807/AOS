@@ -70,6 +70,10 @@
 #define EXT2_BOOT_LOADER_INO	 5	/* Boot loader inode */
 #define EXT2_UNDEL_DIR_INO	 6	/* Undelete directory inode */
 
+#define SINGLE_INDIRECT_POINTER(inode) (inode->block[EXT2_DIRECT_BLOCKS + 1])
+#define DOUBLE_INDIRECT_POINTER(inode) (inode->block[EXT2_DIRECT_BLOCKS + 2])
+#define TRIPLE_INDIRECT_POINTER(inode) (inode->block[EXT2_DIRECT_BLOCKS + 3])
+
 
 /* Super block struct. */
 typedef struct ext2_superblock
@@ -173,7 +177,7 @@ typedef struct ext2_group_desc
 /* Inode on the disk */
 typedef struct ext2_inode
 {
-	uint16_t mode; /* File mode */
+	uint16_t mode; /* File mode (Type and Permissions) */
 	uint16_t uid; /* Low 16bits of Owner Uid */
 	uint32_t size;  /*file length in byte. */
 	uint32_t atime; /* Access time */
@@ -193,14 +197,14 @@ typedef struct ext2_inode
 	uint8_t osd2[12]; /* OS dependent 2 */
 } __attribute__((packed)) ext2_inode_t;
 
-typedef struct ext2_dir_entry
+typedef struct ext2_dentry
 {
-	uint32_t inode; /* inode number */
+	uint32_t inode_nr; /* inode number */
 	uint16_t rec_len; /* Directory entry length */
 	uint8_t name_len; /* Name length */
 	uint8_t file_type; /* Type of file */
 	char name[]; /* Actually a set of characters, at most 255 bytes */
-} __attribute__((packed)) ext2_dir_entry_t;
+} __attribute__((packed)) ext2_dentry_t;
 
 typedef struct ext2_disk_cache_entry
 {

@@ -31,7 +31,7 @@ void dev_install(device_t *dev, char* path) {
 
     if(dev->device_type == DEVICE_BLOCK) {
         root_node = get_inode();
-        root_node->flags = FS_BLOCKDEVICE;
+        root_node->permission = FS_BLOCKDEVICE;
         itoa(num, 'd', current_bdev_index++);
         if(path == NULL) {
             new_path = kmalloc(sizeof(DEVICE_BLOCK_DEAFULT_NAME) + sizeof(num) + 1);
@@ -44,7 +44,7 @@ void dev_install(device_t *dev, char* path) {
         }
     } else if(dev->device_type == DEVICE_CHARACTER) {
         root_node = get_inode();
-        root_node->flags = FS_CHARDEVICE;
+        root_node->permission = FS_CHARDEVICE;
         itoa(num, 'd', current_cdev_index++);
         if(path == NULL) {
             new_path = kmalloc(sizeof(DEVICE_CHAR_DEFAULT_NAME) + sizeof(num) + 1);
