@@ -74,7 +74,3 @@ add_custom_target(count_line
 add_custom_target(build_image
     qemu-img create -f raw  -o size=500M disk.img
 )
-
-add_custom_target(trace
-    addr2line -pCfiae ${KERNEL_BIN} ${MAKE}
-)

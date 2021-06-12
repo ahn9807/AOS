@@ -7,7 +7,7 @@
 #include "string.h"
 
 static int mount(device_t *device, struct inode *ret, void *aux);
-static int build_vfs_inode(ext2_fs_t *ext2, inode_number_t ino, inode_t *ret);
+static int build_vfs_inode(ext2_fs_t *ext2, inode_number_t inode_nr, ext2_inode_t *ext2_inode, inode_t *inode);
 static inline size_t inode_offset(ext2_fs_t *ext2, inode_number_t ino);
 static size_t read_inode(ext2_fs_t *ext2, inode_number_t ino, ext2_inode_t *ext2_inode_ref);
 static size_t write_inode(ext2_fs_t *ext2, inode_number_t ino, inode_t *ext2_inode_ref);
@@ -16,6 +16,7 @@ static uint32_t block_offset(ext2_fs_t *ext2, ext2_inode_t *inode, uint32_t bloc
 static size_t read_data(ext2_fs_t *ext2, ext2_inode_t *inode, size_t idx, void *buf);
 static size_t write_data(ext2_fs_t *ext2, ext2_inode_t *inode, size_t idx, void *buf);
 static int ext2_readdir(inode_t *inode, size_t offset, dentry_t *dir);
+static size_t ext2_read(file_t *file, void *buf, size_t len, size_t offset);
 
 
 struct fs_operations vfs_ext2_fs_operations = {
@@ -23,7 +24,7 @@ struct fs_operations vfs_ext2_fs_operations = {
 };
 
 struct file_operations vfs_ext2_file_operations = {
-
+    .read = &ext2_read,
 };
 
 struct dentry_operations vfs_ext2_dentry_operations = {
@@ -39,26 +40,73 @@ struct vfs_fs vfs_ext2 = {
     .fs_op = &vfs_ext2_fs_operations,
 };
 
+// Initialize ext2 filesystem
 int ext2_init() {
     vfs_install(&vfs_ext2);
 }
 
+// Mount ext2 filesystem.
+// This return valid super_node for accessing entire disk.
 static int ext2_mount(device_t *device, inode_t *super_node, void *aux) {
     mount(device, super_node, aux);
 }
 
-static size_t ext2_read(inode_t *inode, size_t offset, size_t len, void *buf) {
+// Read data from file
+// File must contain valid inode
+static size_t ext2_read(file_t *file, void *buf, size_t len, size_t offset) {
+    inode_t *inode = file->inode;
+    ext2_inode_t *ext2_inode = kmalloc(sizeof(ext2_inode_t));
+    ext2_fs_t *ext2 = (ext2_fs_t *)inode->file_system;
+    char* data_buf = kcalloc(1, ext2->block_size);
 
+    ASSERT(ext2 != NULL);
+
+    read_inode(ext2, inode->inode_nr, ext2_inode);
+
+    ASSERT(ext2_inode != NULL);
+
+    if(offset > ext2_inode->size) {
+        return 0;
+    }
+
+    len = len > ext2_inode->size - offset ? ext2_inode->size - offset : len;
+
+    uint32_t start_block_idx = offset / ext2->block_size;
+    uint32_t end_block_idx = (offset + len) / ext2->block_size;
+    uint32_t start_block_offset = offset % ext2->block_size;
+    uint32_t end_block_offset = (offset + len) % ext2->block_size;
+    uint32_t cur_buf_offset = 0;
+
+    for(int idx = start_block_idx; idx <= end_block_idx; idx++) {
+        uint32_t left = 0;
+        uint32_t right = ext2->block_size - 1;
+        read_data(ext2, ext2_inode, idx, data_buf);
+        if(idx == start_block_idx) {
+            left = start_block_offset;
+        } else if(idx == end_block_idx) {
+            right = end_block_offset - 1;
+        }
+        memcpy((char *)buf + cur_buf_offset, data_buf + left, (right - left + 1));
+        cur_buf_offset += (right - left + 1);
+    }
+
+    kfree(ext2_inode);
+    kfree(data_buf);
+
+    return len;
 }
 
 static size_t ext2_write(inode_t *inode, size_t offset, size_t len, void *buf) {
 
 }
 
+// Read offset'th directory or file from this ext2
+// return dentry objects contains name and inode for accessing file
+// Have to change dentry to file to utilze the return struct dentry.
 static int ext2_readdir(inode_t *inode, size_t offset, dentry_t *dir) {
     ext2_inode_t *ext2_inode = kmalloc(sizeof(ext2_inode_t));
     ext2_fs_t *ext2 = (ext2_fs_t *)inode->file_system;
-    read_inode(inode->file_system, inode->inode_num, ext2_inode);
+    read_inode(inode->file_system, inode->inode_nr, ext2_inode);
 
     if(dir == NULL || inode == NULL || ext2_inode == NULL) {
         return -FS_INVALID;
@@ -75,13 +123,17 @@ static int ext2_readdir(inode_t *inode, size_t offset, dentry_t *dir) {
         ext2_dentry_t *ext2_dentry = buf;
         while((char *)ext2_dentry < (char *)buf + ext2->block_size) {
             if(offset == cur_offset) {
-                dir->inode_nr = ext2_dentry->inode_nr;
                 dir->name = kmalloc(ext2_dentry->name_len);
                 dir->d_op = &vfs_ext2_dentry_operations;
+                dir->inode = kmalloc(sizeof(inode_t));
+                ext2_inode_t *child_ext2_inode = kmalloc(sizeof(ext2_inode_t));
+                read_inode(ext2, ext2_dentry->inode_nr, child_ext2_inode);
+                build_vfs_inode(ext2, ext2_dentry->inode_nr, child_ext2_inode, dir->inode);
                 memcpy(dir->name, (char *)ext2_dentry->name, ext2_dentry->name_len);
                 dir->name[ext2_dentry->name_len] = '\0';
                 kfree(ext2_inode);
                 kfree(buf);
+                kfree(child_ext2_inode);
                 return 1;
             }
             ext2_dentry = (ext2_dentry_t *)((char *)ext2_dentry + ext2_dentry->rec_len);
@@ -102,6 +154,8 @@ static size_t ext2_truncate(inode_t *inode, size_t len) {
 
 }
 
+// Mount ext2 to file system
+// Return super_node for accessing entire file from device
 static int mount(device_t *device, struct inode *super_node, void *aux) {
     ext2_superblock_t *sb = kmalloc(sizeof(ext2_superblock_t));
     ext2_fs_t *fs = kmalloc(sizeof(ext2_fs_t));
@@ -125,32 +179,35 @@ static int mount(device_t *device, struct inode *super_node, void *aux) {
     // Read group descs
     dev_read(device, fs->block_size == 1024 ? 2048 : fs->block_size, fs->desc_len * sizeof(ext2_group_desc_t), fs->group_descs);
 
-    build_vfs_inode(fs, 2, super_node);
+    ext2_inode_t *ext2_inode = kmalloc(sizeof(ext2_inode_t));
+    read_inode(fs, 2, ext2_inode);
+
+    build_vfs_inode(fs, 2, ext2_inode, super_node);
+    kfree(ext2_inode);
 }
 
-static int build_vfs_inode(ext2_fs_t *ext2, inode_number_t ino, inode_t *inode) {
+// Build vfs_inode from ext2_inode
+static int build_vfs_inode(ext2_fs_t *ext2, inode_number_t inode_nr, ext2_inode_t *ext2_inode, inode_t *inode) {
     // read inode from disk / cache
-    ext2_inode_t *inode_buf = kcalloc(1, sizeof(ext2_inode_t));
     inode->device = ext2->mountpoint->device;
     inode->file_system = (void*)ext2;
-    read_inode(ext2, ino, inode_buf);
 
-    inode->inode_num = ino;
-    inode->size = inode_buf->size;
-    inode->type = inode_buf->mode & 0xFF00;
-    inode->permission = inode_buf->mode & 0x00FF;
-    inode->uid = inode_buf->uid;
-    inode->gid = inode_buf->gid;
-    inode->nlink = inode_buf->links_count;
+    inode->inode_nr = inode_nr;
+    inode->size = ext2_inode->size;
+    inode->type = ext2_inode->mode & 0xFFF000;
+    inode->permission = ext2_inode->mode & 0x000FFF;
+    inode->uid = ext2_inode->uid;
+    inode->gid = ext2_inode->gid;
+    inode->nlink = ext2_inode->links_count;
 
-    inode->atime = inode_buf->atime;
-    inode->ctime = inode_buf->ctime;
-    inode->mtime = inode_buf->mtime;
+    inode->atime = ext2_inode->atime;
+    inode->ctime = ext2_inode->ctime;
+    inode->mtime = ext2_inode->mtime;
 
     inode->i_op = &vfs_ext2_inode_operations;
     inode->i_fop = &vfs_ext2_file_operations;
 
-    kfree(inode_buf);
+    kfree(ext2_inode);
 
     return 0;
 }
@@ -175,7 +232,7 @@ static inline size_t inode_offset(ext2_fs_t *ext2, inode_number_t ino) {
 
 // Read ext2_inode from disk with desc and ino
 static size_t read_inode(ext2_fs_t *ext2, inode_number_t ino, ext2_inode_t *ext2_inode_ref) {
-    int offset = inode_offset(ext2, 2);
+    int offset = inode_offset(ext2, ino);
 
     if (offset < 0)
         return offset;

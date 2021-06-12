@@ -19,6 +19,7 @@
 #include "ata.h"
 #include "bitmap.h"
 #include "ext2.h"
+#include "stat.h"
 
 extern uint64_t p4_table;
 extern uint64_t temp_table;
@@ -71,7 +72,6 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
     vga_init();
     interrupt_init();
     multiboot_init(magic, multiboot_addr, &kernel_start, &kernel_end, &multiboot_start, &multiboot_end) != 0 ? panic("check multiboot2 magic!\n") : 0;
-    debug_multiboot2(multiboot_addr);
     memory_init(kernel_start, kernel_end, multiboot_start, multiboot_end, multiboot_addr);
     pic_init();
     bind_interrupt_with_name(0x20, &timer_interrupt, "Timer");
@@ -87,6 +87,14 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
     printf("device %s\n", reg_dev == NULL ? "null" : reg_dev->name);
     struct dentry dir;
     temp_ls(root_node);
+    vfs_readdir(root_node, 5, &dir);
+    file_t file = {
+        .f_op = root_node->i_fop,
+        .inode = dir.inode,
+        .name = dir.name,
+    };
+    temp_ls(dir.inode);
+    temp_cat(&file);
     kfree(root_node);
 
     // Have to call explicitly. Cause without this,
@@ -97,11 +105,26 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
     thread_run_idle();
 }
 
-int temp_ls(inode_t *dir_node) {
+void temp_ls(inode_t *dir_node) {
     struct dentry dir;
     int cur_offset = 0;
     while(vfs_readdir(dir_node, cur_offset, &dir) > 0) {
         printf("%s ", dir.name);
         cur_offset++;
     }
+    printf("\n");
+}
+
+void temp_cat(file_t *file) {
+    printf("cat %s\n", file->name);
+    char* buf = kmalloc(4096);
+
+    file->f_op->read(file, buf, 0, 0);
+
+    for(int i=0;i<512;i++) {
+        printf("%c", buf[i]);
+    }
+    printf("\n");
+
+    kfree(buf);
 }

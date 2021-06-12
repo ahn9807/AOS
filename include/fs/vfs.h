@@ -59,7 +59,7 @@
 #define SEEK_CUR 1
 #define SEEK_END 2
 
-typedef uint64_t inode_number_t;
+typedef uint32_t inode_number_t;
 
 int path_search(const char *path, const char *s);
 char **path_tokenize(const char *path);
@@ -75,7 +75,7 @@ typedef struct inode {
     uint32_t uid;
     uint32_t gid;
     uint32_t type; /* Inode type (char, directory, file ...) */
-    uint32_t inode_num;
+    uint32_t inode_nr;
     uint32_t size; /* Size in bytes */
     uint32_t fs_type; /* file system types */
     uint32_t ctime;
@@ -122,7 +122,7 @@ struct inode_operations {
 
 struct dentry_operations;
 typedef struct dentry {
-    inode_number_t inode_nr;
+    inode_t *inode;
     char* name;
 
     struct dentry_operations *d_op;
@@ -133,13 +133,13 @@ struct dentry_operations {
 };
 
 struct file_operations;
-struct file {
-    char name[256];
+typedef struct file {
+    char* name;
     struct inode* inode;
     uint64_t offset;
     spinlock_t lock;
     struct file_operations *f_op;
-};
+} file_t;
 
 struct file_operations {
     // called by the VFS when an inode should be opened. When the VFS opens a file, it creates a new “struct file”
@@ -147,7 +147,7 @@ struct file_operations {
     // called when the VFS needs to move the file position index
     uint64_t (*lseek)(struct file *file, size_t offset, int whence);
     // called by read(2) and related system calls
-    uint64_t (*read)(struct file *file, void *buf, size_t size);
+    uint64_t (*read)(struct file *file, void *buf, size_t size, size_t offset);
     // called by write(2) and related system calls
     uint64_t (*write)(struct file *file, void *buf, size_t size);
     // called by the close(2) system call to flush a file
@@ -168,6 +168,9 @@ struct fs_operations {
     int (*mount)(device_t *device, inode_t *super_node, void *aux);
 };
 
+// This struct is simillar from struct superblock.
+// This represent entire filesystems.
+// Pointer to this filesystem is stored in struct inode->filesystem
 struct vfs_fs {
     char name[256];
 
@@ -199,8 +202,8 @@ struct vfs_fs *vfs_find(char *name);
 
 /* VFS Functions */
 int vfs_open(struct inode *inode, struct file *file);
-size_t vfs_read(struct file *file, size_t offset, size_t len, void *buffer);
-size_t vfs_write(struct inode *inode, size_t offset, size_t len, void *buffer);
+size_t vfs_read(struct file *file, void* buffer, size_t len, size_t offset);
+size_t vfs_write(struct file *file, void* buffer, size_t len, size_t offset);
 int vfs_readdir(struct inode* p_dir, size_t offset, struct dentry *dir);
 
 // uint32_t vfs_write(struct inode *node, uint32_t offset, uint32_t size, char *buffer);

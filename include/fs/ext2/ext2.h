@@ -222,6 +222,4 @@ typedef struct ext2_fs {
 	struct inode *mountpoint;
 } ext2_fs_t;
 
-typedef size_t inode_number_t;
-
 int ext2_init();
