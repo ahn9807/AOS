@@ -7,6 +7,7 @@ int vfs_open(struct inode *inode, struct file *file) {
     }
 
     spin_lock(&file->inode->lock);
+    file->inode = inode;
     file->inode->refcount++;
     spin_unlock(&file->inode->lock);
 }

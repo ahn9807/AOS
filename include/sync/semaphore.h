@@ -12,4 +12,3 @@ void sema_init(struct semaphore *, unsigned int value);
 void sema_down(struct semaphore *);
 bool sema_try_down(struct semaphore *);
 void sema_up(struct semaphore *);
-void sema_self_tes(void);

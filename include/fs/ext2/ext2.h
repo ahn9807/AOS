@@ -70,9 +70,9 @@
 #define EXT2_BOOT_LOADER_INO	 5	/* Boot loader inode */
 #define EXT2_UNDEL_DIR_INO	 6	/* Undelete directory inode */
 
-#define SINGLE_INDIRECT_POINTER(inode) (inode->block[EXT2_DIRECT_BLOCKS + 1])
-#define DOUBLE_INDIRECT_POINTER(inode) (inode->block[EXT2_DIRECT_BLOCKS + 2])
-#define TRIPLE_INDIRECT_POINTER(inode) (inode->block[EXT2_DIRECT_BLOCKS + 3])
+#define SINGLE_INDIRECT_POINTER(inode) (inode->block[EXT2_DIRECT_BLOCKS])
+#define DOUBLE_INDIRECT_POINTER(inode) (inode->block[EXT2_DIRECT_BLOCKS + 1])
+#define TRIPLE_INDIRECT_POINTER(inode) (inode->block[EXT2_DIRECT_BLOCKS + 2])
 
 
 /* Super block struct. */

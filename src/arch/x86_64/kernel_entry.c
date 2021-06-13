@@ -20,6 +20,7 @@
 #include "bitmap.h"
 #include "ext2.h"
 #include "stat.h"
+#include "semaphore.h"
 
 extern uint64_t p4_table;
 extern uint64_t temp_table;
@@ -88,14 +89,15 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
     struct dentry dir;
     temp_ls(root_node);
     vfs_readdir(root_node, 5, &dir);
+    temp_ls(dir.inode);
     file_t file = {
         .f_op = root_node->i_fop,
         .inode = dir.inode,
         .name = dir.name,
     };
-    temp_ls(dir.inode);
     temp_cat(&file);
     kfree(root_node);
+    sema_self_test();
 
     // Have to call explicitly. Cause without this,
     // rip goes to the end of the bootloader and
@@ -119,7 +121,7 @@ void temp_cat(file_t *file) {
     printf("cat %s\n", file->name);
     char* buf = kmalloc(4096);
 
-    file->f_op->read(file, buf, 0, 0);
+    vfs_read(file, buf, 0, 0);
 
     for(int i=0;i<512;i++) {
         printf("%c", buf[i]);
@@ -127,4 +129,36 @@ void temp_cat(file_t *file) {
     printf("\n");
 
     kfree(buf);
+}
+
+/* Thread function used by sema_self_test(). */
+static void
+sema_test_helper (void *sema_) {
+	struct semaphore *sema = sema_;
+	int i;
+
+	for (i = 0; i < 10; i++)
+	{
+		sema_down (&sema[0]);
+		sema_up (&sema[1]);
+        printf("[%s]", thread_current_s()->name);
+	}
+}
+
+void
+sema_self_test (void) {
+	struct semaphore sema[2];
+	int i;
+
+	printf ("Testing semaphores...\n");
+	sema_init (&sema[0], 0);
+	sema_init (&sema[1], 0);
+	thread_create ("sema-test", sema_test_helper, &sema);
+	for (i = 0; i < 10; i++)
+	{
+		sema_up (&sema[0]);
+		sema_down (&sema[1]);
+        printf("[%s]", thread_current_s()->name);
+	}
+	printf ("done.\n");
 }

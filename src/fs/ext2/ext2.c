@@ -256,9 +256,8 @@ static uint32_t block_offset(ext2_fs_t *ext2, ext2_inode_t *inode, uint32_t bloc
     uint32_t ret;
     int a, b, c, d, e, f, g;
     uint32_t block_nr = (inode->size + ext2->block_size + 1) / ext2->block_size;
-    if(block_nr <= block_idx) {
-        PANIC("INALID ACCESS TO DATA BLOCKS");
-    }
+
+    ASSERT(block_idx < block_nr);
 
     a = block_idx - EXT2_DIRECT_BLOCKS;
 
