@@ -33,12 +33,12 @@ osdev project for studying purposes. First target is pintos and second is run gc
 ## Thread
 - [ ] Implement Clock
 - [ ] Implement RTC
-- [x] Basic Scheduler
+- [x] Basic Scheduler (FIFO)
 - [x] Basic thread implementation
 ## Sync
 - [x] Spin lock
-- [ ] Mutex
-- [ ] Semaphore
+- [x] Mutex
+- [x] Semaphore
 ## Driver
 - [ ] Serial
 - [ ] Graphic Driver

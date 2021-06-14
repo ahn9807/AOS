@@ -4,12 +4,17 @@
 #include "interrupt.h"
 #include "thread.h"
 
+// Initialize the semaphore
+// You should not use sempahore at interrupt context
 void sema_init(struct semaphore *sema, unsigned int value) {
     ASSERT(sema != NULL);
 
     sema->value = value;
     list_init(&sema->waiters);
 }
+
+// Down semaphore
+// If value is 0, then wait until sema_up
 void sema_down(struct semaphore *sema) {
     ASSERT(sema != NULL);
     ASSERT(!intr_context());
@@ -24,6 +29,8 @@ void sema_down(struct semaphore *sema) {
     intr_set_level(prev_level);
 }
 
+// Try down semaphore.
+// If value is 0, then return false
 bool sema_try_down(struct semaphore *sema) {
     ASSERT(sema != NULL);
     ASSERT(!intr_context());
@@ -42,6 +49,8 @@ bool sema_try_down(struct semaphore *sema) {
     return success;
 }
 
+// Up semaphore.
+// This makes other lock holing thread unblocked.
 void sema_up(struct semaphore *sema) {
     ASSERT(sema != NULL);
     ASSERT(!intr_context());
