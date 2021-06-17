@@ -72,5 +72,10 @@ add_custom_target(count_line
 )
 
 add_custom_target(build_image
-    qemu-img create -f raw  -o size=500M disk.img
+    COMMAND qemu-img create -f raw  -o size=500M disk.img
+    COMMAND mkfs.ext2 disk.img
+    COMMAND echo "copy initfs to disk..."
+    COMMAND mkdir -p mnt
+    COMMAND sudo mount disk.img ./mnt
+    COMMAND sudo cp -r ./initfs/. ./mnt
 )

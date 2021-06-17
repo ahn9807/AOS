@@ -147,7 +147,7 @@ struct file_operations {
     // called when the VFS needs to move the file position index
     uint64_t (*lseek)(struct file *file, size_t offset, int whence);
     // called by read(2) and related system calls
-    uint64_t (*read)(struct file *file, void *buf, size_t size, size_t offset);
+    uint64_t (*read)(struct ionde *inode, void *buf, size_t size, size_t offset);
     // called by write(2) and related system calls
     uint64_t (*write)(struct file *file, void *buf, size_t size);
     // called by the close(2) system call to flush a file
@@ -155,11 +155,11 @@ struct file_operations {
     // called by the mmap(2) system call
     int (*mmap)(struct file *);
     // called by the ioctl(2) system call.
-    int (*ioctl)(struct inode* inode, int request, void *argp);
+    int (*ioctl)(struct file* file, int request, void *argp);
     // called by the fsync(2) system call.
     int (*fsync)(struct file *);
     // trucated the file size
-    int (*trunc)(struct file *file, size_t len);
+    int (*trunc)(struct inode *inode, size_t len);
 };
 
 // Represent file system
@@ -204,6 +204,7 @@ struct vfs_fs *vfs_find(char *name);
 int vfs_open(struct inode *inode, struct file *file);
 size_t vfs_read(struct file *file, void* buffer, size_t len, size_t offset);
 size_t vfs_write(struct file *file, void* buffer, size_t len, size_t offset);
+size_t vfs_trunc(struct file* file, size_t len);
 int vfs_readdir(struct inode* p_dir, size_t offset, struct dentry *dir);
 
 // uint32_t vfs_write(struct inode *node, uint32_t offset, uint32_t size, char *buffer);

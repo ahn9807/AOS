@@ -12,5 +12,5 @@ size_t vfs_read(struct file *file, void *buffer, size_t len, size_t offset)
 		return -FS_UNSUPPORTED;
 	}
 
-	file->f_op->read(file, buffer, len, offset);
+	file->f_op->read(file->inode, buffer, len, offset);
 }
