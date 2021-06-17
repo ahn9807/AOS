@@ -114,6 +114,18 @@ struct bitmap *bitmap_create_from_buf(size_t bit_cnt, uint8_t *buf)
     return b;
 }
 
+/* With given bit array, set bitmap */
+size_t bitmap_set_from_buf(struct bitmap *b, size_t bit_cnt, uint8_t *buf) {
+    ASSERT(b != NULL);
+    ASSERT(buf != NULL);
+
+    bit_cnt = b->bit_cnt >= bit_cnt ? bit_cnt : b->bit_cnt;
+
+    memcpy(b->bits, buf, byte_cnt(bit_cnt));
+
+    return bit_cnt;
+}
+
 /* Creates and returns a bitmap with BIT_CNT bits in the
    BLOCK_SIZE bytes of storage preallocated at BLOCK.
    BLOCK_SIZE must be at least bitmap_needed_bytes(BIT_CNT). */
@@ -136,6 +148,11 @@ size_t
 bitmap_buf_size(size_t bit_cnt)
 {
     return sizeof(struct bitmap) + byte_cnt(bit_cnt);
+}
+
+/* get bitmap buffer */
+void *bitmap_get_raw(struct bitmap *b) {
+    return b->bit_cnt;
 }
 
 /* Destroys bitmap B, freeing its storage.
@@ -217,6 +234,18 @@ void bitmap_flip(struct bitmap *b, size_t bit_idx)
         : "=m"(b->bits[idx])
         : "r"(mask)
         : "cc");
+}
+
+/* find first index of the value
+   return -1 (size_t MAX_VAL) if not found */
+size_t bitmap_find(struct bitmap *b, bool val) {
+    for(int i=0;i<b->bit_cnt;i++) {
+        if(bitmap_test(b, i) == val) {
+            return i;
+        }
+    }
+
+    return -1;
 }
 
 /* Returns the value of the bit numbered IDX in B. */

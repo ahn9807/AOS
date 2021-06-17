@@ -10,6 +10,7 @@ uintptr_t kernel_P4;
 extern uintptr_t _start_bss;
 extern uintptr_t _end_bss;
 
+/* Initializing memory */
 uintptr_t memory_init(uintptr_t kernel_start, uintptr_t kernel_end, uintptr_t multiboot_start, uintptr_t multiboot_end, uintptr_t multiboot_addr)
 {
 	kernel_P4 = (uint64_t)&p4_table;
@@ -24,7 +25,7 @@ uintptr_t memory_init(uintptr_t kernel_start, uintptr_t kernel_end, uintptr_t mu
 		{
 			uint16_t flags = PAGE_GLOBAL | PAGE_WRITE;
 
-			if(type != 0x1)
+			if (type != 0x1)
 				continue;
 			if (p >= kernel_start && p < kernel_end)
 				flags &= ~PAGE_WRITE;
@@ -50,15 +51,16 @@ uintptr_t memory_init(uintptr_t kernel_start, uintptr_t kernel_end, uintptr_t mu
  * Returns the new page directory, or a null pointer if memory
  * allocation fails. This pml4 points to the old kernel's p3 directory.
  * setup kernel part of memory */
-uintptr_t kvm_init() {
+uintptr_t kvm_init()
+{
 	uint64_t pml4 = P2V(pmm_alloc());
 	printf("pmm: 0x%x\n", pml4);
-	if(pml4)
+	if (pml4)
 		memcpy((void *)pml4, (void *)kernel_P4, PAGE_SIZE);
 	return pml4;
 }
 
-void bss_init() {
+void bss_init()
+{
 	memset(&_start_bss, 0, &_end_bss - &_start_bss);
 }
-
