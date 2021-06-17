@@ -5,6 +5,7 @@
 #include "debug.h"
 #include "stat.h"
 #include "string.h"
+#include "bitmap.h"
 
 static int mount(device_t *device, struct inode *ret, void *aux);
 static int build_vfs_inode(ext2_fs_t *ext2, inode_number_t inode_nr, ext2_inode_t *ext2_inode, inode_t *inode);
@@ -24,6 +25,7 @@ static int sync_superblock(ext2_fs_t *ext2);
 static int allocate_block(ext2_fs_t *ext2);
 static int free_block(ext2_fs_t *ext2, uint32_t block_ptr);
 static size_t ext2_truncate(inode_t *inode, size_t len);
+static int alloc_inode(ext2_fs_t *ext2);
 
 struct fs_operations vfs_ext2_fs_operations = {
     .mount = &ext2_mount,
@@ -147,8 +149,11 @@ static int ext2_readdir(inode_t *inode, size_t offset, dentry_t *dir) {
         }
     }
 
+    alloc_inode(ext2);
+
     kfree(ext2_inode);
     kfree(buf);
+
     return 0;
 }
 
@@ -381,4 +386,22 @@ static size_t read_data(ext2_fs_t *ext2, ext2_inode_t *inode, size_t idx, void *
 static size_t write_data(ext2_fs_t *ext2, ext2_inode_t *inode, size_t idx, void *buf) {
     uint32_t block_idx = block_offset(ext2, inode, idx);
     return dev_write(ext2->mountpoint->device, block_idx * ext2->block_size, ext2->block_size, buf);
+}
+
+static int alloc_inode(ext2_fs_t *ext2) {
+    uint32_t *_imap = kmalloc(sizeof(ext2_group_desc_t));
+    struct bitmap *imap;
+
+    for(int i=0;i<ext2->desc_len; i++) {
+        dev_read(ext2->mountpoint->device, ext2->group_descs[i].inode_bitmap, ext2->block_size, _imap);
+        break;
+    }
+}
+
+static int alloc_block(ext2_fs_t *ext2) {
+
+}
+
+static int write_data_with_alloc(ext2_fs_t *ext2, ext2_inode_t *inode, void *buf) {
+
 }

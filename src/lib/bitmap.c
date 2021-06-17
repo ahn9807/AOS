@@ -1,6 +1,7 @@
+#include <limits.h>
 #include "bitmap.h"
 #include "debug.h"
-#include <limits.h>
+#include "string.h"
 #include "kmalloc.h"
 #include "vga_text.h"
 
@@ -97,6 +98,20 @@ bitmap_create(size_t bit_cnt)
         kfree(b);
     }
     return NULL;
+}
+
+/* With given bit array, set bitmap */
+struct bitmap *bitmap_create_from_buf(size_t bit_cnt, uint8_t *buf)
+{
+    struct bitmap *b = bitmap_create(bit_cnt);
+
+    ASSERT(buf != NULL);
+    ASSERT(b != NULL);
+    ASSERT(b->bits != NULL);
+
+    memcpy(b->bits, buf, byte_cnt(bit_cnt));
+
+    return b;
 }
 
 /* Creates and returns a bitmap with BIT_CNT bits in the
@@ -333,13 +348,18 @@ bitmap_scan_and_flip(struct bitmap *b, size_t start, size_t cnt, bool value)
 #define BITMAP_DUMP_WIDTH 8
 void bitmap_dump(const struct bitmap *b)
 {
-    for(int i=0; i<byte_cnt(b->bit_cnt);i++) {
-        for(int j = 0;j < 8;j++) {
+    for (int i = 0; i < byte_cnt(b->bit_cnt); i++)
+    {
+        for (int j = 0; j < 8; j++)
+        {
             printf("%d", bitmap_test(b, i * 8 + j));
         }
-        if((i + 1) % BITMAP_DUMP_WIDTH == 0) {
+        if ((i + 1) % BITMAP_DUMP_WIDTH == 0)
+        {
             printf("\n");
-        } else {
+        }
+        else
+        {
             printf(" ");
         }
     }

@@ -100,6 +100,16 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
     temp_cat(&file);
     temp_ls(root_node);
 
+
+    char bbuf[8];
+    for(int i=0;i<8;i++) {
+        bbuf[i] = 0b11110000;
+    }
+    struct bitmap *map = bitmap_create_from_buf(64, bbuf);
+    bitmap_dump(map);
+
+    // bitmap_dump(map);
+
     // Have to call explicitly. Cause without this,
     // rip goes to the end of the bootloader and
     // unrecover kernel panic. Also this changes the current kernel_entry
