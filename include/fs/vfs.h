@@ -149,7 +149,7 @@ struct file_operations {
     // called by read(2) and related system calls
     uint64_t (*read)(struct ionde *inode, void *buf, size_t size, size_t offset);
     // called by write(2) and related system calls
-    uint64_t (*write)(struct file *file, void *buf, size_t size);
+    uint64_t (*write)(struct file *file, void *buf, size_t size, size_t offset);
     // called by the close(2) system call to flush a file
     int (*close)(struct file *);
     // called by the mmap(2) system call
@@ -202,8 +202,9 @@ struct vfs_fs *vfs_find(char *name);
 
 /* VFS Functions */
 int vfs_open(struct inode *inode, struct file *file);
-size_t vfs_read(struct file *file, void* buffer, size_t len, size_t offset);
-size_t vfs_write(struct file *file, void* buffer, size_t len, size_t offset);
+size_t vfs_read(struct file *file, void* buffer, size_t size);
+size_t vfs_write(struct file *file, void *buffer, size_t size);
+size_t vfs_offset(struct file *file, size_t offset);
 size_t vfs_trunc(struct file* file, size_t len);
 int vfs_readdir(struct inode* p_dir, size_t offset, struct dentry *dir);
 

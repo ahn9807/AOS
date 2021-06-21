@@ -95,8 +95,11 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
         .f_op = root_node->i_fop,
         .inode = dir.inode,
         .name = dir.name,
+        .offset = 0,
     };
-    vfs_trunc(&file, 8 * 4096);
+    vfs_offset(&file, 0);
+    vfs_write(&file, "ttttttttttttttttttt123123123123123123123123123123123123123123123123123123123123", 48);
+    vfs_offset(&file, 32);
     temp_cat(&file);
 
     // Have to call explicitly. Cause without this,
@@ -121,9 +124,12 @@ void temp_cat(file_t *file) {
     printf("cat %s\n", file->name);
     char* buf = kmalloc(4096);
 
-    vfs_read(file, buf, 0, 0);
+    vfs_read(file, buf, 4096);
 
-    for(int i=0;i<64;i++) {
+    for(int i=0;i<128;i++) {
+        if(buf[i] == -1) {
+            return;
+        }
         printf("%c", buf[i]);
     }
     printf("\n");

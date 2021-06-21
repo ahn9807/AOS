@@ -10,6 +10,7 @@
 static int ext2_mount(device_t *device, inode_t *super_node, void *aux);
 static size_t ext2_truncate(inode_t *inode, size_t len);
 static size_t ext2_read(inode_t *inode, void *buf, size_t len, size_t offset);
+static size_t ext2_write(inode_t *inode, void *buf, size_t len, size_t offset);
 static int ext2_readdir(inode_t *inode, size_t offset, dentry_t *dir);
 
 static int sync_inode(ext2_fs_t *ext2, ext2_inode_t *ext2_inode, inode_t *inode);
@@ -27,6 +28,7 @@ static int free_inode(ext2_fs_t *ext2, uint32_t inode_ptr);
 static uint32_t block_offset(ext2_fs_t *ext2, ext2_inode_t *inode, uint32_t block_idx);
 static size_t read_block(ext2_fs_t *ext2, ext2_inode_t *inode, size_t idx, void *buf);
 static size_t write_block(ext2_fs_t *ext2, ext2_inode_t *inode, size_t idx, void *buf);
+static int write_block_with_alloc(ext2_fs_t *ext2, ext2_inode_t *inode, size_t inode_nr, size_t block_idx, void *buf);
 static int alloc_block(ext2_fs_t *ext2);
 static int free_block(ext2_fs_t *ext2, uint32_t block_ptr);
 
@@ -36,6 +38,7 @@ struct fs_operations vfs_ext2_fs_operations = {
 
 struct file_operations vfs_ext2_file_operations = {
     .read = &ext2_read,
+    .write = &ext2_write,
     .trunc = &ext2_truncate,
 };
 
@@ -59,7 +62,7 @@ int ext2_init() {
 
 // Read data from file
 // File must contain valid inode
-static size_t ext2_read(inode_t *inode, void *buf, size_t len, size_t offset) {
+static size_t ext2_read(inode_t *inode, void *buf, size_t size, size_t offset) {
     ext2_inode_t *ext2_inode = kmalloc(sizeof(ext2_inode_t));
     ext2_fs_t *ext2 = inode->file_system;
     char* data_buf = kcalloc(1, ext2->block_size);
@@ -72,12 +75,12 @@ static size_t ext2_read(inode_t *inode, void *buf, size_t len, size_t offset) {
         return 0;
     }
 
-    len = len > ext2_inode->size - offset ? ext2_inode->size - offset : len;
+    size = size > ext2_inode->size - offset ? ext2_inode->size - offset : size;
 
     uint32_t start_block_idx = offset / ext2->block_size;
-    uint32_t end_block_idx = (offset + len) / ext2->block_size;
+    uint32_t end_block_idx = (offset + size) / ext2->block_size;
     uint32_t start_block_offset = offset % ext2->block_size;
-    uint32_t end_block_offset = (offset + len) % ext2->block_size;
+    uint32_t end_block_offset = (offset + size) % ext2->block_size;
     uint32_t cur_buf_offset = 0;
 
     for(int idx = start_block_idx; idx <= end_block_idx; idx++) {
@@ -86,7 +89,8 @@ static size_t ext2_read(inode_t *inode, void *buf, size_t len, size_t offset) {
         read_block(ext2, ext2_inode, idx, data_buf);
         if(idx == start_block_idx) {
             left = start_block_offset;
-        } else if(idx == end_block_idx) {
+        } 
+        if(idx == end_block_idx) {
             right = end_block_offset - 1;
         }
         memcpy((char *)buf + cur_buf_offset, data_buf + left, (right - left + 1));
@@ -96,11 +100,50 @@ static size_t ext2_read(inode_t *inode, void *buf, size_t len, size_t offset) {
     kfree(ext2_inode);
     kfree(data_buf);
 
-    return len;
+    return size;
 }
 
-static size_t ext2_write(inode_t *inode, size_t offset, size_t len, void *buf) {
+static size_t ext2_write(inode_t *inode, void *buf, size_t size, size_t offset) {
+    ext2_inode_t *ext2_inode = kmalloc(sizeof(ext2_inode_t));
+    ext2_fs_t *ext2 = inode->file_system;
+    char* data_buf = kcalloc(1, ext2->block_size);
 
+    read_inode(ext2, inode->inode_nr, ext2_inode);
+
+    ASSERT(ext2_inode != NULL);
+
+    if(offset + size > ext2_inode->size) {
+        inode->size = offset + size;
+        ext2_inode->size = offset + size;
+    }
+
+    size = size > ext2_inode->size - offset ? ext2_inode->size - offset : size;
+
+    uint32_t start_block_idx = offset / ext2->block_size;
+    uint32_t end_block_idx = (offset + size) / ext2->block_size;
+    uint32_t start_block_offset = offset % ext2->block_size;
+    uint32_t end_block_offset = (offset + size) % ext2->block_size;
+    uint32_t cur_buf_offset = 0;
+
+    for(int idx = start_block_idx; idx <= end_block_idx; idx++) {
+        uint32_t left = 0;
+        uint32_t right = ext2->block_size - 1;
+        read_block(ext2, ext2_inode, idx, data_buf);
+        if(idx == start_block_idx) {
+            left = start_block_offset;
+        } 
+        if(idx == end_block_idx) {
+            right = end_block_offset - 1;
+        }
+        memcpy(data_buf + left, (char *)buf + cur_buf_offset, (right - left + 1));
+        write_block_with_alloc(ext2, ext2_inode, inode->inode_nr, idx, data_buf);
+        cur_buf_offset += (right - left + 1);
+    }
+
+    kfree(ext2_inode);
+    kfree(data_buf);
+
+    return size;
 }
 
 // Read offset'th directory or file from this ext2
@@ -495,6 +538,37 @@ static int free_block(ext2_fs_t *ext2, uint32_t block_ptr) {
 }
 
 /* Write data to free blocks and update metadatas */
-static int write_data_with_alloc(ext2_fs_t *ext2, ext2_inode_t *inode, void *buf) {
+static int write_block_with_alloc(ext2_fs_t *ext2, ext2_inode_t *inode, size_t inode_nr, size_t block_idx, void *buf) {
+    uint32_t p = ext2->block_size / 4;
+    uint32_t ret;
 
+    if(block_idx < EXT2_DIRECT_BLOCKS) {
+        if(!inode->block[block_idx]) {
+            inode->block[block_idx] = alloc_block(ext2);
+            write_inode(ext2, inode_nr, inode);
+        }
+        write_block(ext2, inode, block_idx, buf);
+    } else if(block_idx < EXT2_DIRECT_BLOCKS + p) {
+        if(!SINGLE_INDIRECT_POINTER(inode)) {
+            SINGLE_INDIRECT_POINTER(inode) = alloc_block(ext2);
+            write_inode(ext2, inode_nr, inode);
+        }
+
+        uint32_t *tmp = kcalloc(1, ext2->block_size);
+        read_block(ext2, inode, block_idx, tmp);
+        // 4 byte per block ptr
+        uint32_t block = tmp[block_idx - EXT2_DIRECT_BLOCKS];
+
+        if(!block) {
+            tmp[block_idx - EXT2_DIRECT_BLOCKS] = alloc_block(ext2);
+            write_block(ext2, inode, SINGLE_INDIRECT_POINTER(inode), tmp);
+        }
+
+        kfree(tmp);
+        write_block(ext2, inode, block_idx, buf);
+    } else {
+        PANIC("NOT IMPLEMENTED");
+    }
+
+    return 0;
 }
