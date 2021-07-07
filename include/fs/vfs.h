@@ -192,21 +192,45 @@ struct vfs_node {
 extern struct inode *vfs_root;
 extern struct list fs_list;
 
+// In AOS, VFS is classfied with 
+// struct vfs_fs (aka. superblock_t in linux)
+// struct inode (base of all other node in vfs_system)
+// struct dentry (Directory entry) and
+// struct file (Actual file in vfs).
+// To open a file, you have insert appropriate inode to vfs_open
+// This inode can be get from vfs_lookup or vfs_readdir.
+// So you have to pass vfs_open an inode to dentry.
+// (vfs_open(dentry->inode)).
+// Cause in our vfs, dentry also leaf node of dentry structure (eg. file)
+
 /* VFS meta Functions */
+// Initializing the vfs_system. Have to call from kernel_entry
 void vfs_init();
+// Mount file system to path. And get local_root from file system.
+// For example, vfs_mount("/dev/disk0") will mount device of /dev/disk0 with appropriate device and filesystem
+// and return super_node for accessing entire file system.
 void vfs_mount(const char* path, struct inode* local_root);
+// Get mount point of the path.
 struct vfs_node *vfs_mountpoint(char *path);
+// Bind path to target node. With vfs_mount, you can bind local_root at global path.
+// This method is call by device manager to fix the position of found device.
 int vfs_bind(const char *path, struct inode *target);
+// install virtual file system.
 int vfs_install(struct vfs_fs *fs);
+// find installed virtual file system.
 struct vfs_fs *vfs_find(char *name);
 
 /* VFS Functions */
+// open file to accessing the content of the file
 int vfs_open(struct inode *inode, struct file *file);
 size_t vfs_read(struct file *file, void* buffer, size_t size);
 size_t vfs_write(struct file *file, void *buffer, size_t size);
 size_t vfs_offset(struct file *file, size_t offset);
 size_t vfs_trunc(struct file* file, size_t len);
+// readdir read n'th dentry from inode
 int vfs_readdir(struct inode* p_dir, size_t offset, struct dentry *dir);
+// lookup search entire file system tree to search path and return containg dentry.
+int vfs_lookup(inode_t *root_node, char* path, struct dentry *ret_dir);
 
 // uint32_t vfs_write(struct inode *node, uint32_t offset, uint32_t size, char *buffer);
 // void vfs_open(struct vfs_node *node, uint32_t flags);

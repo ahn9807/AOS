@@ -88,9 +88,13 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
     printf("device %s\n", reg_dev == NULL ? "null" : reg_dev->name);
     struct dentry dir;
     temp_ls(root_node);
-	if(vfs_readdir(root_node, 6, &dir) == 0) {
-        PANIC("HALT");
-    }
+    vfs_readdir(root_node, 3, &dir);
+    temp_ls(dir.inode);
+    vfs_readdir(dir.inode, 2, &dir);
+    temp_ls(dir.inode);
+    vfs_readdir(dir.inode, 2, &dir);
+    temp_ls(dir.inode);
+    vfs_lookup(root_node, "/a/b/c/test_1/", &dir);
     file_t file = {
         .f_op = root_node->i_fop,
         .inode = dir.inode,
@@ -98,7 +102,6 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
         .offset = 0,
     };
     vfs_offset(&file, 0);
-    vfs_write(&file, "ttttttttttttttttttt123123123123123123123123123123123123123123123123123123123123", 48);
     vfs_offset(&file, 32);
     temp_cat(&file);
 
@@ -114,7 +117,7 @@ void temp_ls(inode_t *dir_node) {
     struct dentry dir;
     int cur_offset = 0;
     while(vfs_readdir(dir_node, cur_offset, &dir) > 0) {
-        printf("%s %d\n", dir.name, dir.inode->size);
+        printf("%s %d ", dir.name, dir.inode->size);
         cur_offset++;
     }
     printf("\n");
@@ -126,7 +129,7 @@ void temp_cat(file_t *file) {
 
     vfs_read(file, buf, 4096);
 
-    for(int i=0;i<128;i++) {
+    for(int i=0;i<256;i++) {
         if(buf[i] == -1) {
             return;
         }
