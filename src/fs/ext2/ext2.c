@@ -218,8 +218,73 @@ static int ext2_readdir(inode_t *inode, size_t offset, dentry_t *dir)
     return -FS_NO_ENTRY;
 }
 
-static size_t ext2_mkdir(inode_t *inode, dentry_t *dir)
+// Create ext2 file or directory entry at inode
+// Inode must be a type directory
+static size_t ext2_mknod(inode_t *dir_node, char* name, uint16_t mode, uint16_t permission)
 {
+    PANIC("NOT IMPLEMENTED");
+    int err = 0;
+
+    ext2_fs_t *desc = dir_node->file_system;
+    ext2_inode_t dir_inode;
+    
+    if ((err = ext2_inode_read(desc, dir_node->inode_nr, &dir_inode))) {
+        /* TODO Error checking */
+    }
+
+    // /* file exists */
+    // if (ext2_dentry_find(desc, &dir_inode, fn))
+    //     return -FS_EXIST;
+
+    uint32_t ino = alloc_inode(desc);
+    struct ext2_inode inode;
+    
+    if ((err = read_inode(desc, ino, &inode))) {
+        /* TODO Error checking */
+    }
+
+    memset(&inode, 0, sizeof(struct ext2_inode));
+
+    inode.mode = permission | mode;
+
+    // struct timespec ts;
+    // gettime(&ts);
+
+    inode.ctime = 0;
+    inode.atime = 0;
+    inode.mtime = 0;
+
+    if (S_ISDIR(mode)) {   /* Initalize directory structure */
+        inode.links_count = 2;
+        inode.size = desc->block_size;
+        
+        char *buf = kmalloc(desc->block_size);
+        struct ext2_dentry *d = (struct ext2_dentry *) buf;
+        d->inode_nr = ino;
+        d->rec_len = 12;
+        d->name_len = 1;
+        d->file_type = EXT2_S_IFDIR ;
+        memcpy(d->name, ".", 1);
+        d = (struct ext2_dentry *) ((char *) d + 12);
+        d->inode_nr = dir_node->inode_nr;
+        d->rec_len = desc->block_size - 12;
+        d->name_len = 2;
+        d->file_type = EXT2_S_IFDIR;
+        memcpy(d->name, "..", 2);
+        write_block_with_alloc(desc, &inode, ino, 0, buf);
+        kfree(buf);
+    } else {
+        inode.links_count = 1;
+        write_inode(desc, ino, &inode);
+    }
+
+    // ext2_dentry_create(dir_node, fn, ino, inode.mode);
+
+    return 0;
+}
+
+static size_t ext2_rmnod(inode_t *dir_node, char *name) {
+    PANIC("NOT IMPLMENTED");
 }
 
 static size_t ext2_truncate(inode_t *inode, size_t len)
@@ -639,4 +704,18 @@ static int write_block_with_alloc(ext2_fs_t *ext2, ext2_inode_t *inode, size_t i
     }
 
     return 0;
+}
+
+static int create_dentry(inode_t *dir_node, char *name, inode_number_t ino) {
+    PANIC("NOT IMPLEMENTED");
+
+    ext2_fs_t *ext2 = dir_node->file_system;
+
+    size_t length = strlne(name);
+    size_t d_size = length + sizeof(ext2_dentry_t);
+    d_size = (d_size + 3) & ~3;
+
+    char *buf = kcalloc(1, ext2->block_size);
+    
+
 }
