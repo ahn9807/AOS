@@ -3,8 +3,10 @@
 #include "pmm.h"
 #include "vga_text.h"
 #include "string.h"
+#include "debug.h"
+#include "intrinsic.h"
 
-uint64_t new_P4()
+uint64_t new_p4()
 {
 	uint64_t p4 = pmm_alloc();
 	memcpy(P2V(p4), (void *)kernel_P4, PAGE_SIZE);
@@ -59,6 +61,23 @@ int vmm_set_page(uint64_t P4, uint64_t addr, uint64_t page, uint16_t flags)
 	P1E = page | flags;
 
 	return 0;
+}
+
+void vmm_activate(uintptr_t p4) {
+	if(p4 == NULL) {
+		lcr3(V2P((uint64_t)&p4_table));
+	} else {
+		lcr3(V2P((uint64_t)p4));
+	}
+}
+
+void vmm_free(uint64_t p4) {
+	ASSERT(p4 != &p4_table);
+
+	if(p4 == NULL)
+		return;
+
+	PANIC("NOT IMPLEMENTED");
 }
 
 void vmm_clear_page(uint64_t P4, uint64_t addr, int free)
