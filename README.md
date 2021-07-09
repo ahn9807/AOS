@@ -7,8 +7,8 @@ osdev project for studying purposes. First target is pintos and second is run gc
 
 # Basic Todo List
 ## X86_64
-- [ ] GDT
-- [ ] TSS
+- [x] GDT
+- [x] TSS
 - [ ] LDT
 ## Memory
 - [x] Implement kmalloc
@@ -57,9 +57,9 @@ osdev project for studying purposes. First target is pintos and second is run gc
 - [x] Hash
 - [ ] Btree+
 ## Filesystem
-- [ ] Ext2
+- [ ] Ext2 - under development
 - [ ] Ext4
-- [ ] VFS
+- [ ] VFS - under development
 - [ ] Journaling
 - [ ] RamDisk
 ## ETC
