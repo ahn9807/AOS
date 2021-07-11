@@ -1,30 +1,51 @@
 #include "vfs.h"
 #include "spin_lock.h"
+#include "stat.h"
+#include "printf.h"
+#include "debug.h"
+#include "kmalloc.h"
+#include "string.h"
 
 int vfs_open(struct inode *inode, struct file *file) {
     if(!file) {
         return -FS_NOT_FILE;
     }
 
-    spin_lock(&file->inode->lock);
+    spin_lock(&file->lock);
     file->inode = inode;
     file->f_op = inode->i_fop;
     file->offset = 0;
     file->inode->refcount++;
-    spin_unlock(&file->inode->lock);
+    spin_unlock(&file->lock);
+
+    return 0;
 }
 
 int vfs_open_by_path(char* path, struct file *file) {
     struct vfs_node *node = vfs_mountpoint(path);
-    if(node == NULL) {
+
+    if(node == NULL || node->inode == NULL) {
         return -FS_NO_ENTRY;
     }
 
-    inode_t *inode = node->inode;
+    inode_t *root_node = node->inode;
+    int error_code = 0;
     struct dentry dir;
-    
-    int last_return = 1;
-    // while(last_return != 0) {
-    //     vfs_read
-    // }
+    // get relative path from mount point
+    char *lookup_path = path + strlen(node->full_path);
+
+    if((error_code = vfs_lookup(root_node, lookup_path, &dir)) != FS_FILE) {
+        return -FS_NOT_FILE;
+    }
+
+    if(dir.inode != NULL && !S_ISDIR(dir.inode->type)) {
+        vfs_open(dir.inode, file);
+        spin_lock(&file->lock);
+        file->name = path_get_name(path);
+        spin_unlock(&file->lock);
+    } else {
+        return -FS_NOT_FILE;
+    }
+
+    return 0;
 }

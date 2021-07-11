@@ -76,11 +76,6 @@ int vfs_bind(const char *path, struct inode *target)
     if (!path ||  !*path || !target)
         return -FS_INVALID;
 
-    if (!strcmp(path, PATH_SEPARATOR_STRING)) {
-        ASSERT("YOU CANNOT MOUNT AT ROOT!");
-        return 0;
-    }
-
     char **tokens = path_tokenize(path);
 
     struct vfs_node *cur_node = &vfs_tree;
@@ -120,6 +115,7 @@ int vfs_bind(const char *path, struct inode *target)
 next:;
     }
 
+    cur_node->full_path = strdup(path);
     cur_node->inode = target;
     return 0;
 }

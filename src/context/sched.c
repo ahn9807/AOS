@@ -41,7 +41,10 @@ void sched_push(struct thread_info *th) {
 
 // Reschedule the current thread
 void sched_do() {
-    ASSERT(intr_get_level() == INTR_OFF);
+    if(intr_get_level() == INTR_ON) {
+        PANIC("Scheduling while atomic");
+        debug_backtrace();
+    }
 
     struct thread_info *cur_thread = thread_current_s();
     if(cur_thread->status == THREAD_RUNNUNG) {

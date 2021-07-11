@@ -81,29 +81,17 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
     vfs_init();
     dev_init();
     ext2_init();
-    char *dev_path = "/dev/disk0/foo/bar";
+
+    char *dev_path = "/dev/disk0/";
     inode_t *root_node = kmalloc(sizeof(inode_t));
     device_t *reg_dev = vfs_mountpoint(dev_path)->inode->device;
     vfs_mount(dev_path, root_node);
-    printf("device %s\n", reg_dev == NULL ? "null" : reg_dev->name);
-    struct dentry dir;
+    vfs_bind("/", root_node);
+
+    file_t file_1;
+    vfs_open_by_path("/a/b/c/test_1/", &file_1);
     temp_ls(root_node);
-    vfs_readdir(root_node, 3, &dir);
-    temp_ls(dir.inode);
-    vfs_readdir(dir.inode, 2, &dir);
-    temp_ls(dir.inode);
-    vfs_readdir(dir.inode, 2, &dir);
-    temp_ls(dir.inode);
-    vfs_lookup(root_node, "/a/b/c/test_1/", &dir);
-    file_t file = {
-        .f_op = root_node->i_fop,
-        .inode = dir.inode,
-        .name = dir.name,
-        .offset = 0,
-    };
-    vfs_offset(&file, 0);
-    vfs_offset(&file, 32);
-    temp_cat(&file);
+    temp_cat(&file_1);
 
     // Have to call explicitly. Cause without this,
     // rip goes to the end of the bootloader and
@@ -114,6 +102,10 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
 }
 
 void temp_ls(inode_t *dir_node) {
+    if(dir_node == NULL) {
+        printf("ls: ?\n");
+        return;
+    }
     struct dentry dir;
     int cur_offset = 0;
     while(vfs_readdir(dir_node, cur_offset, &dir) > 0) {
@@ -125,6 +117,10 @@ void temp_ls(inode_t *dir_node) {
 
 void temp_cat(file_t *file) {
     printf("cat %s\n", file->name);
+    if(file->name == NULL) {
+        printf("cat: ?\n");
+        return;
+    }
     char* buf = kmalloc(4096);
 
     vfs_read(file, buf, 4096);

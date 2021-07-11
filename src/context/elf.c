@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include "elf.h"
 #include "debug.h"
+#include "vfs.h"
 
 int elf_load(const char *file_name, struct intr_frame *if_) {
 	PANIC("NOT IMPLEMENTED");	

@@ -2,6 +2,7 @@
 #include "kmalloc.h"
 #include "string.h"
 #include "queue.h"
+#include "printf.h"
 
 // Check there exist element s in the path
 int path_search(const char *path, const char *s) {
@@ -17,6 +18,17 @@ int path_search(const char *path, const char *s) {
     }
 
     return 0;
+}
+
+// Get last index of the path
+// In other words, get name of the path
+char *path_get_name(const char *path) {
+    char **tokenized_path = path_tokenize(path);
+    char *last_name = tokenized_path[path_length(tokenized_path) - 1];
+    char *return_name = strdup(last_name);
+    kfree(tokenized_path);
+    
+    return last_name;
 }
 
 // parse path to the token

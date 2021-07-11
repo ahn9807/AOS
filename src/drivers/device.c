@@ -32,7 +32,8 @@ void dev_install(device_t *dev, char* path) {
     if(dev->device_type == DEVICE_BLOCK) {
         root_node = get_inode();
         root_node->permission = FS_BLOCKDEVICE;
-        itoa(num, 'd', current_bdev_index++);
+        itoa(num, 'd', current_bdev_index);
+        current_bdev_index++;
         if(path == NULL) {
             new_path = kmalloc(sizeof(DEVICE_BLOCK_DEAFULT_NAME) + sizeof(num) + 1);
             strcpy(new_path, DEVICE_BLOCK_DEAFULT_NAME);

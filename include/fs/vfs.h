@@ -65,6 +65,7 @@ int path_search(const char *path, const char *s);
 char **path_tokenize(const char *path);
 char *path_absolute(char *cwd, char *path);
 int path_length(char **path);
+char *path_get_name(const char *path);
 
 struct inode_operations;
 struct file_operations;
@@ -179,11 +180,19 @@ struct vfs_fs {
 };
 
 struct vfs_node {
+    // name of this node
+    // for example, disk0
     char *name;
+    // full path of this node
+    // for example, /dev/disk0
+    char *full_path;
+
     struct vfs_node *children;
     struct vfs_node *next;
 
+    // Associated file system for this node
     struct vfs_fs *fs;
+    // Representative inode
     struct inode *inode;
     //file system private data
     void *aux;
@@ -209,7 +218,7 @@ void vfs_init();
 // Mount file system to path. And get local_root from file system.
 // For example, vfs_mount("/dev/disk0") will mount device of /dev/disk0 with appropriate device and filesystem
 // and return super_node for accessing entire file system.
-void vfs_mount(const char* path, struct inode* local_root);
+int vfs_mount(const char* path, struct inode* local_root);
 // Get mount point of the path.
 struct vfs_node *vfs_mountpoint(char *path);
 // Bind path to target node. With vfs_mount, you can bind local_root at global path.
@@ -223,6 +232,8 @@ struct vfs_fs *vfs_find(char *name);
 /* VFS Functions */
 // open file to accessing the content of the file
 int vfs_open(struct inode *inode, struct file *file);
+// open file with path name
+int vfs_open_by_path(char* path, struct file *file);
 size_t vfs_read(struct file *file, void* buffer, size_t size);
 size_t vfs_write(struct file *file, void *buffer, size_t size);
 size_t vfs_offset(struct file *file, size_t offset);
