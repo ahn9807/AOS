@@ -29,8 +29,8 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 
 enable_language(ASM_NASM)
 
-file(GLOB_RECURSE kernel_SRC "*.h" "*.c")
-file(GLOB_RECURSE kernel_ASM "*.asm" "*.S" "*.s")
+file(GLOB_RECURSE kernel_SRC "./include/*.h" "./src/*.c")
+file(GLOB_RECURSE kernel_ASM "./src/*.asm" "./src/*.S" "./src/*.s")
 
 include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/include/arch/x86_64
@@ -65,6 +65,13 @@ add_custom_command(TARGET ${KERNEL_BIN} POST_BUILD
 
 add_custom_target(run
     qemu-system-x86_64 -cdrom kernel.iso -curses -m 4G -drive id=disk,format=raw,file=disk.img
+)
+
+add_custom_target(debug
+    COMMAND touch .gdbinit
+    COMMAND echo "target remote localhost:1234" > .gdbinit
+    COMMAND echo "symbol-file ${KERNEL_BIN}" >> .gdbinit
+    COMMAND qemu-system-x86_64 -cdrom kernel.iso -curses -m 4G -drive id=disk,format=raw,file=disk.img -s -S
 )
 
 add_custom_target(count_line

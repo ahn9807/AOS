@@ -5,6 +5,7 @@
 #include "list.h"
 #include "spin_lock.h"
 #include "device.h"
+#include "stat.h"
 
 #define PATH_SEPARATOR '/'
 #define PATH_SEPARATOR_STRING "/"
@@ -60,6 +61,7 @@
 #define SEEK_END 2
 
 typedef uint32_t inode_number_t;
+typedef long off_t;
 
 int path_search(const char *path, const char *s);
 char **path_tokenize(const char *path);
@@ -232,11 +234,14 @@ struct vfs_fs *vfs_find(char *name);
 /* VFS Functions */
 // open file to accessing the content of the file
 int vfs_open(struct inode *inode, struct file *file);
+int vfs_stat(struct inode *inode, struct stat* stat);
 // open file with path name
 int vfs_open_by_path(char* path, struct file *file);
 size_t vfs_read(struct file *file, void* buffer, size_t size);
 size_t vfs_write(struct file *file, void *buffer, size_t size);
-size_t vfs_offset(struct file *file, size_t offset);
+size_t vfs_offset(struct file *file, off_t offset);
+size_t vfs_seek(struct file *file, off_t offset, int whence);
+size_t vfs_get_size(struct file *file);
 size_t vfs_trunc(struct file* file, size_t len);
 // readdir read n'th dentry from inode
 int vfs_readdir(struct inode* p_dir, size_t offset, struct dentry *dir);

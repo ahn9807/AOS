@@ -6,7 +6,7 @@
 #include "debug.h"
 #include "intrinsic.h"
 
-uint64_t new_p4()
+uint64_t vmm_new_p4()
 {
 	uint64_t p4 = pmm_alloc();
 	memcpy(P2V(p4), (void *)kernel_P4, PAGE_SIZE);

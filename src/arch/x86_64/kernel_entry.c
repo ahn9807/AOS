@@ -21,6 +21,8 @@
 #include "ext2.h"
 #include "stat.h"
 #include "semaphore.h"
+#include "elf.h"
+#include "tss.h"
 
 extern uint64_t p4_table;
 extern uint64_t temp_table;
@@ -74,6 +76,7 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
     interrupt_init();
     multiboot_init(magic, multiboot_addr, &kernel_start, &kernel_end, &multiboot_start, &multiboot_end) != 0 ? panic("check multiboot2 magic!\n") : 0;
     memory_init(kernel_start, kernel_end, multiboot_start, multiboot_end, multiboot_addr);
+    tss_init();
     pic_init();
     bind_interrupt_with_name(0x20, &timer_interrupt, "Timer");
     thread_init();
@@ -92,6 +95,10 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
     vfs_open_by_path("/a/b/c/test_1/", &file_1);
     temp_ls(root_node);
     temp_cat(&file_1);
+
+    if(elf_load("/prog_1", &thread_current()->thread_frame)) {
+        PANIC("HALT");
+    }
 
     // Have to call explicitly. Cause without this,
     // rip goes to the end of the bootloader and

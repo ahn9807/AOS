@@ -68,7 +68,7 @@ static size_t ext2_read(inode_t *inode, void *buf, size_t size, size_t offset)
 {
     ext2_inode_t *ext2_inode = kmalloc(sizeof(ext2_inode_t));
     ext2_fs_t *ext2 = inode->file_system;
-    char *data_buf = kcalloc(1, ext2->block_size);
+    char *data_buf = pmm_alloc();
 
     read_inode(ext2, inode->inode_nr, ext2_inode);
 
@@ -76,6 +76,8 @@ static size_t ext2_read(inode_t *inode, void *buf, size_t size, size_t offset)
 
     if (offset > ext2_inode->size)
     {
+        kfree(ext2_inode);
+        pmm_free(data_buf);
         return 0;
     }
 
@@ -105,7 +107,7 @@ static size_t ext2_read(inode_t *inode, void *buf, size_t size, size_t offset)
     }
 
     kfree(ext2_inode);
-    kfree(data_buf);
+    pmm_free(data_buf);
 
     return size;
 }

@@ -11,12 +11,10 @@ int vfs_open(struct inode *inode, struct file *file) {
         return -FS_NOT_FILE;
     }
 
-    spin_lock(&file->lock);
     file->inode = inode;
     file->f_op = inode->i_fop;
     file->offset = 0;
     file->inode->refcount++;
-    spin_unlock(&file->lock);
 
     return 0;
 }
@@ -40,9 +38,7 @@ int vfs_open_by_path(char* path, struct file *file) {
 
     if(dir.inode != NULL && !S_ISDIR(dir.inode->type)) {
         vfs_open(dir.inode, file);
-        spin_lock(&file->lock);
         file->name = path_get_name(path);
-        spin_unlock(&file->lock);
     } else {
         return -FS_NOT_FILE;
     }

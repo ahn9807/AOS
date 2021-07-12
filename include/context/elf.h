@@ -104,6 +104,10 @@
 #define ET_LOPROC	0xff00		/* Processor-specific range start */
 #define ET_HIPROC	0xffff		/* Processor-specific range end */
 
+/* Legal values for e_machine */
+#define EM_X86_64	62	/* AMD x86-64 architecture */
+#define EM_AARCH64	183	/* ARM AARCH64 */
+
 /* Executable header.  See [ELF1] 1-4 to 1-8.
  * This appears at the very beginning of an ELF binary. */
 struct ELF64_Ehdr {
@@ -148,5 +152,6 @@ struct ELF64_Shdr {
 };
 
 int elf_load(const char *file_name, struct intr_frame *if_);
-int elf_check_valid(struct ELF64_Ehdr *hdr);
-int elf_check_supported(struct ELF64_Ehdr *hdr);
+int elf_check_supported(struct ELF64_Ehdr *ehdr);
+int elf_check_segment(struct ELF64_Phdr *phdr);
+void elf_debug(struct ELF64_Ehdr *ehdr);

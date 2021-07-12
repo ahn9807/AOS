@@ -51,7 +51,7 @@ uintptr_t memory_init(uintptr_t kernel_start, uintptr_t kernel_end, uintptr_t mu
  * Returns the new page directory, or a null pointer if memory
  * allocation fails. This pml4 points to the old kernel's p3 directory.
  * setup kernel part of memory */
-uintptr_t kvm_init()
+uintptr_t mm_create_p4()
 {
 	uint64_t pml4 = P2V(pmm_alloc());
 	printf("pmm: 0x%x\n", pml4);
