@@ -33,11 +33,7 @@ uintptr_t memory_init(uintptr_t kernel_start, uintptr_t kernel_end, uintptr_t mu
 				flags &= ~PAGE_WRITE;
 
 			uint64_t addr = (uint64_t)P2V(p);
-			uint64_t page = vmm_get_page(kernel_P4, addr);
-			if (page != -1)
-			{
-				vmm_set_page(kernel_P4, addr, p, flags | PAGE_PRESENT);
-			}
+			vmm_set_page(kernel_P4, addr, p, flags | PAGE_PRESENT);
 		}
 	}
 

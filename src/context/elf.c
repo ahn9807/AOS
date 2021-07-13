@@ -7,6 +7,9 @@
 #include "vmm.h"
 #include "tss.h"
 #include "string.h"
+#include "pmm.h"
+
+static int pt_load(struct ELF64_Phdr *phdr, file_t *file);
 
 int elf_load(const char *file_name, struct intr_frame *if_)
 {
@@ -47,7 +50,7 @@ int elf_load(const char *file_name, struct intr_frame *if_)
 		error_code = -1;
 		goto done;
 	}
-
+cls();
 	cur_offset = ehdr.e_phoff;
 	for (int i = 0; i < ehdr.e_phnum; i++)
 	{
@@ -69,16 +72,9 @@ int elf_load(const char *file_name, struct intr_frame *if_)
 		switch (phdr.p_type)
 		{
 			case PT_LOAD:
-				if(elf_check_segment(&phdr)) {
-					printf("segment validation failed\n");
-					error_code = -1;
+				if(error_code = pt_load(&phdr, &file)) {
 					goto done;
 				}
-
-				uint64_t align = phdr.p_offset % PAGE_SIZE;
-				uint64_t aling_p = (phdr.p_vaddr + phdr.p_filesz) % PAGE_SIZE;
-
-				int flags = 0;
 				break;
 
 			default:
@@ -89,6 +85,64 @@ int elf_load(const char *file_name, struct intr_frame *if_)
 done:
 	PANIC("NOT IMPLEMENTED");
 	return error_code;
+}
+
+static int pt_load(struct ELF64_Phdr *phdr, file_t *file) {
+	if(elf_check_segment(phdr)) {
+		printf("validation failed");
+		return -1;
+	}
+
+	uint64_t file_offset = phdr->p_offset % phdr->p_align;
+	uint64_t mem_vaddr = phdr->p_vaddr % phdr->p_align;
+	uint64_t mem_remaning = phdr->p_vaddr - mem_vaddr;
+	uint64_t read_bytes, zero_bytes;
+
+	uint16_t flags = 0;
+	flags |= phdr->p_flags == PF_W ? PAGE_WRITE : 0;
+
+	// Data / Code section
+	if(phdr->p_filesz >= phdr->p_memsz) {
+		read_bytes = mem_remaning + phdr->p_filesz;
+		zero_bytes = (read_bytes + PAGE_SIZE - (read_bytes) % PAGE_SIZE) - read_bytes;
+	} 
+	// Bss Section
+	else {
+		read_bytes = 0;
+		zero_bytes = mem_remaning + phdr->p_memsz + PAGE_SIZE - (mem_remaning + phdr->p_memsz + PAGE_SIZE) % PAGE_SIZE; 
+	}
+
+	ASSERT((read_bytes + zero_bytes) % PAGE_SIZE == 0);
+	ASSERT(file_offset % PAGE_SIZE == 0);
+
+	while(read_bytes > 0 || zero_bytes > 0) {
+		size_t page_read_bytes = read_bytes < PAGE_SIZE ? read_bytes : PAGE_SIZE;
+		size_t page_zero_bytes = PAGE_SIZE - page_read_bytes;
+
+		uint8_t* kpage = P2V(pmm_alloc());
+		if(kpage == NULL) {
+			return -1;
+		}
+
+		// if(vfs_read(file, kpage, page_read_bytes) != (int)page_read_bytes) {
+		// 	pmm_free(kpage);
+		// 	return -1;
+		// }
+
+		// memset(kpage + page_read_bytes, 0, page_zero_bytes);
+
+		// if(vmm_set_page(thread_current()->p4, mem_vaddr, kpage, flags)) {
+		// 	printf("failed to allocate at vm\n");
+		// 	pmm_free(kpage);
+		// 	return -1;
+		// }
+
+		read_bytes -= page_read_bytes;
+		zero_bytes -= page_zero_bytes;
+		mem_vaddr += PAGE_SIZE;
+	}
+
+	return 0;
 }
 
 int elf_check_supported(struct ELF64_Ehdr *ehdr)

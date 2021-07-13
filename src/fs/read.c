@@ -12,7 +12,14 @@ size_t vfs_read(struct file *file, void *buffer, size_t size)
 		return -FS_UNSUPPORTED;
 	}
 
-	file->f_op->read(file->inode, buffer, size, file->offset);
+	if(vfs_get_size(file) < file->offset + size) {
+		size = vfs_get_size(file) - file->offset;
+		if(size <= 0) {
+			return 0;
+		}
+	}
+
+	return file->f_op->read(file->inode, buffer, size, file->offset);
 }
 
 

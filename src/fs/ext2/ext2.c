@@ -68,7 +68,7 @@ static size_t ext2_read(inode_t *inode, void *buf, size_t size, size_t offset)
 {
     ext2_inode_t *ext2_inode = kmalloc(sizeof(ext2_inode_t));
     ext2_fs_t *ext2 = inode->file_system;
-    char *data_buf = pmm_alloc();
+    char *data_buf = P2V(pmm_alloc_pages(size / PAGE_SIZE + 1));
 
     read_inode(ext2, inode->inode_nr, ext2_inode);
 
