@@ -163,7 +163,7 @@ void printf(const char *format, ...)
 
 void panic(const char *panic_message)
 {
-    printf("[Kernel Panic!]%s\n", panic_message);
+    printf("[Kernel Panic!] %s\n", panic_message);
     while (1)
     {
     };

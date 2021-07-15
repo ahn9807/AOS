@@ -52,7 +52,7 @@ void tss_init(void)
 	/* Our TSS is never used in a call gate or task gate, so only a
 	 * few fields of it are ever referenced, and those are the only
 	 * ones we initialize. */
-	tss = pmm_calloc();
+	tss = P2V(pmm_calloc());
 	tss_update(thread_current());
 }
 

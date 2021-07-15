@@ -9,3 +9,4 @@
 #define SEL_UCSEG       0x23    /* User code selector. */
 #define SEL_TSS         0x28    /* Task-state segment. */
 #define SEL_CNT         8       /* Number of segments. */
+#define USER_STACK 0x47480000

@@ -8,6 +8,7 @@
 #include "tss.h"
 #include "string.h"
 #include "pmm.h"
+#include "layout.h"
 
 static int pt_load(struct ELF64_Phdr *phdr, file_t *file);
 
@@ -24,6 +25,7 @@ int elf_load(const char *file_name, struct intr_frame *if_)
 	th->p4 = vmm_new_p4();
 
 	// To used in user process, we have to init tss->rsp and page table
+	
 	vmm_activate(th->p4);
 	tss_update(th);
 
@@ -50,7 +52,7 @@ int elf_load(const char *file_name, struct intr_frame *if_)
 		error_code = -1;
 		goto done;
 	}
-cls();
+
 	cur_offset = ehdr.e_phoff;
 	for (int i = 0; i < ehdr.e_phnum; i++)
 	{
@@ -82,8 +84,19 @@ cls();
 		}
 	}
 
+	if_->rip = ehdr.e_entry;
+
+	uint8_t* spage = pmm_alloc();
+	if(spage != NULL) {
+		vmm_set_page(thread_current()->p4, USER_STACK - PAGE_SIZE, spage, PAGE_USER_ACCESSIBLE | PAGE_WRITE | PAGE_PRESENT);
+		if_->rsp = USER_STACK;
+	} else {
+		printf("failed to alloc stack\n");
+		error_code = -1;
+		goto done;
+	}
+
 done:
-	PANIC("NOT IMPLEMENTED");
 	return error_code;
 }
 
@@ -93,49 +106,52 @@ static int pt_load(struct ELF64_Phdr *phdr, file_t *file) {
 		return -1;
 	}
 
-	uint64_t file_offset = phdr->p_offset % phdr->p_align;
-	uint64_t mem_vaddr = phdr->p_vaddr % phdr->p_align;
+	uint64_t alignment = phdr->p_align;
+#define ALIGN_ADDR(src) ((src) - (src) % (alignment))
+#define ROUND_UP(X, STEP) (((X) + (STEP) - 1) / (STEP) * (STEP))
+	uint64_t file_offset = ALIGN_ADDR(phdr->p_offset);
+	uint64_t mem_vaddr = ALIGN_ADDR(phdr->p_vaddr);
 	uint64_t mem_remaning = phdr->p_vaddr - mem_vaddr;
 	uint64_t read_bytes, zero_bytes;
-
-	uint16_t flags = 0;
-	flags |= phdr->p_flags == PF_W ? PAGE_WRITE : 0;
+	uint16_t flags = (phdr->p_flags == PF_W ? PAGE_WRITE | PAGE_USER_ACCESSIBLE : PAGE_USER_ACCESSIBLE);
+	flags |= PAGE_PRESENT;
 
 	// Data / Code section
-	if(phdr->p_filesz >= phdr->p_memsz) {
+	if(phdr->p_filesz > 0) {
 		read_bytes = mem_remaning + phdr->p_filesz;
-		zero_bytes = (read_bytes + PAGE_SIZE - (read_bytes) % PAGE_SIZE) - read_bytes;
+		zero_bytes = ROUND_UP(mem_remaning + phdr->p_memsz, PAGE_SIZE) - read_bytes;
 	} 
 	// Bss Section
 	else {
 		read_bytes = 0;
-		zero_bytes = mem_remaning + phdr->p_memsz + PAGE_SIZE - (mem_remaning + phdr->p_memsz + PAGE_SIZE) % PAGE_SIZE; 
+		zero_bytes = ROUND_UP(mem_remaning + phdr->p_memsz, PAGE_SIZE);
 	}
 
 	ASSERT((read_bytes + zero_bytes) % PAGE_SIZE == 0);
 	ASSERT(file_offset % PAGE_SIZE == 0);
 
+	vfs_seek(file, file_offset, SEEK_SET);
 	while(read_bytes > 0 || zero_bytes > 0) {
 		size_t page_read_bytes = read_bytes < PAGE_SIZE ? read_bytes : PAGE_SIZE;
 		size_t page_zero_bytes = PAGE_SIZE - page_read_bytes;
 
-		uint8_t* kpage = P2V(pmm_alloc());
+		uint8_t* kpage = pmm_alloc();
 		if(kpage == NULL) {
 			return -1;
 		}
 
-		// if(vfs_read(file, kpage, page_read_bytes) != (int)page_read_bytes) {
-		// 	pmm_free(kpage);
-		// 	return -1;
-		// }
+		if(vfs_read(file, P2V(kpage), page_read_bytes) != (int)page_read_bytes) {
+			pmm_free(kpage);
+			return -1;
+		}
 
-		// memset(kpage + page_read_bytes, 0, page_zero_bytes);
-
-		// if(vmm_set_page(thread_current()->p4, mem_vaddr, kpage, flags)) {
-		// 	printf("failed to allocate at vm\n");
-		// 	pmm_free(kpage);
-		// 	return -1;
-		// }
+		memset(P2V(kpage) + page_read_bytes, 0, page_zero_bytes);
+		printf("mem_vaddr: 0x%x kpage: 0x%x\n", mem_vaddr, kpage);
+		if(vmm_set_page(thread_current()->p4, mem_vaddr, kpage, flags)) {
+			printf("failed to allocate at vm\n");
+			pmm_free(kpage);
+			return -1;
+		}
 
 		read_bytes -= page_read_bytes;
 		zero_bytes -= page_zero_bytes;

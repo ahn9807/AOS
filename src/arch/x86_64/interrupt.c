@@ -115,10 +115,10 @@ void interrupt_handler(struct intr_frame *frame) {
             sched_tick();
             break;
         case KILL_ON_RETURN:
-            PANIC("NOT IMPLEMENTED");
+            panic("NOT IMPLEMENTED");
             break;
         case FAILED:
-            PANIC("FAILED TO HANDLE INTERRUPT");
+            panic("FAILED TO HANDLE INTERRUPT");
             break;
         default:
             break;

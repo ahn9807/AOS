@@ -24,6 +24,7 @@
 #include "elf.h"
 #include "tss.h"
 #include "process.h"
+#include "gdt.h"
 
 extern uint64_t p4_table;
 extern uint64_t temp_table;
@@ -56,19 +57,12 @@ void temp_thread2() {
     }
 }
 
-size_t readdir(struct inode* inode, struct dentry** dentries_ret) {
-    struct dentry *d1 = kmalloc(sizeof(struct dentry));
-    struct dentry *d2 = kmalloc(sizeof(struct dentry));
-    struct dentry *d3 = kmalloc(sizeof(struct dentry));
-    d1->name = "a";
-    d2->name = "b";
-    d3->name = "c";
-    dentries_ret = kmalloc(sizeof(struct dentry*) * 3);
-    dentries_ret[0] = d1;
-    dentries_ret[1] = d2;
-    dentries_ret[2] = d2;
-    return 3;
+void exec() {
+    if(process_exec("/prog_1")) {
+        PANIC("EXEC FAILED");
+    }
 }
+
 
 int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
 {
@@ -79,6 +73,7 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
     debug_multiboot2(multiboot_addr);
     memory_init(kernel_start, kernel_end, multiboot_start, multiboot_end, multiboot_addr);
     tss_init();
+    gdt_init();
     pic_init();
     bind_interrupt_with_name(0x20, &timer_interrupt, "Timer");
     thread_init();
@@ -98,7 +93,7 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
     temp_ls(root_node);
     temp_cat(&file_1);
 
-    process_exec("/prog_1");
+    thread_create("exec", &exec, NULL);
 
     // Have to call explicitly. Cause without this,
     // rip goes to the end of the bootloader and
