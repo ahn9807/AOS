@@ -58,7 +58,11 @@ int vmm_set_page(uint64_t P4, uint64_t addr, uint64_t page, uint16_t flags)
 			return -1;
 	}
 
-	P1E = page | flags;
+	// We have to set PAGE_USER_ACCESSIBLE to all page directories
+	if(flags & PAGE_USER_ACCESSIBLE) {
+		touch_page(P4, addr, flags);
+	}
+	P1E = page | flags | PAGE_PRESENT;
 
 	return 0;
 }

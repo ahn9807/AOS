@@ -60,7 +60,6 @@ tid_t thread_create(const char* name, thread_func* func, void * aux) {
     th->thread_frame.ss = SEL_KDSEG;
     th->thread_frame.cs = SEL_KCSEG;
     th->thread_frame.eflags = FLAG_IF;
-
     th->magic = THREAD_MAGIC;
     th->status = THREAD_READY;
 

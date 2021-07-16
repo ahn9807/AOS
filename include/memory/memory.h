@@ -22,6 +22,8 @@
 
 #define PAGE_PRESENT 0x1
 #define PAGE_WRITE 0x2
+// Controls access to the page based on CPL.
+// Have to set page directory to access from user level.
 #define PAGE_USER_ACCESSIBLE 0x4
 #define PAGE_WRITE_THROUGH 0x8
 #define PAGE_NO_CACHE 0x10
@@ -29,7 +31,6 @@
 #define PAGE_DIRTY 0x40
 #define PAGE_HUGE_PAGE 0x80
 #define PAGE_GLOBAL 0x100
-#define PAGE_NO_EXECUTE 0x8000000000000000000000000
 
 #define PAGE_SIZE       0x1000
 #define ENTRIES_PER_PT  512

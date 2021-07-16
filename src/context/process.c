@@ -19,7 +19,7 @@ int process_exec(char *f_name) {
 	memset(&_if, 0, sizeof(struct intr_frame));
 	_if.ds = _if.es = _if.ss = SEL_UDSEG;
 	_if.cs = SEL_UCSEG;
-	_if.eflags = FLAG_IF | thread_current()->thread_frame.eflags;
+	_if.eflags = FLAG_IF | 0x2;
 
 	if(elf_load(f_name, &_if)) {
 		return -1;

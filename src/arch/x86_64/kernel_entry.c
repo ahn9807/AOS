@@ -70,13 +70,12 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
     vga_init();
     interrupt_init();
     multiboot_init(magic, multiboot_addr, &kernel_start, &kernel_end, &multiboot_start, &multiboot_end) != 0 ? panic("check multiboot2 magic!\n") : 0;
-    debug_multiboot2(multiboot_addr);
     memory_init(kernel_start, kernel_end, multiboot_start, multiboot_end, multiboot_addr);
-    tss_init();
-    gdt_init();
     pic_init();
     bind_interrupt_with_name(0x20, &timer_interrupt, "Timer");
     thread_init();
+    tss_init();
+    gdt_init();
     intr_enable();
     vfs_init();
     dev_init();

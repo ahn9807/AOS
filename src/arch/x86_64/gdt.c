@@ -61,7 +61,7 @@ static struct segment_desc gdt[SEL_CNT] = {
 
 struct {
 	uint16_t len;
-	struct segment_dex* addr;
+	struct segment_desc* addr;
 } __attribute__ ((packed)) gdtr;
 
 void gdt_init(void)
