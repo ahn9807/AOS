@@ -113,8 +113,7 @@ static int pt_load(struct ELF64_Phdr *phdr, file_t *file) {
 	uint64_t mem_vaddr = ALIGN_ADDR(phdr->p_vaddr);
 	uint64_t mem_remaning = phdr->p_vaddr - mem_vaddr;
 	uint64_t read_bytes, zero_bytes;
-	uint16_t flags = (phdr->p_flags == PF_W ? PAGE_WRITE | PAGE_USER_ACCESSIBLE : PAGE_USER_ACCESSIBLE);
-	flags |= PAGE_PRESENT;
+	uint16_t flags = (phdr->p_flags == PF_W ? PAGE_WRITE | PAGE_USER_ACCESSIBLE | PAGE_PRESENT : PAGE_USER_ACCESSIBLE | PAGE_PRESENT);
 
 	// Data / Code section
 	if(phdr->p_filesz > 0) {
@@ -145,8 +144,8 @@ static int pt_load(struct ELF64_Phdr *phdr, file_t *file) {
 			return -1;
 		}
 
-		memset(P2V(kpage) + page_read_bytes, 0, page_zero_bytes);
-		printf("mem_vaddr: 0x%x kpage: 0x%x\n", mem_vaddr, kpage);
+		memset(P2V(kpage + page_read_bytes), 0, page_zero_bytes);
+
 		if(vmm_set_page(thread_current()->p4, mem_vaddr, kpage, flags)) {
 			printf("failed to allocate at vm\n");
 			pmm_free(kpage);

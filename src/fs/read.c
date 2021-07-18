@@ -1,4 +1,5 @@
 #include "vfs.h"
+#include "printf.h"
 
 size_t vfs_read(struct file *file, void *buffer, size_t size)
 {
@@ -18,8 +19,8 @@ size_t vfs_read(struct file *file, void *buffer, size_t size)
 			return 0;
 		}
 	}
-
-	return file->f_op->read(file->inode, buffer, size, file->offset);
+	file->offset += size;
+	return file->f_op->read(file->inode, buffer, size, file->offset - size);
 }
 
 
@@ -34,5 +35,6 @@ size_t vfs_write(struct file *file, void *buffer, size_t size) {
 		return -FS_UNSUPPORTED;
 	}
 
-	file->f_op->write(file->inode, buffer, size, file->offset);
+	file->offset += size;
+	return file->f_op->write(file->inode, buffer, size, file->offset - size);
 }

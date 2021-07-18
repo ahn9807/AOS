@@ -88,7 +88,7 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
     vfs_bind("/", root_node);
 
     file_t file_1;
-    vfs_open_by_path("/a/b/c/test_1/", &file_1);
+    vfs_open_by_path("/a/b/c/test_1", &file_1);
     temp_ls(root_node);
     temp_cat(&file_1);
 
@@ -99,6 +99,7 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
     // unrecover kernel panic. Also this changes the current kernel_entry
     // Function to the idle thread.
     // Rest of the powerup process in done by init.
+    printf("end of kernel_entry\n");
     thread_run_idle();
 }
 
@@ -124,13 +125,11 @@ void temp_cat(file_t *file) {
     }
     char* buf = kmalloc(4096);
 
-    vfs_read(file, buf, 4096);
-
-    for(int i=0;i<256;i++) {
-        if(buf[i] == -1) {
-            return;
+    for(int page = 0; page < vfs_get_size(file); page += 4096) {
+        int read_size = vfs_read(file, buf, 4096);
+        for(int i=0;i<read_size;i++) {
+            printf("%c", buf[i]);
         }
-        printf("%c", buf[i]);
     }
     printf("\n");
 

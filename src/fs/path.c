@@ -34,7 +34,7 @@ char *path_get_name(const char *path) {
 // parse path to the token
 // eg. /a/b/c/.. -> a b c ..
 char **path_tokenize(const char *path) {
-       if(path == NULL || *path == '\0')
+    if(path == NULL || *path == '\0')
         return NULL;
 
     while (*path == PATH_SEPARATOR)

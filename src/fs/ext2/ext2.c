@@ -469,15 +469,16 @@ static uint32_t block_offset(ext2_fs_t *ext2, ext2_inode_t *inode, uint32_t bloc
 
     a = block_idx - EXT2_DIRECT_BLOCKS;
 
+    uint32_t *tmp = kmalloc(ext2->block_size); // size of block pointer is 4bytes
     if (a < 0)
     {
-        return inode->block[block_idx];
+        ret = inode->block[block_idx];
+        goto done;
     }
-    uint32_t *tmp = kmalloc(ext2->block_size); // size of block pointer is 4bytes
     b = a - p;
     if (b < 0)
     {
-        dev_read(ext2->mountpoint->device, SINGLE_INDIRECT_POINTER(inode), ext2->block_size, tmp);
+        dev_read(ext2->mountpoint->device, SINGLE_INDIRECT_POINTER(inode) * ext2->block_size, ext2->block_size, tmp);
         ret = tmp[a];
         goto done;
     }
@@ -486,7 +487,7 @@ static uint32_t block_offset(ext2_fs_t *ext2, ext2_inode_t *inode, uint32_t bloc
     {
         c = b / p;
         d = b - c * p;
-        dev_read(ext2->mountpoint->device, DOUBLE_INDIRECT_POINTER(inode), ext2->block_size, tmp);
+        dev_read(ext2->mountpoint->device, DOUBLE_INDIRECT_POINTER(inode) * ext2->block_size, ext2->block_size, tmp);
         dev_read(ext2->mountpoint->device, tmp[c], ext2->block_size, tmp);
         ret = tmp[d];
         goto done;
@@ -497,7 +498,7 @@ static uint32_t block_offset(ext2_fs_t *ext2, ext2_inode_t *inode, uint32_t bloc
         e = c / (p * p);
         f = (c - e * p * p) / p;
         g = (c - e * p * p - f * p);
-        dev_read(ext2->mountpoint->device, TRIPLE_INDIRECT_POINTER(inode), ext2->block_size, tmp);
+        dev_read(ext2->mountpoint->device, TRIPLE_INDIRECT_POINTER(inode) * ext2->block_size, ext2->block_size, tmp);
         dev_read(ext2->mountpoint->device, tmp[e], ext2->block_size, tmp);
         dev_read(ext2->mountpoint->device, tmp[f], ext2->block_size, tmp);
         ret = tmp[p];
@@ -506,6 +507,7 @@ static uint32_t block_offset(ext2_fs_t *ext2, ext2_inode_t *inode, uint32_t bloc
 
 done:
     kfree(tmp);
+    // printf("[bid: %d ret %d] ", block_idx, ret);
     return ret;
 }
 
