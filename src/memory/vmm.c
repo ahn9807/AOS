@@ -67,6 +67,18 @@ int vmm_set_page(uint64_t P4, uint64_t addr, uint64_t page, uint16_t flags)
 	return 0;
 }
 
+int vmm_set_pages(uint64_t P4, uint64_t addr, uint64_t page, uint16_t flags, size_t num) {
+	for(int i=0;i<num;i++) {
+		if(vmm_set_page(P4, addr + PAGE_SIZE * i, page + PAGE_SIZE * i, flags)) {
+			for(int j=0;j<=i;j++) {
+				vmm_clear_page(P4, addr + PAGE_SIZE * i, true);
+			}
+		}
+	}
+
+	return 0;
+}
+
 void vmm_activate(uintptr_t p4) {
 	if(p4 == NULL) {
 		lcr3(V2P((uint64_t)&p4_table));

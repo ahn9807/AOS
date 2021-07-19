@@ -1,5 +1,7 @@
 #pragma once
 
+#include "memory.h"
+
 /* GDT selectors defined by loader.
    More selectors are defined by userprog/gdt.h. */
 #define SEL_NULL        0x00    /* Null selector. */
@@ -10,3 +12,4 @@
 #define SEL_TSS         0x28    /* Task-state segment. */
 #define SEL_CNT         8       /* Number of segments. */
 #define USER_STACK 0x47480000
+#define USER_STACK_SIZE 8      /* 32 PAGES at one user stack */

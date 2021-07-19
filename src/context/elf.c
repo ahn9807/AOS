@@ -86,9 +86,9 @@ int elf_load(const char *file_name, struct intr_frame *if_)
 
 	if_->rip = ehdr.e_entry;
 
-	uint8_t* spage = pmm_alloc();
+	uint8_t* spage = pmm_alloc_pages(USER_STACK_SIZE);
 	if(spage != NULL) {
-		vmm_set_page(thread_current()->p4, USER_STACK - PAGE_SIZE, spage, PAGE_USER_ACCESSIBLE | PAGE_WRITE | PAGE_PRESENT);
+		vmm_set_pages(thread_current()->p4, USER_STACK - PAGE_SIZE, spage, PAGE_USER_ACCESSIBLE | PAGE_WRITE | PAGE_PRESENT, USER_STACK_SIZE);
 		if_->rsp = USER_STACK;
 	} else {
 		printf("failed to alloc stack\n");
@@ -113,7 +113,7 @@ static int pt_load(struct ELF64_Phdr *phdr, file_t *file) {
 	uint64_t mem_vaddr = ALIGN_ADDR(phdr->p_vaddr);
 	uint64_t mem_remaning = phdr->p_vaddr - mem_vaddr;
 	uint64_t read_bytes, zero_bytes;
-	uint16_t flags = (phdr->p_flags == PF_W ? PAGE_WRITE | PAGE_USER_ACCESSIBLE | PAGE_PRESENT : PAGE_USER_ACCESSIBLE | PAGE_PRESENT);
+	uint16_t flags = (phdr->p_flags & PF_W ? PAGE_WRITE | PAGE_USER_ACCESSIBLE | PAGE_PRESENT : PAGE_USER_ACCESSIBLE | PAGE_PRESENT);
 
 	// Data / Code section
 	if(phdr->p_filesz > 0) {
