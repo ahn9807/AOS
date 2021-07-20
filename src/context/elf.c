@@ -24,11 +24,6 @@ int elf_load(const char *file_name, struct intr_frame *if_)
 
 	th->p4 = vmm_new_p4();
 
-	// To used in user process, we have to init tss->rsp and page table
-	
-	vmm_activate(th->p4);
-	tss_update(th);
-
 	if (vfs_open_by_path(file_name, &file))
 	{
 		printf("open failed");
@@ -43,8 +38,6 @@ int elf_load(const char *file_name, struct intr_frame *if_)
 		error_code = -FS_INVALID;
 		goto done;
 	}
-
-	elf_debug(&ehdr);
 
 	if (elf_check_supported(&ehdr))
 	{
@@ -88,7 +81,7 @@ int elf_load(const char *file_name, struct intr_frame *if_)
 
 	uint8_t* spage = pmm_alloc_pages(USER_STACK_SIZE);
 	if(spage != NULL) {
-		vmm_set_pages(thread_current()->p4, USER_STACK - PAGE_SIZE, spage, PAGE_USER_ACCESSIBLE | PAGE_WRITE | PAGE_PRESENT, USER_STACK_SIZE);
+		vmm_set_pages(th->p4, USER_STACK - PAGE_SIZE, spage, PAGE_USER_ACCESSIBLE | PAGE_WRITE | PAGE_PRESENT, USER_STACK_SIZE);
 		if_->rsp = USER_STACK;
 	} else {
 		printf("failed to alloc stack\n");

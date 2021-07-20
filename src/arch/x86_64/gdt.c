@@ -106,5 +106,6 @@ void gdt_init(void)
 				 "1:\n" ::"b"(SEL_KCSEG)
 				 : "cc", "memory");
 	/* Kill the local descriptor table */
+	ltr(SEL_TSS);
 	lldt(0);
 }

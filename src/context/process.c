@@ -35,10 +35,17 @@ int process_exec(char *f_name) {
 	if(elf_load(parsed_input[0], &_if)) {
 		return -1;
 	}
+
 	setup_stack(&_if, argv_length(parsed_input), parsed_input, NULL);
-	vmm_activate(thread_current()->p4);
+
+	tss_update(thread_current_s());
+	vmm_activate(thread_current_s()->p4);
+	
 	kfree(parsed_input);
 	printf("start process %s\n", parsed_input[0]);
+	printf("current rsp: 0x%x\n", rrsp());
+	printf("th: 0x%x\n", thread_current());
+	printf("tss->rsp0: 0x%x\n", tss_get()->rsp0);
 	do_iret(&_if);
 	NOT_REACHED();
 }

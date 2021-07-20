@@ -25,18 +25,21 @@
 // 15 	TCE (Translation Cache Extension)
 #define MSR_TCE (1<<15)
 
+/// Extended Feature Enable Register (EFER) is a model-specific register added in the AMD K6 processor,
+/// to allow enabling the SYSCALL/SYSRET instruction, and later for entering and exiting long mode.
+#define MSR_EFER 0xc0000080
 /// Ring 0 and Ring 3 Segment bases, as well as SYSCALL EIP.
 /// Low 32 bits = SYSCALL EIP, bits 32-47 are kernel segment base, bits 48-63
 /// are user segment base.
-#define MSR_STAR = 0xc0000081
+#define MSR_STAR  0xc0000081
 /// The kernel's RIP SYSCALL entry for 64 bit software.
-#define MSR_LSTAR = 0xc0000082
+#define MSR_LSTAR  0xc0000082
 /// The kernel's RIP for SYSCALL in compatibility mode.
-#define MSR_CSTAR = 0xc0000083
+#define MSR_CSTAR  0xc0000083
 /// The low 32 bits are the SYSCALL flag mask.
 /// If a bit in this is set, the corresponding bit in rFLAGS is cleared.
-#define MSR_SF_MASK = 0xc0000084
-#define MSR_FS_BASE = 0xc0000100
-#define MSR_GS_BASE = 0xc0000101
-#define MSR_KERNEL_GS_BASE = 0xc0000102
-#define MSR_TSC_DEADLINE = 0x6e0
+#define MSR_SF_MASK  0xc0000084
+#define MSR_FS_BASE  0xc0000100
+#define MSR_GS_BASE  0xc0000101
+#define MSR_KERNEL_GS_BASE  0xc0000102
+#define MSR_TSC_DEADLINE  0x6e0

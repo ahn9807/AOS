@@ -4,6 +4,7 @@
 #include "tss.h"
 #include "memory.h"
 #include "debug.h"
+#include "layout.h"
 
 /* The Task-State Segment (TSS).
  *
@@ -52,9 +53,7 @@ void tss_init(void)
 	/* Our TSS is never used in a call gate or task gate, so only a
 	 * few fields of it are ever referenced, and those are the only
 	 * ones we initialize. */
-	thread_validate();
 	tss = P2V(pmm_calloc());
-	tss_update(thread_current_s());
 }
 
 /* Returns the kernel TSS. */

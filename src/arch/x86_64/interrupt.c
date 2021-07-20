@@ -5,6 +5,7 @@
 #include "string.h"
 #include "sched.h"
 #include "debug.h"
+#include "layout.h"
 #include "cpu_flags.h"
 
 #define INTERRUPT_LEN 256
@@ -98,6 +99,7 @@ void interrupt_handler(struct intr_frame *frame) {
     // INTR is NULL. Panic and debug INTR
     else {
         intr_debug(frame);
+        debug_backtrace();
         panic("UNHANDLED INTERRUPT OCCURRED!");
     }
 

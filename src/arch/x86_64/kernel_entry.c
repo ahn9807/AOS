@@ -25,6 +25,7 @@
 #include "tss.h"
 #include "process.h"
 #include "gdt.h"
+#include "syscalls.h"
 
 extern uint64_t p4_table;
 extern uint64_t temp_table;
@@ -58,7 +59,7 @@ void temp_thread2() {
 }
 
 void exec() {
-    if(process_exec("/prog_1")) {
+    if(process_exec("/prog_2")) {
         PANIC("EXEC FAILED");
     }
 }
@@ -68,29 +69,30 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
 {
     uint64_t kernel_start, kernel_end, multiboot_start, multiboot_end;
     vga_init();
-    interrupt_init();
     multiboot_init(magic, multiboot_addr, &kernel_start, &kernel_end, &multiboot_start, &multiboot_end) != 0 ? panic("check multiboot2 magic!\n") : 0;
     memory_init(kernel_start, kernel_end, multiboot_start, multiboot_end, multiboot_addr);
     pic_init();
-    bind_interrupt_with_name(0x20, &timer_interrupt, "Timer");
-    thread_init();
+    interrupt_init();
+    intr_enable();
     tss_init();
     gdt_init();
-    intr_enable();
+    thread_init();
+    syscall_init();
     vfs_init();
     dev_init();
     ext2_init();
 
+    bind_interrupt_with_name(0x20, &timer_interrupt, "Timer");
     char *dev_path = "/dev/disk0/";
     inode_t *root_node = kmalloc(sizeof(inode_t));
     device_t *reg_dev = vfs_mountpoint(dev_path)->inode->device;
     vfs_mount(dev_path, root_node);
     vfs_bind("/", root_node);
 
-    file_t file_1;
-    vfs_open_by_path("/a/b/c/test_1", &file_1);
-    temp_ls(root_node);
-    temp_cat(&file_1);
+    // file_t file_1;
+    // vfs_open_by_path("/a/b/c/test_1", &file_1);
+    // temp_ls(root_node);
+    // temp_cat(&file_1);
 
     thread_create("exec", &exec, NULL);
 
