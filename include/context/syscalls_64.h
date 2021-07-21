@@ -15,3 +15,4 @@
 #define __SYSCALL_64(nr, sym) [nr] = sym,
 
 __SYSCALL_COMMON(1, sys_write)
+__SYSCALL_COMMON(60, sys_exit)

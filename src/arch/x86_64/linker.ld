@@ -39,6 +39,13 @@ SECTIONS {
         *(.data .data.* )
     }
 
+    .syscall_info_table ALIGN(4K) : AT(ADDR(.syscall_info_table) - KERNEL_OFFSET)
+    {        
+        _start_syscall_info_table = .;
+        *(__syscalls_info)
+        _end_syscall_info_table = .;
+    }
+
     /* Read-write data (uninitialized) and stack */
     _start_bss = .;
     .bss ALIGN(4K) : AT(ADDR(.bss) - KERNEL_OFFSET)

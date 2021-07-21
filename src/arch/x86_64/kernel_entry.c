@@ -71,8 +71,9 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
     vga_init();
     multiboot_init(magic, multiboot_addr, &kernel_start, &kernel_end, &multiboot_start, &multiboot_end) != 0 ? panic("check multiboot2 magic!\n") : 0;
     memory_init(kernel_start, kernel_end, multiboot_start, multiboot_end, multiboot_addr);
-    pic_init();
     interrupt_init();
+    bind_interrupt_with_name(0x20, &timer_interrupt, "Timer");
+    pic_init();
     intr_enable();
     tss_init();
     gdt_init();
@@ -82,7 +83,6 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
     dev_init();
     ext2_init();
 
-    bind_interrupt_with_name(0x20, &timer_interrupt, "Timer");
     char *dev_path = "/dev/disk0/";
     inode_t *root_node = kmalloc(sizeof(inode_t));
     device_t *reg_dev = vfs_mountpoint(dev_path)->inode->device;
@@ -93,6 +93,7 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
     // vfs_open_by_path("/a/b/c/test_1", &file_1);
     // temp_ls(root_node);
     // temp_cat(&file_1);
+    cls();
 
     thread_create("exec", &exec, NULL);
 

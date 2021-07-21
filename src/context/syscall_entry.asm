@@ -5,7 +5,6 @@ extern tss
 
 section .text
 syscall_entry:
-	swapgs
 	mov [rel temp1], rbx
 	mov [rel temp2], r12
 	mov rbx, rsp
@@ -42,9 +41,10 @@ syscall_entry:
 check_intr:
 	bts r11, 9
 	jnb no_sti
-	cli
+	sti
 no_sti:
-	call syscall_handler
+	mov r12, syscall_handler
+	call r12
 	pop r15
 	pop r14
 	pop r13
@@ -65,7 +65,7 @@ no_sti:
 	add rsp, 0x8
 	pop r11
 	pop rsp
-	sysret
+	o64 sysret ; o64 neended for return to 64bit mode.
 	
 section .data
 temp1:

@@ -15,20 +15,48 @@
 
 #define __SC_DECL(t, a) t a
 
-#define __SYSCALL_DEFINEx(x, name, ...) \
+typedef union syscall_ptr
+{
+	long (*syscall_arg0)(void);
+	long (*syscall_arg1)(unsigned long);
+	long (*syscall_arg2)(unsigned long, unsigned long);
+	long (*syscall_arg3)(unsigned long, unsigned long, unsigned long);
+	long (*syscall_arg4)(unsigned long, unsigned long, unsigned long, unsigned long);
+	long (*syscall_arg5)(unsigned long, unsigned long, unsigned long, unsigned long, unsigned long);
+	long (*syscall_arg6)(unsigned long, unsigned long, unsigned long, unsigned long, unsigned long, unsigned long);
+} syscall_ptr_t;
+
+typedef struct syscall_info {
+	const char *syscall_name;
+	uint32_t syscall_nr;
+	uint32_t arg_nr;
+	syscall_ptr_t syscall_p;
+} syscall_info_t;
+
+#define __SYSCALL_DEFINE_METADATA(nr, x, name) 		\
+    struct syscall_info __syscall_info_sys##name = { 			\
+        .syscall_name = "sys"#name, 							\
+        .syscall_nr = nr, 										\
+        .arg_nr = x, 											\
+        .syscall_p = NULL,										\
+    };															\
+	struct syscall_info __attribute__((section("__syscalls_info"))) \
+	*__p_syscall_meta_##name = &__syscall_info_sys##name;
+
+#define __SYSCALL_DEFINEx(nr, x, name, ...) \
+	__SYSCALL_DEFINE_METADATA(nr, x, name) \
 	long sys##name(__MAP(x, __SC_DECL, __VA_ARGS__))
 
-#define SYSCALL_DEFINE0(name) long sys_##name()
-#define SYSCALL_DEFINE1(name, ...) __SYSCALL_DEFINEx(1, _##name, __VA_ARGS__)
-#define SYSCALL_DEFINE2(name, ...) __SYSCALL_DEFINEx(2, _##name, __VA_ARGS__)
-#define SYSCALL_DEFINE3(name, ...) __SYSCALL_DEFINEx(3, _##name, __VA_ARGS__)
-#define SYSCALL_DEFINE4(name, ...) __SYSCALL_DEFINEx(4, _##name, __VA_ARGS__)
-#define SYSCALL_DEFINE5(name, ...) __SYSCALL_DEFINEx(5, _##name, __VA_ARGS__)
-#define SYSCALL_DEFINE6(name, ...) __SYSCALL_DEFINEx(6, _##name, __VA_ARGS__)
+#define SYSCALL_DEFINE0(nr, name) \
+	__SYSCALL_DEFINE_METADATA(nr, 0, name) \
+	long sys_##name()
+#define SYSCALL_DEFINE1(nr, name, ...) __SYSCALL_DEFINEx(nr, 1, _##name, __VA_ARGS__)
+#define SYSCALL_DEFINE2(nr, name, ...) __SYSCALL_DEFINEx(nr, 2, _##name, __VA_ARGS__)
+#define SYSCALL_DEFINE3(nr, name, ...) __SYSCALL_DEFINEx(nr, 3, _##name, __VA_ARGS__)
+#define SYSCALL_DEFINE4(nr, name, ...) __SYSCALL_DEFINEx(nr, 4, _##name, __VA_ARGS__)
+#define SYSCALL_DEFINE5(nr, name, ...) __SYSCALL_DEFINEx(nr, 5, _##name, __VA_ARGS__)
+#define SYSCALL_DEFINE6(nr, name, ...) __SYSCALL_DEFINEx(nr, 6, _##name, __VA_ARGS__)
 
 #define SYSCALL_DEFINE_MAXARGS 6
 
-typedef long (*syscall_ptr_t)(unsigned long, unsigned long,
-							  unsigned long, unsigned long,
-							  unsigned long, unsigned long);
 void syscall_init();

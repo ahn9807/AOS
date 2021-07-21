@@ -36,7 +36,7 @@ uintptr_t memory_init(uintptr_t kernel_start, uintptr_t kernel_end, uintptr_t mu
 			vmm_set_page(kernel_P4, addr, p, flags | PAGE_PRESENT);
 		}
 	}
-
+	bss_init();
 	lcr3(V2P(kernel_P4));
 
 	return kernel_P4;

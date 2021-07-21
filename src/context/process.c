@@ -42,10 +42,6 @@ int process_exec(char *f_name) {
 	vmm_activate(thread_current_s()->p4);
 	
 	kfree(parsed_input);
-	printf("start process %s\n", parsed_input[0]);
-	printf("current rsp: 0x%x\n", rrsp());
-	printf("th: 0x%x\n", thread_current());
-	printf("tss->rsp0: 0x%x\n", tss_get()->rsp0);
 	do_iret(&_if);
 	NOT_REACHED();
 }
