@@ -21,11 +21,11 @@ osdev project for studying purposes. First target is pintos and second is run gc
 - [ ] Swap in and out
 - [ ] Cpoy on write
 ## User Process
-- [ ] Elf Loader
+- [x] Elf Loader
 - [ ] Dynamic Linker
-- [ ] Argument Passing
+- [x] Argument Passing
 - [ ] User Memory
-- [ ] System calls
+- [x] System calls - Have to implement POSIX
 - [ ] Process Termination Messages
 - [ ] Safty
 - [ ] Extend File Descriptor

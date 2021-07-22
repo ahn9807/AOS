@@ -43,6 +43,7 @@ include_directories(
     ${CMAKE_CURRENT_SOURCE_DIR}/include/context
     ${CMAKE_CURRENT_SOURCE_DIR}/include/fs
     ${CMAKE_CURRENT_SOURCE_DIR}/include/fs/ext2
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/syscall
 )
 
 add_executable(

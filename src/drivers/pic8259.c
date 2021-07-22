@@ -44,3 +44,9 @@ void pic_end_of_interrupt(int irq) {
 	if (irq >= 0x28)
 		outb (0xa0, 0x20);
 }
+
+void pic_disable() {
+    /* Mask all interrupts on both PICs. */
+	outb (0x21, 0xff);
+	outb (0xa1, 0xff);
+}

@@ -23,14 +23,12 @@ void syscall_init() {
 	write_msr(MSR_LSTAR, (uint64_t)syscall_entry);
 	write_msr(MSR_SF_MASK, FLAG_IF | FLAG_TF | FLAG_DF | FLAG_IOPL1 | FLAG_AC | FLAG_NT);
 
-	cls();
-
 	// fill default settings for syscall	
 	for(int i=0;i<MAX_SYSCALL_NR;i++) {
 		syscall_info_table[i].syscall_name = "sys_ni";
 		syscall_info_table[i].syscall_p = syscall_func_table[i];
 		syscall_info_table[i].arg_nr = 0;
-		syscall_info_table[i].syscall_nr = -1;
+		syscall_info_table[i].syscall_nr = i;
 	}
 
 	for(syscall_info_t **cursor = (syscall_info_t **)&_start_syscall_info_table; 
@@ -56,6 +54,7 @@ void syscall_handler(struct intr_frame *if_) {
 		syscall_info_t *syscall_info = &syscall_info_table[if_->reg.rax];
 		long ret = 0;
 
+		debug_syscall(if_);
 		switch (syscall_info->arg_nr)
 		{
 			case 0:
@@ -80,7 +79,7 @@ void syscall_handler(struct intr_frame *if_) {
 				ret = syscall_func_table[if_->reg.rax].syscall_arg6(if_->reg.rdi, if_->reg.rsi, if_->reg.rdx, if_->reg.r10, if_->reg.r8, if_->reg.r9);
 				break;
 			default:
-				PANIC("UNDEFINED SYSTEM CALL!");
+				panic("UNDEFINED SYSTEM CALL!");
 				break;
 			
 			if_->reg.rax = (uint64_t)ret;
@@ -103,7 +102,7 @@ SYSCALL_DEFINE1(60, exit, int, error_code) {
 }
 
 SYSCALL_DEFINE0(-1, ni) {
-	PANIC("UNREGISTERED SYSTEM CALL!");
+	panic("UNREGISTERED SYSTEM CALL!");
 	return -ENOSYS;	
 }
 

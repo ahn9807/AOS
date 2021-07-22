@@ -26,6 +26,7 @@
 #include "process.h"
 #include "gdt.h"
 #include "syscalls.h"
+#include "cmos.h"
 
 extern uint64_t p4_table;
 extern uint64_t temp_table;
@@ -59,7 +60,7 @@ void temp_thread2() {
 }
 
 void exec() {
-    if(process_exec("/prog_2")) {
+    if(process_exec("/prog_1")) {
         PANIC("EXEC FAILED");
     }
 }
@@ -74,6 +75,7 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
     interrupt_init();
     bind_interrupt_with_name(0x20, &timer_interrupt, "Timer");
     pic_init();
+    cmos_init();
     intr_enable();
     tss_init();
     gdt_init();
@@ -85,15 +87,19 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
 
     char *dev_path = "/dev/disk0/";
     inode_t *root_node = kmalloc(sizeof(inode_t));
-    device_t *reg_dev = vfs_mountpoint(dev_path)->inode->device;
     vfs_mount(dev_path, root_node);
     vfs_bind("/", root_node);
 
-    // file_t file_1;
-    // vfs_open_by_path("/a/b/c/test_1", &file_1);
-    // temp_ls(root_node);
-    // temp_cat(&file_1);
-    cls();
+    struct tm current_data;
+    while(1) {
+        cls();
+        cmos_get_real_time(&current_data);
+        printf("UTC: year: %d, month: %d day: %d\nhour: %d, min: %d, sec: %d\n", 
+        current_data.tm_year + 1900, current_data.tm_mon + 1, current_data.tm_mday,  current_data.tm_hour, current_data.tm_min, current_data.tm_sec);
+        for(int i=0;i<100000000;i++) {
+
+        }
+    }
 
     thread_create("exec", &exec, NULL);
 
