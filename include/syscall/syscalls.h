@@ -59,4 +59,24 @@ typedef struct syscall_info {
 
 #define SYSCALL_DEFINE_MAXARGS 6
 
+/// Initialize the system call tables
 void syscall_init();
+
+// From this, definition of system calls goes by
+
+/* Default system call */
+long sysc_ni();
+
+/* syscall/context */
+long sys_exit(int);
+
+/* syscall/fs */
+long sys_write(uint64_t, const char *, size_t);
+
+/* syscall/futex */
+
+/* syscall/net */
+
+/* syscall/proc */
+
+/* syscall/sys */

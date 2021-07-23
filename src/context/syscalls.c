@@ -87,20 +87,6 @@ void syscall_handler(struct intr_frame *if_) {
 	}
 }
 
-SYSCALL_DEFINE3(1, write, uint64_t, fd, const char *, buf, size_t, size) {
-	char *buffer = kmalloc(size + 1);
-	memcpy(buffer, buf, size);
-	buffer[size] = '\0';
-	printf("%s", buffer);
-	kfree(buffer);
-
-	return 0;
-}
-
-SYSCALL_DEFINE1(60, exit, int, error_code) {
-	thread_exit();
-}
-
 SYSCALL_DEFINE0(-1, ni) {
 	panic("UNREGISTERED SYSTEM CALL!");
 	return -ENOSYS;	

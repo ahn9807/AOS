@@ -1,5 +1,7 @@
 #pragma once
 
+#include "syscalls.h"
+
 /* This file is included at the end of the syscall initialization
 	const sys_call_ptr_t sys_call_table[__NR_syscall_max+1] = {
     [0 ... __NR_syscall_max] = &sys_ni_syscall,
