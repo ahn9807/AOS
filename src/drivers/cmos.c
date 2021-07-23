@@ -4,6 +4,7 @@
 #include "time.h"
 #include "port.h"
 #include "vga_text.h"
+#include "debug.h"
 
 // Have to parse from ACPI
 int century_register = 0x00;
@@ -100,4 +101,8 @@ void cmos_get_real_time(struct tm *real_time) {
 	real_time->tm_mday = boot_real_time.day;
 	real_time->tm_mon = boot_real_time.month - 1;
 	real_time->tm_year = boot_real_time.year + boot_real_time.century * 100 - 1900;
+}
+
+void cmos_set_real_time(struct tm *real_time) {
+	PANIC("NOT IMPLEMENTED");
 }

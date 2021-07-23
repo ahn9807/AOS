@@ -27,6 +27,8 @@
 #include "gdt.h"
 #include "syscalls.h"
 #include "cmos.h"
+#include "acpi.h"
+#include "apic.h"
 
 extern uint64_t p4_table;
 extern uint64_t temp_table;
@@ -60,7 +62,7 @@ void temp_thread2() {
 }
 
 void exec() {
-    if(process_exec("/prog_1")) {
+    if(process_exec("/minish")) {
         PANIC("EXEC FAILED");
     }
 }
@@ -76,6 +78,8 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
     bind_interrupt_with_name(0x20, &timer_interrupt, "Timer");
     pic_init();
     cmos_init();
+    acpi_init();
+    apic_init();
     intr_enable();
     tss_init();
     gdt_init();
@@ -90,17 +94,6 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
     vfs_mount(dev_path, root_node);
     vfs_bind("/", root_node);
 
-    struct tm current_data;
-    while(1) {
-        cls();
-        cmos_get_real_time(&current_data);
-        printf("UTC: year: %d, month: %d day: %d\nhour: %d, min: %d, sec: %d\n", 
-        current_data.tm_year + 1900, current_data.tm_mon + 1, current_data.tm_mday,  current_data.tm_hour, current_data.tm_min, current_data.tm_sec);
-        for(int i=0;i<100000000;i++) {
-
-        }
-    }
-
     thread_create("exec", &exec, NULL);
 
     // Have to call explicitly. Cause without this,
@@ -108,9 +101,10 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
     // unrecover kernel panic. Also this changes the current kernel_entry
     // Function to the idle thread.
     // Rest of the powerup process in done by init.
-    printf("end of kernel_entry\n");
     thread_run_idle();
 }
+
+int ap_main();
 
 void temp_ls(inode_t *dir_node) {
     if(dir_node == NULL) {

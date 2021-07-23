@@ -22,3 +22,4 @@
 
 void cmos_init();
 void cmos_get_real_time(struct tm *real_time);
+void cmos_set_real_time(struct tm *real_time);
