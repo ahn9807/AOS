@@ -49,8 +49,8 @@ include_directories(
 add_executable(
     ${KERNEL_BIN}
 
-    ${kernel_SRC}
     ${kernel_ASM}
+    ${kernel_SRC}
 )
 
 set_target_properties(${KERNEL_BIN} PROPERTIES CMAKE_LINKER "/usr/bin/ld")
@@ -65,21 +65,21 @@ add_custom_command(TARGET ${KERNEL_BIN} POST_BUILD
 )
 
 add_custom_target(run
-    qemu-system-x86_64 -no-reboot -no-shutdown -cdrom kernel.iso -curses -m 4G -drive id=disk,format=raw,file=disk.img
+    qemu-system-x86_64 -smp 4 -no-reboot -no-shutdown -cdrom kernel.iso -curses -m 4G -drive id=disk,format=raw,file=disk.img
 )
 
 add_custom_target(debug
     COMMAND touch .gdbinit
     COMMAND echo "target remote localhost:1234" > .gdbinit
     COMMAND echo "symbol-file ${KERNEL_BIN}" >> .gdbinit
-    COMMAND qemu-system-x86_64 -no-shutdown -no-reboot -cdrom kernel.iso -curses -m 4G -drive id=disk,format=raw,file=disk.img -s -S
+    COMMAND qemu-system-x86_64 -smp 4 -no-shutdown -no-reboot -cdrom kernel.iso -curses -m 4G -drive id=disk,format=raw,file=disk.img -s -S
 )
 
 add_custom_target(debug_qemu
     COMMAND touch .gdbinit
     COMMAND echo "target remote localhost:1234" > .gdbinit
     COMMAND echo "symbol-file ${KERNEL_BIN}" >> .gdbinit
-    COMMAND qemu-system-x86_64 -d int -no-shutdown -no-reboot -cdrom kernel.iso -vnc :1 -m 4G -drive id=disk,format=raw,file=disk.img -s -S
+    COMMAND qemu-system-x86_64 -smp 4 -d int -no-shutdown -no-reboot -cdrom kernel.iso -vnc :1 -m 4G -drive id=disk,format=raw,file=disk.img -s -S
 )
 
 add_custom_target(count_line

@@ -1,6 +1,7 @@
 ENTRY(start)
 OUTPUT_FORMAT(elf64-x86-64)
 
+/* Higher half address of the kernel */
 KERNEL_OFFSET = 0xFFFFFF8000000000;
 
 SECTIONS {
@@ -12,8 +13,9 @@ SECTIONS {
         *(.bootstrap. .bootstrap.*)
     }
 
+    /* 0x8000 is reserved for ap_trampoline */
     . += KERNEL_OFFSET;
-    . += 0x10000;
+    . += 0x10000; 
 
     /* code section */
     .text ALIGN(4K) : AT(ADDR(.text) - KERNEL_OFFSET)
@@ -39,6 +41,7 @@ SECTIONS {
         *(.data .data.* )
     }
 
+    /* store SYSCALL_METADATA (parsed at syscall_init) */
     .syscall_info_table ALIGN(4K) : AT(ADDR(.syscall_info_table) - KERNEL_OFFSET)
     {        
         _start_syscall_info_table = .;
@@ -54,6 +57,7 @@ SECTIONS {
     }
     _end_bss = .;
 
+    /* Kernel stack */
     .kernel_stack ALIGN(4K) : AT(ADDR(.kernel_stack) - KERNEL_OFFSET)
     {
         *(.kernel_stack)

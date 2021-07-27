@@ -77,7 +77,3 @@ struct acpi_rsdt *acpi_get_rsdt(char signature[4]) {
 
 	return NULL;
 }
-
-struct acpi_madt *acpi_get_madt() {
-
-}

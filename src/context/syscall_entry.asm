@@ -5,6 +5,7 @@ extern tss
 
 section .text
 syscall_entry:
+	swapgs
 	mov [rel temp1], rbx
 	mov [rel temp2], r12
 	mov rbx, rsp

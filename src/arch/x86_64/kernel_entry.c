@@ -29,6 +29,7 @@
 #include "cmos.h"
 #include "acpi.h"
 #include "apic.h"
+#include "cpu.h"
 
 extern uint64_t p4_table;
 extern uint64_t temp_table;
@@ -88,6 +89,7 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
     vfs_init();
     dev_init();
     ext2_init();
+    // cpu_init();
 
     char *dev_path = "/dev/disk0/";
     inode_t *root_node = kmalloc(sizeof(inode_t));

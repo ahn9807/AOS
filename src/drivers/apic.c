@@ -4,6 +4,26 @@
 #include "cpu.h"
 #include "debug.h"
 #include "memory.h"
+#include "vmm.h"
+
+uintptr_t lapic_base_addr;
+uintptr_t ioapic_base_addr;
+
+static inline lapic_write(size_t addr, uint32_t value) {
+	*((volatile uint32_t*)(lapic_base_addr + addr)) = value;
+	asm volatile("":::"memory"); // inline assembly barrier for block memory reordering
+}
+
+static inline uint32_t lapic_read(size_t addr) {
+	return *((volatile uint32_t*)lapic_base_addr + addr);
+}
+
+void lapic_send_ipi(int id, uint32_t val) {
+	ASSERT(lapic_base_addr != NULL); // should be removed for speed up!
+	lapic_write(0x310, id << 24);
+	lapic_write(0x300, val);
+	do { asm volatile ("pause" : : : "memory"); } while (lapic_read(0x300) & (1 << 12));
+}
 
 void apic_init() {
 	struct acpi_rsdt* rsdt = acpi_get_rsdt("APIC");
@@ -44,10 +64,12 @@ void apic_init() {
 	}
 
 	num_of_cpu = cur_core;
+	
 	lapic_base_addr = P2V(lapic_base);
 	ioapic_base_addr = P2V(ioapic_base_addr);
+	vmm_set_page(kernel_P4, lapic_base_addr, lapic_base, PAGE_PRESENT);
+	vmm_set_page(kernel_P4, ioapic_base_addr, ioapic_base, PAGE_PRESENT);
+	vmm_activate(kernel_P4);
 
 	ASSERT(num_of_cpu != 0);
 }
-
-void apic_ipi();

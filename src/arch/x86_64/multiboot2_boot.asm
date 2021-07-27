@@ -3,6 +3,7 @@ global kernel_stack_top
 
 extern long_mode_start
 extern kernel_entry
+global p4_table
 KERNEL_OFFSET equ 0xFFFFFF8000000000
 PAGE_PRESENT equ 1 << 0
 PAGE_WRITEABLE equ 1 << 1
