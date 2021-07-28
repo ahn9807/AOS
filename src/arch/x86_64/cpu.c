@@ -5,6 +5,9 @@
 #include "multiboot2.h"
 #include "memory.h"
 #include "cpu.h"
+#include "intrinsic.h"
+#include "msr_flags.h"
+#include "thread.h"
 
 #define cpuid(in,a,b,c,d) do { asm volatile ("cpuid" : "=a"(a),"=b"(b),"=c"(c),"=d"(d) : "a"(in)); } while(0)
 
@@ -36,28 +39,36 @@ static inline load_cpu_info() {
 		current_cpu()->family = (a >> 8) & 0x0f;
 	}
 
+	memcpy(cpu_info_table[current_cpu()->cpuid].cpu_model_name, "Undefined", 10);
 	cpuid(0x80000000, a, unused, unused, unused);
-	*current_cpu()->cpu_model_name = "Unknown";
 	if(a >= 0x80000000) {
 		uint32_t brand[12];
 		cpuid(0x80000002, brand[0], brand[1], brand[2], brand[3]);
 		cpuid(0x80000003, brand[4], brand[5], brand[6], brand[7]);
 		cpuid(0x80000004, brand[8], brand[9], brand[10], brand[11]);
-		memcpy(current_cpu()->cpu_model_name, brand, sizeof(uint32_t) * 12);	
+		memcpy(cpu_info_table[current_cpu()->cpuid].cpu_model_name, brand, sizeof(uint32_t) * 12);	
 	}
+}
+
+static inline void set_gs_segment(uintptr_t base) {
+	write_msr(MSR_FS_BASE, NULL);
+	write_msr(MSR_GS_BASE, base);
+	write_msr(MSR_KERNEL_GS_BASE, base);
+	asm volatile ("swapgs");
 }
 
 void debug_cpu() {
 	printf("[CPU %d] %s, %s\n", current_cpu()->cpuid, current_cpu()->cpu_manufacturer, current_cpu()->cpu_model_name);
 }
 
-void ap_main(int lapic_id) {
+void ap_main() {
 	// set gs segment's cpu id to current_ap_index
-	
+	set_gs_segment((uintptr_t)&cpu_info_table[current_ap_index]);
 	current_cpu()->cpuid = current_ap_index;
 	load_cpu_info();
 	debug_cpu();
-	vmm_activate(V2P(kernel_P4));
+
+	vmm_activate(kernel_P4);
 	ap_end_init = 1;
 	while(1);
 }
@@ -67,16 +78,13 @@ void bsp_main() {
 }
 
 void cpu_init() {
-	current_cpu()->cpuid = 0;
+	set_gs_segment((uintptr_t)&cpu_info_table[current_ap_index]);
+	current_cpu()->cpuid = current_ap_index;
 	load_cpu_info();
 	debug_cpu();
 
-	memcpy((void*)P2V(0x8000), &ap_trampoline, (size_t)&ap_trampoline_end - (size_t)&ap_trampoline);
-	printf("length: 0x%x\n", (size_t)&ap_trampoline_end - (size_t)&ap_trampoline);
-	printf("start addr: 0x%x\n", &ap_trampoline);
-	printf("end addr: 0x%x\n", &ap_trampoline_end);
-	printf("test: 0x%x\n", 8000 >> 12);
 	for(int i=0;i<num_of_cpu;i++) {
+		memcpy((void*)P2V(0x8000), &ap_trampoline, (size_t)&ap_trampoline_end - (size_t)&ap_trampoline);
 		if(i == 0) continue;
 		ap_end_init = 0;
 		ASSERT(i == cpu_info_table[i].cpuid);
@@ -85,10 +93,12 @@ void cpu_init() {
 		lapic_send_ipi(cpu_info_table[i].lapicid, 0x4500);
 		// SEND SIPI
 		lapic_send_ipi(cpu_info_table[i].lapicid, 0x4600 | (0x8000 >> 12));
+		uint64_t prev_clk = read_tsc();
+		// This line must be changed!!!! Now hard codede about 0.1 sec in my machine (200ns is required typically....)
+		while(read_tsc() - prev_clk < 1000315000 * 0.1) {};
 		lapic_send_ipi(cpu_info_table[i].lapicid, 0x4600 | (0x8000 >> 12));
 		// WAIT
-		for(int i=0;i<1000000;i++);
-		// do { asm volatile ("pause" : : : "memory"); } while (!ap_end_init);
+		do { asm volatile ("pause" : : : "memory"); } while (!ap_end_init);
 	}
 }
 

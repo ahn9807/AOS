@@ -3,14 +3,12 @@
 #include <stdint.h>
 #define MAX_CPU_NUM 128
 
-static struct cpu_info __seg_gs * const current_cpu_ = 0;
-
 typedef struct cpu_info {
 	int cpuid;
 	int lapicid;
 	int cpu_model;
 	int family;
-	int cpu_model_name[48];
+	uint32_t cpu_model_name[12];
 	const char *cpu_manufacturer;
 } cpu_info_t;
 
@@ -19,7 +17,8 @@ extern size_t num_of_cpu;
 extern uintptr_t lapic_base_addr;
 extern uintptr_t ioapic_base_addr;
 
-#define current_cpu() ((struct cpu_info *)current_cpu_)
+static struct cpu_info __seg_gs * current_cpu_ = 0;
+#define current_cpu() (&cpu_info_table[current_cpu_->cpuid])
 
 void cpu_init();
 void cpu_tlb_shootdown();
