@@ -75,12 +75,13 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
     vga_init();
     multiboot_init(magic, multiboot_addr, &kernel_start, &kernel_end, &multiboot_start, &multiboot_end) != 0 ? panic("check multiboot2 magic!\n") : 0;
     memory_init(kernel_start, kernel_end, multiboot_start, multiboot_end, multiboot_addr);
-    interrupt_init();
-    bind_interrupt_with_name(0x20, &timer_interrupt, "Timer");
-    pic_init();
     cmos_init();
     acpi_init();
     apic_init();
+    cpu_init();
+    interrupt_init();
+    bind_interrupt_with_name(0x20, &timer_interrupt, "Timer");
+    pic_init();
     intr_enable();
     tss_init();
     gdt_init();
@@ -89,7 +90,6 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
     vfs_init();
     dev_init();
     ext2_init();
-    cpu_init();
 
     char *dev_path = "/dev/disk0/";
     inode_t *root_node = kmalloc(sizeof(inode_t));

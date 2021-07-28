@@ -94,8 +94,8 @@ void cpu_init() {
 		// SEND SIPI
 		lapic_send_ipi(cpu_info_table[i].lapicid, 0x4600 | (0x8000 >> 12));
 		uint64_t prev_clk = read_tsc();
-		// This line must be changed!!!! Now hard codede about 0.1 sec in my machine (200ns is required typically....)
-		while(read_tsc() - prev_clk < 1000315000 * 0.1) {};
+		// This line must be changed!!!! Now hard coded about 0.1 sec in my machine (200ns is required typically....)
+		while(read_tsc() - prev_clk < 1000315000 * 0.02) {};
 		lapic_send_ipi(cpu_info_table[i].lapicid, 0x4600 | (0x8000 >> 12));
 		// WAIT
 		do { asm volatile ("pause" : : : "memory"); } while (!ap_end_init);
