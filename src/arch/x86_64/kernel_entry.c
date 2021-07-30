@@ -63,7 +63,7 @@ void temp_thread2() {
 }
 
 void exec() {
-    if(process_exec("/minish")) {
+    if(process_exec("/prog_1")) {
         PANIC("EXEC FAILED");
     }
 }
@@ -80,8 +80,8 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
     apic_init();
     cpu_init();
     interrupt_init();
-    bind_interrupt_with_name(0x20, &timer_interrupt, "Timer");
     pic_init();
+    bind_interrupt_with_name(0x20, &timer_interrupt, "Timer");
     intr_enable();
     tss_init();
     gdt_init();
@@ -97,7 +97,6 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
     vfs_bind("/", root_node);
 
     thread_create("exec", &exec, NULL);
-
     // Have to call explicitly. Cause without this,
     // rip goes to the end of the bootloader and
     // unrecover kernel panic. Also this changes the current kernel_entry

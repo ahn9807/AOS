@@ -9,15 +9,22 @@
 #include "string.h"
 #include "pmm.h"
 #include "layout.h"
+#include "kmalloc.h"
+#include "process.h"
+#include "msr_flags.h"
+
+#define ALIGN_ADDR(src) ((src) - (src) % (alignment))
+#define ROUND_UP(X, STEP) (((X) + (STEP) - 1) / (STEP) * (STEP))
 
 static int pt_load(struct ELF64_Phdr *phdr, file_t *file);
+static int pt_tls(struct ELF64_Phdr *phdr, file_t *file);
 
-int elf_load(const char *file_name, struct intr_frame *if_)
+int elf_load(struct process_info *proc, const char *file_name, struct intr_frame *if_)
 {
 	struct thread_info *th = thread_current_s();
 	struct ELF64_Ehdr ehdr;
-	struct ELF64_Phdr phdr;
 	struct ELF64_Shdr shdr;
+	struct ELF64_Phdr* phdrs;
 	file_t file;
 	size_t cur_offset;
 	int error_code = 0;
@@ -46,6 +53,8 @@ int elf_load(const char *file_name, struct intr_frame *if_)
 		goto done;
 	}
 
+	phdrs = kmalloc(ehdr.e_phentsize * ehdr.e_phnum);
+
 	cur_offset = ehdr.e_phoff;
 	for (int i = 0; i < ehdr.e_phnum; i++)
 	{
@@ -56,22 +65,26 @@ int elf_load(const char *file_name, struct intr_frame *if_)
 		}
 
 		vfs_seek(&file, cur_offset, SEEK_SET);
-		cur_offset += sizeof(phdr);
-		if (vfs_read(&file, &phdr, sizeof(phdr)) != sizeof(phdr))
+		cur_offset += ehdr.e_phentsize;
+		if (vfs_read(&file, &phdrs[i], sizeof(struct ELF64_Phdr)) != sizeof(struct ELF64_Phdr))
 		{
 			printf("read failed");
 			error_code = -FS_INVALID;
 			goto done;
 		}
 
-		switch (phdr.p_type)
+		switch (phdrs[i].p_type)
 		{
 			case PT_LOAD:
-				if(error_code = pt_load(&phdr, &file)) {
+				if(error_code = pt_load(&phdrs[i], &file)) {
 					goto done;
 				}
 				break;
-
+			case PT_TLS:
+				if(error_code = pt_tls(&phdrs[i], &file)) {
+					goto done;
+				}
+				break;
 			default:
 				break;
 		}
@@ -79,18 +92,69 @@ int elf_load(const char *file_name, struct intr_frame *if_)
 
 	if_->rip = ehdr.e_entry;
 
-	uint8_t* spage = pmm_alloc_pages(USER_STACK_SIZE);
-	if(spage != NULL) {
-		vmm_set_pages(th->p4, USER_STACK - PAGE_SIZE, spage, PAGE_USER_ACCESSIBLE | PAGE_WRITE | PAGE_PRESENT, USER_STACK_SIZE);
-		if_->rsp = USER_STACK;
-	} else {
-		printf("failed to alloc stack\n");
-		error_code = -1;
-		goto done;
-	}
+	proc->ehdr = kmalloc(sizeof(struct ELF64_Ehdr));
+	memcpy(proc->ehdr, &ehdr, sizeof(struct ELF64_Ehdr));
+	proc->phdrs = kmalloc(sizeof(struct ELF64_Phdr) * ehdr.e_phnum);
+	memcpy(proc->phdrs, phdrs, ehdr.e_phentsize * ehdr.e_phnum);
 
 done:
+	kfree(phdrs);
 	return error_code;
+}
+
+static int pt_tls(struct ELF64_Phdr *phdr, file_t *file) {
+	if(elf_check_segment(phdr)) {
+		printf("validation failed");
+		return -1;
+	}
+
+	uint64_t alignment = phdr->p_align;
+	uint64_t file_offset = ALIGN_ADDR(phdr->p_offset);
+	uint64_t mem_vaddr = ALIGN_ADDR(phdr->p_vaddr);
+	uint64_t mem_remaning = phdr->p_vaddr - mem_vaddr;
+	uint64_t read_bytes, zero_bytes;
+	uint16_t flags = (phdr->p_flags & PF_W ? PAGE_WRITE | PAGE_USER_ACCESSIBLE | PAGE_PRESENT : PAGE_USER_ACCESSIBLE | PAGE_PRESENT);
+
+	// Data / Code section
+	if(phdr->p_filesz > 0) {
+		read_bytes = mem_remaning + phdr->p_filesz;
+		zero_bytes = ROUND_UP(mem_remaning + phdr->p_memsz, alignment) - read_bytes;
+	} 
+	// Bss Section
+	else {
+		read_bytes = 0;
+		zero_bytes = ROUND_UP(mem_remaning + phdr->p_memsz, alignment);
+	}
+
+	ASSERT((read_bytes + zero_bytes) % alignment == 0);
+	ASSERT(file_offset % alignment == 0);
+
+	while((int)read_bytes > 0 || (int)zero_bytes > 0) {
+		size_t page_read_bytes = read_bytes < PAGE_SIZE ? read_bytes : PAGE_SIZE;
+		size_t page_zero_bytes = PAGE_SIZE - page_read_bytes;
+
+		uint8_t* kpage = pmm_alloc();
+		if(kpage == NULL) {
+			return -1;
+		}
+
+		if(vmm_set_page(thread_current()->p4, mem_vaddr, kpage, flags)) {
+			printf("failed to allocate at vm\n");
+			pmm_free(kpage);
+			return -1;
+		}
+
+		read_bytes -= page_read_bytes;
+		zero_bytes -= page_zero_bytes;
+		mem_vaddr += PAGE_SIZE;
+	}
+
+	// Set FS base for TLS Section
+	// Short... But pretty, very important!
+	// Wait... is there any race condition at hear?? <-FIX!
+	write_msr(MSR_FS_BASE, mem_vaddr);
+
+	return 0;
 }
 
 static int pt_load(struct ELF64_Phdr *phdr, file_t *file) {
@@ -100,8 +164,6 @@ static int pt_load(struct ELF64_Phdr *phdr, file_t *file) {
 	}
 
 	uint64_t alignment = phdr->p_align;
-#define ALIGN_ADDR(src) ((src) - (src) % (alignment))
-#define ROUND_UP(X, STEP) (((X) + (STEP) - 1) / (STEP) * (STEP))
 	uint64_t file_offset = ALIGN_ADDR(phdr->p_offset);
 	uint64_t mem_vaddr = ALIGN_ADDR(phdr->p_vaddr);
 	uint64_t mem_remaning = phdr->p_vaddr - mem_vaddr;
@@ -123,7 +185,7 @@ static int pt_load(struct ELF64_Phdr *phdr, file_t *file) {
 	ASSERT(file_offset % PAGE_SIZE == 0);
 
 	vfs_seek(file, file_offset, SEEK_SET);
-	while(read_bytes > 0 || zero_bytes > 0) {
+	while((int)read_bytes > 0 || (int)zero_bytes > 0) {
 		size_t page_read_bytes = read_bytes < PAGE_SIZE ? read_bytes : PAGE_SIZE;
 		size_t page_zero_bytes = PAGE_SIZE - page_read_bytes;
 

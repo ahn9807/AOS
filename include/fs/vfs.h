@@ -237,6 +237,7 @@ int vfs_open(struct inode *inode, struct file *file);
 int vfs_stat(struct inode *inode, struct stat* stat);
 // open file with path name
 int vfs_open_by_path(char* path, struct file *file);
+// Associated vfs operations
 size_t vfs_read(struct file *file, void* buffer, size_t size);
 size_t vfs_write(struct file *file, void *buffer, size_t size);
 size_t vfs_offset(struct file *file, off_t offset);

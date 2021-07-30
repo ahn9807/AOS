@@ -66,6 +66,7 @@ no_sti:
 	add rsp, 0x8
 	pop r11
 	pop rsp
+	swapgs
 	o64 sysret ; o64 neended for return to 64bit mode.
 	
 section .data

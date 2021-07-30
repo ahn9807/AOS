@@ -9,7 +9,9 @@ osdev project for studying purposes. First target is pintos and second is run gc
 ## X86_64
 - [x] GDT
 - [x] TSS
-- [ ] LDT
+- [x] LDT
+- [x] Detecting CPU
+- [ ] Multitasking
 ## Memory
 - [x] Implement kmalloc
 - [ ] User, Kernel Pool
@@ -43,7 +45,9 @@ osdev project for studying purposes. First target is pintos and second is run gc
 - [ ] Serial
 - [ ] Graphic Driver
 - [ ] Soudn Driver
-- [ ] APIC
+- [x] APIC
+- [x] ACPI
+- [ ] HPET
 - [x] ATA
 - [ ] ATAPI, SATA, SATAPI
 - [ ] USB

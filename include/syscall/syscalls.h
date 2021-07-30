@@ -1,6 +1,7 @@
 #pragma once
 
 #include "thread.h"
+#include "errno.h"
 
 #define MAX_SYSCALL_NR 255
 
@@ -71,7 +72,8 @@ long sysc_ni();
 long sys_exit(int);
 
 /* syscall/fs */
-long sys_write(uint64_t, const char *, size_t);
+long sys_write(uint64_t, const char *, size_t); // 01
+long sys_access(const char *, int); // 21
 
 /* syscall/futex */
 
@@ -80,3 +82,7 @@ long sys_write(uint64_t, const char *, size_t);
 /* syscall/proc */
 
 /* syscall/sys */
+long sys_brk(unsigned long); // 12
+long sys_getuid(); // 102
+long sys_geteuid(); // 107
+long sys_arch_prctl(int, unsigned long);

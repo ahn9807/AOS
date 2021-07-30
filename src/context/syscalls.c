@@ -81,10 +81,18 @@ void syscall_handler(struct intr_frame *if_) {
 			default:
 				panic("UNDEFINED SYSTEM CALL!");
 				break;
-			
-			if_->reg.rax = (uint64_t)ret;
+
 		}
+		if_->reg.rax = (uint64_t)ret;
 	}
+}
+
+bool syscall_validate(const void *p) {
+	if(p == NULL) {
+		return false; 
+	}
+
+	return true;
 }
 
 SYSCALL_DEFINE0(-1, ni) {
@@ -98,7 +106,7 @@ const syscall_ptr_t syscall_func_table[MAX_SYSCALL_NR + 1] = {
 };
 
 static void debug_syscall(struct intr_frame *if_) {
-	printf("syscall nr: %d, name: %s\n", if_->reg.rax, "NULL");
+	printf("syscall nr: %d, name: %s\n", if_->reg.rax, syscall_info_table[if_->reg.rax].syscall_name);
 	printf("rax: %d rdi: 0x%x, rsi: 0x%x,\nrdx: 0x%x, r10: 0x%x, r8: 0x%x, r9: 0x%x\n",
 		if_->reg.rax, if_->reg.rdi, if_->reg.rsi, if_->reg.rdx, if_->reg.r10, if_->reg.r8, if_->reg.r9
 	);

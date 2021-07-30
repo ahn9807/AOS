@@ -5,6 +5,7 @@
 #include "interrupt.h"
 #include "intrinsic.h"
 #include "list.h"
+#include "process.h"
 
 #define thread_current() ((struct thread_info*)((rrsp()) & ~((uint64_t)((1<<12) - 1))))
 
@@ -24,9 +25,12 @@ struct thread_info {
     enum thread_status status;
     char name[32];
     uint64_t *p4;
+    uintptr_t tls_base;
+    size_t tls_size;
     struct intr_frame thread_frame;
     struct list_elem elem;
     uint64_t magic;
+    process_info_t* owner;
 };
 
 typedef void thread_func (void *aux);

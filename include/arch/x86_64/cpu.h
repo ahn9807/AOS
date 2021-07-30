@@ -19,6 +19,7 @@ extern uintptr_t ioapic_base_addr;
 
 static struct cpu_info __seg_gs * current_cpu_ = 0;
 #define current_cpu() (&cpu_info_table[current_cpu_->cpuid])
+#define current_cpuid() (current_cpu_->cpuid)
 
 void cpu_init();
 void cpu_tlb_shootdown();
