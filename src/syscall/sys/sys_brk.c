@@ -18,7 +18,7 @@ SYSCALL_DEFINE1(12, brk, unsigned long, brk) {
 		 			  thread_current()->owner->brk_end, 
 					  hpage, 
 					  PAGE_USER_ACCESSIBLE | PAGE_WRITE | PAGE_PRESENT, page_num);
-		thread_current()->owner->brk_end = cur_brk + PAGE_SIZE;
+		thread_current()->owner->brk_end = cur_brk + (uintptr_t)PAGE_SIZE * page_num;
 	}
 
 	return (long)thread_current()->owner->brk_end;

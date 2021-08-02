@@ -198,6 +198,14 @@ static int setup_stack(struct process_info *proc, struct intr_frame *_if, int ar
 	}
 
 	// Bottom of stack push NULL
+	unsigned char k_rand_bytes[16];
+	for(int i=0;i<16;i++) {
+		k_rand_bytes[i] = 171717 * i / 255;
+	}
+	uintptr_t u_random_byte = _if->rsp;
+	for(int i=0;i<16;i++) {
+		push64(k_rand_bytes[i]);
+	}
 	push64(NULL);
 
 	// PUSH STACK _AUX[]
@@ -213,7 +221,7 @@ static int setup_stack(struct process_info *proc, struct intr_frame *_if, int ar
 	push_aux(AT_EUID, 0);
 	push_aux(AT_GID, 0);
 	push_aux(AT_EGID, 0);
-	push_aux(AT_RANDOM, NULL);
+	push_aux(AT_RANDOM, u_random_byte);
 	push_aux(AT_SECURE, 0);
 
 	// PUSH STACK _ ENVP[][]

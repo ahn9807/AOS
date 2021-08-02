@@ -109,49 +109,8 @@ static int pt_tls(struct ELF64_Phdr *phdr, file_t *file) {
 	}
 
 	uint64_t alignment = phdr->p_align;
-	uint64_t file_offset = ALIGN_ADDR(phdr->p_offset);
 	uint64_t mem_vaddr = ALIGN_ADDR(phdr->p_vaddr);
-	uint64_t mem_remaning = phdr->p_vaddr - mem_vaddr;
-	uint64_t read_bytes, zero_bytes;
-	uint16_t flags = (phdr->p_flags & PF_W ? PAGE_WRITE | PAGE_USER_ACCESSIBLE | PAGE_PRESENT : PAGE_USER_ACCESSIBLE | PAGE_PRESENT);
 
-	// Data / Code section
-	if(phdr->p_filesz > 0) {
-		read_bytes = mem_remaning + phdr->p_filesz;
-		zero_bytes = ROUND_UP(mem_remaning + phdr->p_memsz, alignment) - read_bytes;
-	} 
-	// Bss Section
-	else {
-		read_bytes = 0;
-		zero_bytes = ROUND_UP(mem_remaning + phdr->p_memsz, alignment);
-	}
-
-	ASSERT((read_bytes + zero_bytes) % alignment == 0);
-	ASSERT(file_offset % alignment == 0);
-
-	while((int)read_bytes > 0 || (int)zero_bytes > 0) {
-		size_t page_read_bytes = read_bytes < PAGE_SIZE ? read_bytes : PAGE_SIZE;
-		size_t page_zero_bytes = PAGE_SIZE - page_read_bytes;
-
-		uint8_t* kpage = pmm_alloc();
-		if(kpage == NULL) {
-			return -1;
-		}
-
-		if(vmm_set_page(thread_current()->p4, mem_vaddr, kpage, flags)) {
-			printf("failed to allocate at vm\n");
-			pmm_free(kpage);
-			return -1;
-		}
-
-		read_bytes -= page_read_bytes;
-		zero_bytes -= page_zero_bytes;
-		mem_vaddr += PAGE_SIZE;
-	}
-
-	// Set FS base for TLS Section
-	// Short... But pretty, very important!
-	// Wait... is there any race condition at hear?? <-FIX!
 	write_msr(MSR_FS_BASE, mem_vaddr);
 
 	return 0;
@@ -173,12 +132,12 @@ static int pt_load(struct ELF64_Phdr *phdr, file_t *file) {
 	// Data / Code section
 	if(phdr->p_filesz > 0) {
 		read_bytes = mem_remaning + phdr->p_filesz;
-		zero_bytes = ROUND_UP(mem_remaning + phdr->p_memsz, PAGE_SIZE) - read_bytes;
+		zero_bytes = ROUND_UP(mem_remaning + phdr->p_memsz, alignment) - read_bytes;
 	} 
 	// Bss Section
 	else {
 		read_bytes = 0;
-		zero_bytes = ROUND_UP(mem_remaning + phdr->p_memsz, PAGE_SIZE);
+		zero_bytes = ROUND_UP(mem_remaning + phdr->p_memsz, alignment);
 	}
 
 	ASSERT((read_bytes + zero_bytes) % PAGE_SIZE == 0);

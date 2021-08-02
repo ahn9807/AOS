@@ -73,6 +73,7 @@ long sys_exit(int);
 
 /* syscall/fs */
 long sys_write(uint64_t, const char *, size_t); // 01
+long sys_writev(const void *, int);
 long sys_access(const char *, int); // 21
 
 /* syscall/futex */
@@ -83,6 +84,7 @@ long sys_access(const char *, int); // 21
 
 /* syscall/sys */
 long sys_brk(unsigned long); // 12
+long sys_uname(void *);
 long sys_getuid(); // 102
 long sys_geteuid(); // 107
 long sys_arch_prctl(int, unsigned long);

@@ -18,8 +18,10 @@
 
 __SYSCALL_COMMON(1, sys_write)
 __SYSCALL_COMMON(12, sys_brk)
+__SYSCALL_COMMON(20, sys_writev)
 __SYSCALL_COMMON(21, sys_access)
 __SYSCALL_COMMON(60, sys_exit)
+__SYSCALL_COMMON(63, sys_uname)
 __SYSCALL_COMMON(102, sys_getuid)
 __SYSCALL_COMMON(107, sys_geteuid)
 __SYSCALL_COMMON(158, sys_arch_prctl)
