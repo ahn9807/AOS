@@ -88,12 +88,12 @@ void syscall_handler(struct intr_frame *if_) {
 	}
 }
 
-bool syscall_validate(const void *p) {
-	if(p == NULL) {
-		return false; 
+int syscall_validate_ptr(uintptr_t ptr) {
+	if(ptr != NULL && !mm_is_user(ptr)) {
+		return -EINVAL; 
 	}
 
-	return true;
+	return 0;
 }
 
 SYSCALL_DEFINE0(-1, ni) {
@@ -107,7 +107,6 @@ const syscall_ptr_t syscall_func_table[MAX_SYSCALL_NR + 1] = {
 };
 
 static void debug_syscall(struct intr_frame *if_) {
-	cls();
 	printf("syscall nr: %d, name: %s\n", if_->reg.rax, syscall_info_table[if_->reg.rax].syscall_name);
 	printf("rax: %d rdi: 0x%x, rsi: 0x%x,\nrdx: 0x%x, r10: 0x%x, r8: 0x%x, r9: 0x%x\n",
 		if_->reg.rax, if_->reg.rdi, if_->reg.rsi, if_->reg.rdx, if_->reg.r10, if_->reg.r8, if_->reg.r9

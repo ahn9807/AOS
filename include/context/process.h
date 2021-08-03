@@ -4,6 +4,7 @@
 #include <stddef.h>
 #include "list.h"
 #include "elf.h"
+#include "vfs.h"
 
 typedef uint32_t pid_t;
 typedef uint32_t uid_t;

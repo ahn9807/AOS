@@ -79,13 +79,13 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
     acpi_init();
     apic_init();
     cpu_init();
-    interrupt_init();
-    pic_init();
-    bind_interrupt_with_name(0x20, &timer_interrupt, "Timer");
-    intr_enable();
     tss_init();
     gdt_init();
+    pic_init();
+    interrupt_init();
+    bind_interrupt_with_name(0x20, &timer_interrupt, "Timer");
     thread_init();
+    intr_enable();
     syscall_init();
     vfs_init();
     dev_init();

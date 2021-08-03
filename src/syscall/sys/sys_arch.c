@@ -14,6 +14,8 @@
 #define ARCH_MAP_VDSO_64	0x2003
 
 SYSCALL_DEFINE2(158, arch_prctl, int, code, unsigned long, addr) {
+	VALIDATE_PTR(addr);
+
 	switch (code)
 	{
 		case ARCH_SET_GS:

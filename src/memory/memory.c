@@ -5,10 +5,16 @@
 #include "pmm.h"
 #include "intrinsic.h"
 #include "string.h"
+#include "thread.h"
 
 uintptr_t kernel_P4;
 extern uintptr_t _start_bss;
 extern uintptr_t _end_bss;
+
+static void bss_init()
+{
+	memset(&_start_bss, 0, &_end_bss - &_start_bss);
+}
 
 /* Initializing memory */
 uintptr_t memory_init(uintptr_t kernel_start, uintptr_t kernel_end, uintptr_t multiboot_start, uintptr_t multiboot_end, uintptr_t multiboot_addr)
@@ -56,7 +62,10 @@ uintptr_t mm_create_p4()
 	return pml4;
 }
 
-void bss_init()
-{
-	memset(&_start_bss, 0, &_end_bss - &_start_bss);
+int mm_is_user(void *ptr) {
+	if(ptr >= KERNEL_OFFSET) {
+		return 0;
+	} 
+
+	return 1;
 }

@@ -9,7 +9,7 @@
 #define UTS_VERSION "In Libra\0"
 #define UTS_MACHINE "x86_64\0"
 
-
+// Each utsname node has maximun 9 element in each
 struct utsname {
 	char *sysname;    /* Operating system name (e.g., "Linux") */
 	char *nodename;   /* Name within "some implementation-defined
@@ -21,6 +21,7 @@ struct utsname {
 };
 
 SYSCALL_DEFINE1(63, uname, void *, buf) {
+	VALIDATE_PTR(buf);
 	struct utsname *uts = (struct utsname *)buf;
 	// check validation
 	// If failed return EFAULT

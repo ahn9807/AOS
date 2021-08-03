@@ -46,8 +46,8 @@ struct page {
 };
 
 uintptr_t memory_init(uintptr_t kernel_start, uintptr_t kernel_end, uintptr_t multiboot_start, uintptr_t multiboot_end, uintptr_t multiboot_addr);
-void bss_init();
 uintptr_t mm_create_p4();
+int mm_is_user(void *ptr);
 void *memcpy(void *dst, const void *src, size_t n);
 void *memset(void *s, int c, size_t n);
 void *memmove(void *dest, const void *src, size_t n);

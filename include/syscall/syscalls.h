@@ -60,6 +60,13 @@ typedef struct syscall_info {
 
 #define SYSCALL_DEFINE_MAXARGS 6
 
+#define VALIDATE_PTR(PTR) \
+	do { \
+		if(syscall_validate_ptr((uintptr_t)(PTR))) return -EINVAL; \
+	} while(0)
+
+int syscall_validate_ptr(uintptr_t ptr);
+
 /// Initialize the system call tables
 void syscall_init();
 

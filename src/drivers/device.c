@@ -14,12 +14,25 @@ static dev_bwrite(device_t *dev, size_t offset, size_t len, void *buffer);
 static dev_bread(device_t *dev, size_t offset, size_t len, void *buffer);
 static inode_t* get_inode();
 
+extern uintptr_t _start_device_probe;
+extern uintptr_t _end_device_probe;
+typedef void (*__ctor)(void);
+
 static struct list device_list;
 
 void dev_init() {
     list_init(&device_list);
-    ata_init();
-    keyboard_init();
+
+    __ctor *start_f = (void *)&_start_device_probe;
+    __ctor *end_f = (void *)&_end_device_probe;
+
+    size_t nr = end_f - start_f;
+
+    for(size_t i=0;i<nr;i++) {
+        if(start_f[i]) {
+            start_f[i]();
+        }
+    }
 }
 
 void dev_install(device_t *dev, char* path) {

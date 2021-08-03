@@ -49,6 +49,14 @@ SECTIONS {
         _end_syscall_info_table = .;
     }
 
+    /* store probe functions of devices */
+    .device_probe ALIGN(4K) : AT(ADDR(.device_probe) - KERNEL_OFFSET)
+    {
+        _start_device_probe = .;
+        *(__device_probe)
+        _end_device_probe = .;
+    }
+
     /* Read-write data (uninitialized) and stack */
     _start_bss = .;
     .bss ALIGN(4K) : AT(ADDR(.bss) - KERNEL_OFFSET)

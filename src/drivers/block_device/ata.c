@@ -377,3 +377,5 @@ static void debug_device()
         );
     }
 }
+
+DEVICE_INSTALL(ata, &ata_init);

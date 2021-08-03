@@ -4,6 +4,11 @@
 #include "pmm.h"
 
 SYSCALL_DEFINE1(12, brk, unsigned long, brk) {
+	// BRK can has NULL as an brk to access start_brk
+	if(!mm_is_user(brk)) {
+		return -EINVAL;
+	}
+
 	uintptr_t cur_brk = thread_current_s()->owner->brk_end;
 
 	// free

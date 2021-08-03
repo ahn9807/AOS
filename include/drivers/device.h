@@ -11,6 +11,10 @@
 #define DEVICE_BLOCK_DEAFULT_NAME "disk"
 #define DEVICE_CHAR_DEFAULT_NAME "char"
 
+#define DEVICE_INSTALL(dev_name, probe_fun) \
+    __attribute__((section("__device_probe"))) void * __device_init_##dev_name = probe_fun; 
+
+
 struct device_operations;
 typedef struct device {
     char *name;
