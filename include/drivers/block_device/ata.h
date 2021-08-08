@@ -146,5 +146,5 @@ struct ata_disk {
 };
 
 void ata_init();
-static void ata_disk_read(void *, size_t offset, size_t len, void* buffer);
-static void ata_disk_write(void *, size_t offset, size_t len, const void *buffer);
+static size_t ata_disk_read(void *, size_t offset, size_t len, void* buffer);
+static size_t ata_disk_write(void *, size_t offset, size_t len, const void *buffer);

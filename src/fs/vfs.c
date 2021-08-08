@@ -76,6 +76,14 @@ int vfs_bind(const char *path, struct inode *target)
     if (!path ||  !*path || !target)
         return -FS_INVALID;
 
+    if(!strcmp(path, PATH_SEPARATOR_STRING)) {
+        vfs_root = target;
+        vfs_tree.inode = target;
+        vfs_tree.children = NULL;
+    
+        return 0;
+    }
+
     char **tokens = path_tokenize(path);
 
     struct vfs_node *cur_node = &vfs_tree;

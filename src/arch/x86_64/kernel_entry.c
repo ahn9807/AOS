@@ -96,6 +96,12 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
     vfs_mount(dev_path, root_node);
     vfs_bind("/", root_node);
 
+    file_t file;
+
+    // vfs_bind("/dev", vfs_mountpoint("dev"));
+    // vfs_open_by_path("/dev/", &file);
+    // temp_ls(root_node);
+
     thread_create("exec", &exec, NULL);
     // Have to call explicitly. Cause without this,
     // rip goes to the end of the bootloader and

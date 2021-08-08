@@ -25,8 +25,8 @@ static void soft_reset(const struct ata_disk *disk);
 static void intr_handler(struct intr_frame *);
 static void ata_intr_enable(struct ata_disk *disk);
 static void ata_intr_disable(struct ata_disk *disk);
-static void read_one_sector_28(struct ata_disk *disk, uint32_t lba28, void *buffer);
-static void write_one_sector_28(struct ata_disk *disk, uint32_t lba28, void *buffer);
+static size_t read_one_sector_28(struct ata_disk *disk, uint32_t lba28, void *buffer);
+static size_t write_one_sector_28(struct ata_disk *disk, uint32_t lba28, void *buffer);
 static void identify_disk(struct ata_disk *disk);
 static void flush_cache(struct ata_disk *disk);
 static uint64_t max_offset(struct ata_disk *disk);
@@ -62,7 +62,6 @@ static device_t *install_ata_disk(char *name, struct ata_disk *aux) {
     // Set device operations
     struct device_operations *dev_ops = kmalloc(sizeof(struct device_operations));
     dev_ops->block_size = &get_block_size;
-    // dev_ops->init = &ata_init;
     dev_ops->read = &ata_disk_read;
     dev_ops->write = &ata_disk_write;
     ata_device->dev_op = dev_ops;
@@ -78,7 +77,7 @@ uint64_t max_offset(struct ata_disk* disk) {
 /* Reads SIZE bytes from INODE into BUFFER, starting at position OFFSET.
  * Returns the number of bytes actually read, which may be less
  * than SIZE if an error occurs or end of file is reached. */
-void ata_disk_read(void *aux, size_t offset, size_t len, void *buffer)
+size_t ata_disk_read(void *aux, size_t offset, size_t len, void *buffer)
 {
     struct ata_disk *disk = (struct ata_disk *)aux;
     return read_one_sector_28(disk, offset / 512, buffer);
@@ -87,7 +86,7 @@ void ata_disk_read(void *aux, size_t offset, size_t len, void *buffer)
 /* Writes SIZE bytes from INODE into BUFFER, starting at position OFFSET.
  * Returns the number of bytes actually write, which may be less
  * than SIZE if an error occurs or end of file is reached. */
-void ata_disk_write(void *aux, size_t offset, size_t len, const void *buffer)
+size_t ata_disk_write(void *aux, size_t offset, size_t len, const void *buffer)
 {
     struct ata_disk *disk = (struct ata_disk *)aux;
     return write_one_sector_28(disk, offset / 512, buffer);
@@ -97,7 +96,7 @@ static size_t get_block_size(device_t *dev) {
     return 512;
 }
 
-static void read_one_sector_28(struct ata_disk *disk, uint32_t lba28, void *buffer)
+static size_t read_one_sector_28(struct ata_disk *disk, uint32_t lba28, void *buffer)
 {
     ASSERT(disk->is_active == true);
     ASSERT(disk->type == PATA);
@@ -124,10 +123,12 @@ static void read_one_sector_28(struct ata_disk *disk, uint32_t lba28, void *buff
     wait_idle(disk);
     intr_set_level(prev_level);
     spin_unlock(&disk->lock);
+
+    return 512;
 }
 
 // Write 512Byte (1 sector) to the disk
-static void write_one_sector_28(struct ata_disk *disk, uint32_t lba28, void *buffer)
+static size_t write_one_sector_28(struct ata_disk *disk, uint32_t lba28, void *buffer)
 {
     ASSERT(disk->is_active == true);
     ASSERT(disk->type == PATA);
@@ -153,6 +154,8 @@ static void write_one_sector_28(struct ata_disk *disk, uint32_t lba28, void *buf
     wait_busy(disk);
     intr_set_level(prev_level);
     spin_unlock(&disk->lock);
+
+    return 512;
 }
 
 // FLush Cache
