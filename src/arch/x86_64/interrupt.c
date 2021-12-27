@@ -121,7 +121,7 @@ void interrupt_handler(struct intr_frame *frame) {
             panic("NOT IMPLEMENTED");
             break;
         case FAILED:
-            //debug_backtrace();
+            debug_backtrace();
             panic("FAILED TO HANDLE INTERRUPT");
             break;
         default:

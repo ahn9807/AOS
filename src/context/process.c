@@ -213,8 +213,8 @@ static int setup_stack(struct process_info *proc, struct intr_frame *_if, int ar
 
 	size_t len = 0;
 	int envpc = argv_length(envp);
-	uintptr_t *argv_ptr;
-	uintptr_t *envp_ptr;
+	char **argv_ptr = kmalloc(sizeof(char *) * argc);
+	char **envp_ptr = kmalloc(sizeof(char *) * envpc);
 
 	if (argv_ptr == NULL || envp_ptr == NULL)
 	{
@@ -253,7 +253,7 @@ static int setup_stack(struct process_info *proc, struct intr_frame *_if, int ar
 	// PUSH STACK _ ENVP[][]
 	for (int i = envpc - 1; i >= 0; i--)
 	{
-		envp_ptr = (uintptr_t *)_if->rsp;
+		envp_ptr[i] = (char *)_if->rsp;
 		len = strlen(envp[i]);
 
 		for (int j = 0; j < len; j++)
@@ -266,7 +266,7 @@ static int setup_stack(struct process_info *proc, struct intr_frame *_if, int ar
 	// PUSH STACK _ ARGUMENT[][]
 	for (int i = argc - 1; i >= 0; i--)
 	{
-		argv_ptr = (uintptr_t *)_if->rsp;
+		argv_ptr[i] = (char *)_if->rsp;
 		len = strlen(argv[i]);
 
 		for (int j = 0; j < len; j++)

@@ -194,7 +194,7 @@ static int ext2_readdir(inode_t *inode, size_t offset, dentry_t *dir)
             {
                 dir->name = kmalloc(ext2_dentry->name_len);
                 dir->inode = kmalloc(sizeof(inode_t));
-                ext2_inode_t *child_ext2_inode = kmalloc(sizeof(ext2_inode_t));
+                ext2_inode_t *child_ext2_inode = kmalloc(4096);
                 
                 dir->d_op = &vfs_ext2_dentry_operations;
                 read_inode(ext2, ext2_dentry->inode_nr, child_ext2_inode);

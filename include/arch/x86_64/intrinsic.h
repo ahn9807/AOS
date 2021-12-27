@@ -51,11 +51,11 @@ __attribute__((always_inline)) static __inline void ltr(uint16_t sel)
 					 : "r"(sel));
 }
 
-__attribute__((always_inline)) static __inline void lidt(const void *dtr)
+__attribute__((always_inline)) static __inline void lidt(const void *idt)
 {
 	__asm __volatile("lidt %0"
 					 :
-					 : "m"(*(uintptr_t *)dtr));
+					 : "m"(*(uintptr_t *)idt));
 }
 
 __attribute__((always_inline)) static __inline void invlpg(uint64_t addr)

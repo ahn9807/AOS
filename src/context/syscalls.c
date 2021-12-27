@@ -61,7 +61,7 @@ void syscall_handler(struct intr_frame *if_)
 		syscall_info_t *syscall_info = &syscall_info_table[if_->reg.rax];
 		long ret = 0;
 
-		debug_syscall(if_);
+		// debug_syscall(if_);
 		switch (syscall_info->arg_nr)
 		{
 		case 0:
@@ -90,7 +90,7 @@ void syscall_handler(struct intr_frame *if_)
 			break;
 		}
 		if_->reg.rax = (uint64_t)ret;
-		printf("return val: %d\n", ret);
+		// printf("return val: %d\n", ret);
 	}
 }
 
