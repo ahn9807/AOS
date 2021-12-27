@@ -153,14 +153,14 @@ static int pt_load(struct ELF64_Phdr *phdr, file_t *file) {
 			return -1;
 		}
 
-		if(vfs_read(file, P2V(kpage), page_read_bytes) != (int)page_read_bytes) {
+		if(vfs_read(file, (char *)P2V(kpage), page_read_bytes) != (int)page_read_bytes) {
 			pmm_free(kpage);
 			return -1;
 		}
 
-		memset(P2V(kpage + page_read_bytes), 0, page_zero_bytes);
+		memset((void *)P2V(kpage + page_read_bytes), 0, page_zero_bytes);
 
-		if(vmm_set_page(thread_current()->p4, mem_vaddr, kpage, flags)) {
+		if(vmm_set_page(thread_current()->p4, mem_vaddr, (uint64_t)kpage, flags)) {
 			printf("failed to allocate at vm\n");
 			pmm_free(kpage);
 			return -1;

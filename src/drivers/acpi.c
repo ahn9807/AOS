@@ -34,7 +34,7 @@ static struct acpi_rsdp * get_rsdt() {
 	}
 
 	ebda_cursor = (uint8_t *)0x000e0000;
-	while(ebda_cursor < P2V(0x000fffff)) {
+	while((uintptr_t)ebda_cursor < (uintptr_t)P2V(0x000fffff)) {
 		if(!check_rsdp(ebda_cursor)) {
 			return (struct acpi_rsdp *)ebda_cursor;
 		}
@@ -71,7 +71,7 @@ struct acpi_rsdt *acpi_get_rsdt(char signature[4]) {
 		struct acpi_rsdt_header *hdr = (struct acpi_rsdt_header *)P2V(rsdt->sdt[i]);
 
 		if(!strncmp(hdr->signature, signature, 4)) {
-			return hdr;
+			return (struct acpi_rsdt *)hdr;
 		}
 	}
 

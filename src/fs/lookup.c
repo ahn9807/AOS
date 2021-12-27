@@ -5,7 +5,7 @@
 #include "kmalloc.h"
 #include "vga_text.h"
 
-int vfs_lookup(inode_t *root_node, char *path, struct dentry *ret_dir)
+int vfs_lookup(inode_t *root_node, const char *path, struct dentry *ret_dir)
 {
 	if (root_node == NULL)
 	{

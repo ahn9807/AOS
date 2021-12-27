@@ -83,13 +83,13 @@ int multiboot_init(uint64_t magic, unsigned long multiboot_addr, uint64_t *kerne
 			struct multiboot_elf64_shdr *shdr = (struct multiboot_elf64_shdr *)((uintptr_t)elf_section->sections + elf_section->entsize * i);
 			if (shdr->size == 0x0)
 				continue;
-			if (V2P(shdr->addr) + shdr->size > *kernel_end)
+			if ((uintptr_t)V2P(shdr->addr) + shdr->size > *kernel_end)
 			{
-				*kernel_end = V2P(shdr->addr) + shdr->size;
+				*kernel_end = (uint64_t)V2P(shdr->addr) + shdr->size;
 			}
-			if (V2P(shdr->addr) < *kernel_start)
+			if ((uintptr_t)V2P(shdr->addr) < *kernel_start)
 			{
-				*kernel_start = V2P(shdr->addr);
+				*kernel_start = (uint64_t)V2P(shdr->addr);
 			}
 		}
 	}

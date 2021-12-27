@@ -152,7 +152,7 @@ bitmap_buf_size(size_t bit_cnt)
 
 /* get bitmap buffer */
 void *bitmap_get_raw(struct bitmap *b) {
-    return b->bit_cnt;
+    return b->bits;
 }
 
 /* Destroys bitmap B, freeing its storage.

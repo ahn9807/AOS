@@ -5,7 +5,7 @@
 #include "printf.h"
 
 // Check there exist element s in the path
-int path_search(const char *path, const char *s) {
+int path_search(const char **path, const char *s) {
     if(path == NULL || s == NULL) {
         return 0;
     }

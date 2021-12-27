@@ -26,7 +26,7 @@ typedef struct device {
 
 struct device_operations {
     size_t (*read) (void *aux, size_t offset, size_t size, void *buf);
-    size_t (*write)(void *aux, size_t offset, size_t size, void *buf);
+    size_t (*write)(void *aux, size_t offset, size_t size, const void *buf);
     size_t (*block_size)(void *aux);
 };
 

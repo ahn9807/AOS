@@ -62,53 +62,11 @@ void temp_thread2() {
     }
 }
 
-void exec() {
-    if(process_exec("/prog_1")) {
+void temp_exec() {
+    printf("execute program\n");
+    if(process_exec("/prog_2")) {
         PANIC("EXEC FAILED");
     }
-}
-
-
-int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
-{
-    uint64_t kernel_start, kernel_end, multiboot_start, multiboot_end;
-    vga_init();
-    multiboot_init(magic, multiboot_addr, &kernel_start, &kernel_end, &multiboot_start, &multiboot_end) != 0 ? panic("check multiboot2 magic!\n") : 0;
-    memory_init(kernel_start, kernel_end, multiboot_start, multiboot_end, multiboot_addr);
-    cmos_init();
-    acpi_init();
-    apic_init();
-    cpu_init();
-    tss_init();
-    gdt_init();
-    pic_init();
-    interrupt_init();
-    bind_interrupt_with_name(0x20, &timer_interrupt, "Timer");
-    thread_init();
-    intr_enable();
-    syscall_init();
-    vfs_init();
-    dev_init();
-    ext2_init();
-
-    char *dev_path = "/dev/disk0/";
-    inode_t *root_node = kmalloc(sizeof(inode_t));
-    vfs_mount(dev_path, root_node);
-    vfs_bind("/", root_node);
-
-    file_t file;
-
-    // vfs_bind("/dev", vfs_mountpoint("dev"));
-    // vfs_open_by_path("/dev/", &file);
-    // temp_ls(root_node);
-
-    thread_create("exec", &exec, NULL);
-    // Have to call explicitly. Cause without this,
-    // rip goes to the end of the bootloader and
-    // unrecover kernel panic. Also this changes the current kernel_entry
-    // Function to the idle thread.
-    // Rest of the powerup process in done by init.
-    thread_run_idle();
 }
 
 int ap_main();
@@ -144,4 +102,45 @@ void temp_cat(file_t *file) {
     printf("\n");
 
     kfree(buf);
+}
+
+
+int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
+{
+    uint64_t kernel_start, kernel_end, multiboot_start, multiboot_end;
+    vga_init();
+    multiboot_init(magic, multiboot_addr, &kernel_start, &kernel_end, &multiboot_start, &multiboot_end) != 0 ? panic("check multiboot2 magic!\n") : 0;
+    memory_init(kernel_start, kernel_end, multiboot_start, multiboot_end, multiboot_addr);
+    cmos_init();
+    acpi_init();
+    apic_init();
+    cpu_init();
+    tss_init();
+    gdt_init();
+    pic_init();
+    interrupt_init();
+    bind_interrupt_with_name(0x20, &timer_interrupt, "Timer");
+    thread_init();
+    intr_enable();
+    syscall_init();
+    vfs_init();
+    dev_init();
+    ext2_init();
+
+    char *dev_path = "/dev/disk0/";
+    inode_t *root_node = kmalloc(sizeof(inode_t));
+    vfs_mount(dev_path, root_node);
+    vfs_bind("/", root_node);
+    file_t file;
+
+    ASSERT(vfs_open_by_path("/a/b/c/test_1", &file) == 0);
+    temp_cat(&file);
+
+    thread_create("exec", &temp_exec, NULL);
+    // Have to call explicitly. Cause without this,
+    // rip goes to the end of the bootloader and
+    // unrecover kernel panic. Also this changes the current kernel_entry
+    // Function to the idle thread.
+    // Rest of the powerup process in done by init.
+    thread_run_idle();
 }

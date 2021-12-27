@@ -70,7 +70,7 @@ static enum irq_handler_result keyboard_handler(struct intr_frame *f)
         read_kbd_buffer(NULL, 0, 256, buf);
         for(int i=0;i<256;i++) {
             if(buf[i] == 0) {
-                return;
+                return OK;
             } else {
                 printf("%c", buf[i]);
             }

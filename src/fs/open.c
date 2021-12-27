@@ -5,9 +5,12 @@
 #include "debug.h"
 #include "kmalloc.h"
 #include "string.h"
+#include "vga_text.h"
 
-int vfs_open(struct inode *inode, struct file *file) {
-    if(!file) {
+int vfs_open(struct inode *inode, struct file *file)
+{
+    if (!file)
+    {
         return -FS_NOT_FILE;
     }
 
@@ -19,29 +22,38 @@ int vfs_open(struct inode *inode, struct file *file) {
     return 0;
 }
 
-int vfs_open_by_path(char* path, struct file *file) {
+int vfs_open_by_path(const char *path, struct file *file)
+{
     struct vfs_node *node = vfs_mountpoint(path);
 
-    if(node == NULL || node->inode == NULL) {
+    if (node == NULL || node->inode == NULL)
+    {
         return -FS_NO_ENTRY;
     }
 
     inode_t *root_node = node->inode;
-    int error_code = 0;
+    int error_code = -FS_NO_ENTRY;
     struct dentry dir;
     // get relative path from mount point
-    char *lookup_path = path + strlen(node->full_path);
+    char *new_path = strdup(path);
+    char *lookup_path = new_path + strlen(node->full_path);
 
-    if((error_code = vfs_lookup(root_node, lookup_path, &dir)) != FS_FILE) {
-        return -FS_NOT_FILE;
+    if ((error_code = vfs_lookup(root_node, path, &dir)) != FS_FILE)
+    {
+        goto error;
     }
 
-    if(dir.inode != NULL && !S_ISDIR(dir.inode->type)) {
+    if (dir.inode != NULL && !S_ISDIR(dir.inode->type))
+    {
         vfs_open(dir.inode, file);
         file->name = path_get_name(path);
-    } else {
-        return -FS_NOT_FILE;
+        goto done;
     }
 
+error:
+    kfree(new_path);
+    return error_code;
+done:
+    kfree(new_path);
     return 0;
 }

@@ -22,18 +22,18 @@ static int wait_busy(const struct ata_disk *disk);
 static int wait_transfer(const struct ata_disk *disk);
 static int wait_idle(const struct ata_disk *disk);
 static void soft_reset(const struct ata_disk *disk);
-static void intr_handler(struct intr_frame *);
+static enum irq_handler_result intr_handler(struct intr_frame *);
 static void ata_intr_enable(struct ata_disk *disk);
 static void ata_intr_disable(struct ata_disk *disk);
 static size_t read_one_sector_28(struct ata_disk *disk, uint32_t lba28, void *buffer);
-static size_t write_one_sector_28(struct ata_disk *disk, uint32_t lba28, void *buffer);
+static size_t write_one_sector_28(struct ata_disk *disk, uint32_t lba28, const void *buffer);
 static void identify_disk(struct ata_disk *disk);
 static void flush_cache(struct ata_disk *disk);
 static uint64_t max_offset(struct ata_disk *disk);
 // static void read_one_sector_48(struct ata_disk *disk, uint32_t lba28, void *buffer); // To do...
 // static void write_one_sector_48(struct ata_disk *disk, uint32_t lba28, void *buffer); / To do...
 static void debug_device();
-static size_t get_block_size(device_t *dev);
+static size_t get_block_size(void *dev);
 static device_t *install_ata_disk(char *name, struct ata_disk *aux);
 
 static struct list active_ata_devices;
@@ -43,8 +43,8 @@ void ata_init()
 {
     list_init(&active_ata_devices);
 
-    bind_interrupt_with_name(0x20 + 14, &intr_handler, "ATA HD0");
-    bind_interrupt_with_name(0x20 + 15, &intr_handler, "ATA HD1");
+    bind_interrupt_with_name(0x20 + 14, intr_handler, "ATA HD0");
+    bind_interrupt_with_name(0x20 + 15, intr_handler, "ATA HD1");
 
     disk_init(&ata_disk_primary_master);
     disk_init(&ata_disk_primary_slave);
@@ -52,7 +52,8 @@ void ata_init()
     disk_init(&ata_disk_secondary_slave);
 }
 
-static device_t *install_ata_disk(char *name, struct ata_disk *aux) {
+static device_t *install_ata_disk(char *name, struct ata_disk *aux)
+{
     // Set device default informations
     device_t *ata_device = kmalloc(sizeof(device_t));
     ata_device->device_type = DEVICE_BLOCK;
@@ -70,7 +71,8 @@ static device_t *install_ata_disk(char *name, struct ata_disk *aux) {
 }
 
 // Get MAX Offset of disk
-uint64_t max_offset(struct ata_disk* disk) {
+uint64_t max_offset(struct ata_disk *disk)
+{
     return disk->info.sectors_28 * 512;
 }
 
@@ -92,7 +94,8 @@ size_t ata_disk_write(void *aux, size_t offset, size_t len, const void *buffer)
     return write_one_sector_28(disk, offset / 512, buffer);
 }
 
-static size_t get_block_size(device_t *dev) {
+static size_t get_block_size(void *dev)
+{
     return 512;
 }
 
@@ -128,7 +131,7 @@ static size_t read_one_sector_28(struct ata_disk *disk, uint32_t lba28, void *bu
 }
 
 // Write 512Byte (1 sector) to the disk
-static size_t write_one_sector_28(struct ata_disk *disk, uint32_t lba28, void *buffer)
+static size_t write_one_sector_28(struct ata_disk *disk, uint32_t lba28, const void *buffer)
 {
     ASSERT(disk->is_active == true);
     ASSERT(disk->type == PATA);
@@ -140,8 +143,8 @@ static size_t write_one_sector_28(struct ata_disk *disk, uint32_t lba28, void *b
     outb(disk->io_base + ATA_REG_HDDEVSEL, (disk->is_master == true ? 0xe0 : 0xf0) | (uint8_t)(lba28 & 0x0f000000) >> 24);
     outb(disk->io_base + ATA_REG_FEATURES, 0x0);
     outb(disk->io_base + ATA_REG_SECCOUNT0, 0x1);
-    outb(disk->io_base + ATA_REG_LBA0, (lba28 & 0x000000ff) >>  0);
-    outb(disk->io_base + ATA_REG_LBA1, (lba28 & 0x0000ff00) >>  8);
+    outb(disk->io_base + ATA_REG_LBA0, (lba28 & 0x000000ff) >> 0);
+    outb(disk->io_base + ATA_REG_LBA1, (lba28 & 0x0000ff00) >> 8);
     outb(disk->io_base + ATA_REG_LBA2, (lba28 & 0x00ff0000) >> 16);
     outb(disk->io_base + ATA_REG_COMMAND, ATA_CMD_WRITE_PIO);
     wait_io(disk);
@@ -231,7 +234,8 @@ static void disk_init(struct ata_disk *disk)
 }
 
 // Identify ATA Device
-static void identify_disk(struct ata_disk *disk) {
+static void identify_disk(struct ata_disk *disk)
+{
     outb(disk->io_base + ATA_REG_ERROR, 0x1);
     outb(disk->control_base, 0x0);
 
@@ -246,16 +250,18 @@ static void identify_disk(struct ata_disk *disk) {
     wait_transfer(disk);
 
     memset(&disk->info, 0, sizeof(struct ata_identity));
-    uint16_t *buf = (uint16_t*)&disk->info;
+    uint16_t *buf = (uint16_t *)&disk->info;
 
-    for(int i=0;i<256;i++) {
+    for (int i = 0; i < 256; i++)
+    {
         buf[i] = inw(disk->io_base);
     }
 
-    uint8_t *ptr = (uint8_t*)&disk->info.model;
-    for(int i=0;i<39;i+=2) {
-        uint8_t tmp = ptr[i+1];
-        ptr[i+1] = ptr[i];
+    uint8_t *ptr = (uint8_t *)&disk->info.model;
+    for (int i = 0; i < 39; i += 2)
+    {
+        uint8_t tmp = ptr[i + 1];
+        ptr[i + 1] = ptr[i];
         ptr[i] = tmp;
     }
     ptr[40] = '\0';
@@ -294,7 +300,8 @@ static int wait_busy(const struct ata_disk *disk)
 #ifdef ASSERT_NO_ERR
     ASSERT(return_val & ATA_SR_ERR == 1);
 #endif
-    if(return_val & ATA_SR_ERR) {
+    if (return_val & ATA_SR_ERR)
+    {
         int16_t error = inb(disk->io_base + ATA_REG_ERROR);
         return error;
     }
@@ -311,7 +318,8 @@ static int wait_transfer(const struct ata_disk *disk)
 #ifdef ASSERT_NO_ERR
     ASSERT(return_val & ATA_SR_ERR == 1);
 #endif
-    if(return_val & ATA_SR_ERR) {
+    if (return_val & ATA_SR_ERR)
+    {
         int16_t error = inb(disk->io_base + ATA_REG_ERROR);
         return error;
     }
@@ -328,7 +336,8 @@ static int wait_idle(const struct ata_disk *disk)
 #ifdef ASSERT_NO_ERR
     ASSERT(return_val & ATA_SR_ERR == 1);
 #endif
-    if(return_val & ATA_SR_ERR) {
+    if (return_val & ATA_SR_ERR)
+    {
         int16_t error = inb(disk->io_base + ATA_REG_ERROR);
         return error;
     }
@@ -346,10 +355,11 @@ static void soft_reset(const struct ata_disk *disk)
     outb(disk->control_base, ATA_CR_NA);
 }
 
-static void intr_handler(struct intr_frame *frame)
+static enum irq_handler_result intr_handler(struct intr_frame *frame)
 {
     // printf("Interrupt form [%s] disk!\n", "hd0:0");
     //do nothing
+    return OK;
 }
 
 // enable interrupt of this ata device
@@ -375,9 +385,8 @@ static void debug_device()
     {
         struct ata_disk *disk = list_entry(e, struct ata_disk, elem);
         printf("%s (%s)\n",
-            disk->info.model,
-            disk->type == (PATA) ? "PATA" : "PATAPI"
-        );
+               disk->info.model,
+               disk->type == (PATA) ? "PATA" : "PATAPI");
     }
 }
 

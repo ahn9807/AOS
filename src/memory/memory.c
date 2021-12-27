@@ -23,7 +23,7 @@ uintptr_t memory_init(uintptr_t kernel_start, uintptr_t kernel_end, uintptr_t mu
 	uint64_t start, end;
 	uint32_t type, i = 1;
 
-	init_pmm(kernel_start, kernel_end, multiboot_start, multiboot_end, parse_multiboot(MULTIBOOT_TAG_TYPE_MMAP, multiboot_addr));
+	init_pmm(kernel_start, kernel_end, multiboot_start, multiboot_end, (struct multiboot_tag_mmap *)parse_multiboot(MULTIBOOT_TAG_TYPE_MMAP, multiboot_addr));
 
 	while (!multiboot_get_memory_area(i++, &start, &end, &type))
 	{
@@ -43,7 +43,7 @@ uintptr_t memory_init(uintptr_t kernel_start, uintptr_t kernel_end, uintptr_t mu
 		}
 	}
 	bss_init();
-	lcr3(V2P(kernel_P4));
+	lcr3((uintptr_t)V2P(kernel_P4));
 
 	return kernel_P4;
 }
@@ -55,7 +55,7 @@ uintptr_t memory_init(uintptr_t kernel_start, uintptr_t kernel_end, uintptr_t mu
  * setup kernel part of memory */
 uintptr_t mm_create_p4()
 {
-	uint64_t pml4 = P2V(pmm_alloc());
+	uint64_t pml4 = (uint64_t)P2V(pmm_alloc());
 	printf("pmm: 0x%x\n", pml4);
 	if (pml4)
 		memcpy((void *)pml4, (void *)kernel_P4, PAGE_SIZE);
@@ -63,7 +63,7 @@ uintptr_t mm_create_p4()
 }
 
 int mm_is_user(void *ptr) {
-	if(ptr >= KERNEL_OFFSET) {
+	if((uintptr_t)ptr >= KERNEL_OFFSET) {
 		return 0;
 	} 
 

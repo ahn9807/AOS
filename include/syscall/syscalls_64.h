@@ -14,7 +14,7 @@
 }; */
 
 #define __SYSCALL_COMMON(nr, sym) __SYSCALL_64(nr, sym)
-#define __SYSCALL_64(nr, sym) [nr] = sym,
+#define __SYSCALL_64(nr, sym) [nr] = (long int (*)(void))sym,
 
 __SYSCALL_COMMON(1, sys_write)
 __SYSCALL_COMMON(12, sys_brk)

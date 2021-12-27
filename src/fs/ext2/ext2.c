@@ -68,7 +68,7 @@ static size_t ext2_read(inode_t *inode, void *buf, size_t size, size_t offset)
 {
     ext2_inode_t *ext2_inode = kmalloc(sizeof(ext2_inode_t));
     ext2_fs_t *ext2 = inode->file_system;
-    char *data_buf = P2V(pmm_alloc_pages(size / PAGE_SIZE + 1));
+    char *data_buf = (char *)P2V(pmm_alloc_pages(size / PAGE_SIZE + 1));
 
     read_inode(ext2, inode->inode_nr, ext2_inode);
 
@@ -230,9 +230,9 @@ static size_t ext2_mknod(inode_t *dir_node, char* name, uint16_t mode, uint16_t 
     ext2_fs_t *desc = dir_node->file_system;
     ext2_inode_t dir_inode;
     
-    if ((err = ext2_inode_read(desc, dir_node->inode_nr, &dir_inode))) {
-        /* TODO Error checking */
-    }
+    // if ((err = ext2_inode_read(desc, dir_node->inode_nr, &dir_inode))) {
+    //     /* TODO Error checking */
+    // }
 
     // /* file exists */
     // if (ext2_dentry_find(desc, &dir_inode, fn))
@@ -265,13 +265,13 @@ static size_t ext2_mknod(inode_t *dir_node, char* name, uint16_t mode, uint16_t 
         d->inode_nr = ino;
         d->rec_len = 12;
         d->name_len = 1;
-        d->file_type = EXT2_S_IFDIR ;
+        d->file_type = EXT2_FT_DIR;
         memcpy(d->name, ".", 1);
         d = (struct ext2_dentry *) ((char *) d + 12);
         d->inode_nr = dir_node->inode_nr;
         d->rec_len = desc->block_size - 12;
         d->name_len = 2;
-        d->file_type = EXT2_S_IFDIR;
+        d->file_type = EXT2_FT_DIR;
         memcpy(d->name, "..", 2);
         write_block_with_alloc(desc, &inode, ino, 0, buf);
         kfree(buf);
@@ -715,11 +715,11 @@ static int create_dentry(inode_t *dir_node, char *name, inode_number_t ino) {
 
     ext2_fs_t *ext2 = dir_node->file_system;
 
-    size_t length = strlne(name);
+    size_t length = strlen(name);
     size_t d_size = length + sizeof(ext2_dentry_t);
     d_size = (d_size + 3) & ~3;
 
     char *buf = kcalloc(1, ext2->block_size);
-    
 
+    return -1;
 }

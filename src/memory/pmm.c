@@ -29,18 +29,18 @@ void init_pmm(uint64_t kernel_start, uint64_t kernel_end, uint64_t multiboot_sta
 	pmm_frame_list.kernel_area.end = PA_TO_FRAME(kernel_end);
 	pmm_frame_list.multiboot_area.start = PA_TO_FRAME(multiboot_start);
 	pmm_frame_list.multiboot_area.end = PA_TO_FRAME(multiboot_end);
-	pmm_frame_list.memory_pool = P2V(mmap_pool);
+	pmm_frame_list.memory_pool = (struct multiboot_tag_mmap *)P2V(mmap_pool);
 	pmm_frame_list.next_free_frame = PA_TO_FRAME(0);
 
 	choose_next_area();
 }
 
-void pmm_free(uint64_t page)
+void pmm_free(void *page)
 {
 	// do nothing
 }
 
-uint64_t pmm_alloc()
+void *pmm_alloc()
 {
 	if (pmm_frame_list.current_pool != NULL)
 	{
@@ -62,36 +62,39 @@ uint64_t pmm_alloc()
 		else
 		{
 			pmm_frame_list.next_free_frame += 1;
-			return (uint64_t)V2P(FRAME_TO_PA(f));
+			return (void *)V2P(FRAME_TO_PA(f));
 		}
 		return pmm_alloc();
 	}
 	else
 	{
-		return 0;
+		return NULL;
 	}
-	return 0;
+	return NULL;
 }
 
 // Must be changed!!!
-uint64_t pmm_alloc_pages(size_t size) {
-	uint64_t first_addr = pmm_alloc();
-	size -=1;
-	while (size != 0) {
+void *pmm_alloc_pages(size_t size)
+{
+	void *first_addr = pmm_alloc();
+	size -= 1;
+	while (size != 0)
+	{
 		pmm_alloc();
 		size -= 1;
 	}
 	return first_addr;
 }
 
-uint64_t pmm_free_pages(uint64_t s_addr, size_t size) {
+void *pmm_free_pages(void *s_addr, size_t size)
+{
 	// do nothing
 }
 
-uint64_t pmm_calloc()
+void *pmm_calloc()
 {
-	uint64_t page = pmm_alloc();
-	memset(P2V(page), 0, PAGE_SIZE);
+	void *page = pmm_alloc();
+	memset((void *)P2V(page), 0, PAGE_SIZE);
 	return page;
 }
 
@@ -104,7 +107,8 @@ static void choose_next_area()
 		 (multiboot_uint8_t *)mmap < (multiboot_uint8_t *)pmm_frame_list.memory_pool + pmm_frame_list.memory_pool->size;
 		 mmap = (multiboot_memory_map_t *)((unsigned long)mmap + ((struct multiboot_tag_mmap *)pmm_frame_list.memory_pool)->entry_size))
 	{
-		if(mmap->addr < 0xffff) {
+		if (mmap->addr < 0xffff)
+		{
 			continue;
 		}
 		uint64_t address = PA_TO_FRAME(mmap->addr + mmap->len - 1);

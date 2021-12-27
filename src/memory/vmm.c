@@ -8,8 +8,8 @@
 
 uint64_t vmm_new_p4()
 {
-	uint64_t p4 = pmm_alloc();
-	memcpy(P2V(p4), (void *)kernel_P4, PAGE_SIZE);
+	uint64_t p4 = (uint64_t)pmm_alloc();
+	memcpy((void *)P2V(p4), (void *)kernel_P4, PAGE_SIZE);
 	return p4;
 }
 
@@ -25,15 +25,15 @@ static int touch_page(uint64_t P4, uint64_t addr, uint16_t flags)
 	if (!P4)
 		return -1;
 
-	if ((!PRESENT(P4E)) && (!(P4E = pmm_calloc())))
+	if ((!PRESENT(P4E)) && (!(P4E = (uint64_t)pmm_calloc())))
 		return -1;
 	P4E |= flags | PAGE_PRESENT;
 
-	if ((!PRESENT(P3E)) && (!(P3E = pmm_calloc())))
+	if ((!PRESENT(P3E)) && (!(P3E = (uint64_t)pmm_calloc())))
 		return -1;
 	P3E |= flags | PAGE_PRESENT;
 
-	if ((!PRESENT(P2E)) && (!(P2E = pmm_calloc())))
+	if ((!PRESENT(P2E)) && (!(P2E = (uint64_t)pmm_calloc())))
 		return -1;
 	P2E |= flags | PAGE_PRESENT;
 
@@ -80,17 +80,17 @@ int vmm_set_pages(uint64_t P4, uint64_t addr, uint64_t page, uint16_t flags, siz
 }
 
 void vmm_activate(uintptr_t p4) {
-	if(p4 == NULL) {
+	if(p4 == 0) {
 		lcr3(V2P((uint64_t)&p4_table));
 	} else {
 		lcr3(V2P((uint64_t)p4));
 	}
 }
 
-void vmm_free(uint64_t p4) {
-	ASSERT(p4 != &p4_table);
+void vmm_free(uintptr_t p4) {
+	ASSERT(p4 != (uintptr_t)&p4_table);
 
-	if(p4 == NULL)
+	if(p4 == 0)
 		return;
 
 	PANIC("NOT IMPLEMENTED");
@@ -112,21 +112,21 @@ void vmm_clear_page(uint64_t P4, uint64_t addr, int free)
 	for (int i = 0; i < ENTRIES_PER_PT; i++)
 		if (pt[i])
 			return;
-	pmm_free(MASK_FLAGS(P2E));
+	pmm_free((void *)MASK_FLAGS(P2E));
 	P2E = 0;
 
 	pt = PT(P3E);
 	for (int i = 0; i < ENTRIES_PER_PT; i++)
 		if (pt[i])
 			return;
-	pmm_free(MASK_FLAGS(P3E));
+	pmm_free((void *)MASK_FLAGS(P3E));
 	P3E = 0;
 
 	pt = PT(P4E);
 	for (int i = 0; i < ENTRIES_PER_PT; i++)
 		if (pt[i])
 			return;
-	pmm_free(MASK_FLAGS(P4E));
+	pmm_free((void *)MASK_FLAGS(P4E));
 	P4E = 0;
 }
 

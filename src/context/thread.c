@@ -43,7 +43,7 @@ void thread_init() {
 
 // Create new thread
 tid_t thread_create(const char* name, thread_func* func, void * aux) {
-    struct thread_info *th = P2V(pmm_alloc_pages(1));
+    struct thread_info *th = (struct thread_info *)P2V(pmm_alloc_pages(1));
 
     ASSERT(func != NULL);
     ASSERT(name != NULL);

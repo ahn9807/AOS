@@ -2,6 +2,7 @@
 #include "vga_text.h"
 #include "debug.h"
 #include "kmalloc.h"
+#include "string.h"
 
 // Mount filesystem at super_node from path
 int vfs_mount(const char *path, struct inode* super_node) {

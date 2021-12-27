@@ -24,7 +24,7 @@ struct thread_info {
     tid_t tid;
     enum thread_status status;
     char name[32];
-    uint64_t *p4;
+    uint64_t p4;
     uintptr_t tls_base;
     size_t tls_size;
     struct intr_frame thread_frame;

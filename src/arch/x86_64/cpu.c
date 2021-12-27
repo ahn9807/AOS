@@ -9,6 +9,8 @@
 #include "msr_flags.h"
 #include "thread.h"
 #include "register_flags.h"
+#include "apic.h"
+#include "vmm.h"
 
 #define cpuid(in,a,b,c,d) do { asm volatile ("cpuid" : "=a"(a),"=b"(b),"=c"(c),"=d"(d) : "a"(in)); } while(0)
 
@@ -22,7 +24,7 @@ static uint64_t ap_end_init = 0;
 
 static volatile int current_ap_index = 0;
 
-static inline load_cpu_info() {
+static inline void load_cpu_info() {
 	uint64_t a, b, unused;
 	cpuid(0, unused, b, unused, unused);
 
@@ -52,7 +54,7 @@ static inline load_cpu_info() {
 }
 
 static inline void set_gs_segment(uintptr_t base) {
-	write_msr(MSR_FS_BASE, NULL);
+	write_msr(MSR_FS_BASE, 0);
 	write_msr(MSR_GS_BASE, base);
 	write_msr(MSR_KERNEL_GS_BASE, base);
 	asm volatile ("swapgs");

@@ -4,6 +4,7 @@
 #include "spin_lock.h"
 #include "memory.h"
 #include "vga_text.h"
+#include "pmm.h"
 
 #define ALIGNMENT 16ul //4ul				///< This is the byte alignment that memory must be allocated on. IMPORTANT for GTK and other stuff.
 
@@ -610,8 +611,7 @@ int liballoc_unlock()
 
 void *liballoc_alloc(size_t size)
 {
-	uint64_t temp = P2V(pmm_alloc_pages(size));
-	return (void *)temp;
+	return (void *)P2V(pmm_alloc_pages(size));
 }
 
 int liballoc_free(void *addr, size_t size)

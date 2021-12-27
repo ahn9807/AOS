@@ -10,8 +10,8 @@
 static int current_bdev_index = 0;
 static int current_cdev_index = 0;
 
-static dev_bwrite(device_t *dev, size_t offset, size_t len, void *buffer);
-static dev_bread(device_t *dev, size_t offset, size_t len, void *buffer);
+static int dev_bwrite(device_t *dev, size_t offset, size_t len, void *buffer);
+static int dev_bread(device_t *dev, size_t offset, size_t len, void *buffer);
 static inode_t* get_inode();
 
 extern uintptr_t _start_device_probe;
@@ -133,7 +133,7 @@ static inode_t* get_inode() {
     inode->ctime = 0;
 }
 
-static dev_bread(device_t *dev, size_t offset, size_t len, void *buffer) {
+static int dev_bread(device_t *dev, size_t offset, size_t len, void *buffer) {
     uint32_t block_size = dev->dev_op->block_size(dev->aux);
     uint32_t start_block = offset / block_size;
     uint32_t end_block = (offset + len - 1) / block_size;
@@ -169,7 +169,7 @@ static dev_bread(device_t *dev, size_t offset, size_t len, void *buffer) {
     return len;
 }
 
-static dev_bwrite(device_t *dev, size_t offset, size_t len, void *buffer) {
+static int dev_bwrite(device_t *dev, size_t offset, size_t len, void *buffer) {
     uint32_t block_size = dev->dev_op->block_size(dev->aux);
     uint32_t start_block = offset / block_size;
     uint32_t end_block = (offset + len - 1) / block_size;

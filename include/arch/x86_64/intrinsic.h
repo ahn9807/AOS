@@ -2,6 +2,7 @@
 #pragma once
 
 #include <stdint.h>
+#include "gdt.h"
 
 __attribute__((always_inline)) static __inline void lcr0(uint64_t val)
 {
@@ -33,7 +34,7 @@ __attribute__((always_inline)) static __inline void lgdt(const void *dtr)
 {
 	__asm __volatile("lgdt %0"
 					 :
-					 : "m"(*dtr));
+					 : "m"(*(uintptr_t *)dtr));
 }
 
 __attribute__((always_inline)) static __inline void lldt(uint16_t sel)
@@ -54,7 +55,7 @@ __attribute__((always_inline)) static __inline void lidt(const void *dtr)
 {
 	__asm __volatile("lidt %0"
 					 :
-					 : "m"(*dtr));
+					 : "m"(*(uintptr_t *)dtr));
 }
 
 __attribute__((always_inline)) static __inline void invlpg(uint64_t addr)

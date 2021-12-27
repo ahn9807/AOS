@@ -27,28 +27,29 @@ typedef union syscall_ptr
 	long (*syscall_arg6)(unsigned long, unsigned long, unsigned long, unsigned long, unsigned long, unsigned long);
 } syscall_ptr_t;
 
-typedef struct syscall_info {
+typedef struct syscall_info
+{
 	const char *syscall_name;
 	uint32_t syscall_nr;
 	uint32_t arg_nr;
 	syscall_ptr_t syscall_p;
 } syscall_info_t;
 
-#define __SYSCALL_DEFINE_METADATA(nr, x, name) 		\
-    struct syscall_info __syscall_info_sys##name = { 			\
-        .syscall_name = "sys"#name, 							\
-        .syscall_nr = nr, 										\
-        .arg_nr = x, 											\
-        .syscall_p = NULL,										\
-    };															\
+#define __SYSCALL_DEFINE_METADATA(nr, x, name)                      \
+	struct syscall_info __syscall_info_sys##name = {                \
+		.syscall_name = "sys" #name,                                \
+		.syscall_nr = nr,                                           \
+		.arg_nr = x,                                                \
+		.syscall_p = NULL,                                          \
+	};                                                              \
 	struct syscall_info __attribute__((section("__syscalls_info"))) \
 	*__p_syscall_meta_##name = &__syscall_info_sys##name;
 
 #define __SYSCALL_DEFINEx(nr, x, name, ...) \
-	__SYSCALL_DEFINE_METADATA(nr, x, name) \
+	__SYSCALL_DEFINE_METADATA(nr, x, name)  \
 	long sys##name(__MAP(x, __SC_DECL, __VA_ARGS__))
 
-#define SYSCALL_DEFINE0(nr, name) \
+#define SYSCALL_DEFINE0(nr, name)          \
 	__SYSCALL_DEFINE_METADATA(nr, 0, name) \
 	long sys_##name()
 #define SYSCALL_DEFINE1(nr, name, ...) __SYSCALL_DEFINEx(nr, 1, _##name, __VA_ARGS__)
@@ -60,12 +61,14 @@ typedef struct syscall_info {
 
 #define SYSCALL_DEFINE_MAXARGS 6
 
-#define VALIDATE_PTR(PTR) \
-	do { \
-		if(syscall_validate_ptr((uintptr_t)(PTR))) return -EINVAL; \
-	} while(0)
+#define VALIDATE_PTR(PTR)                           \
+	do                                              \
+	{                                               \
+		if (syscall_validate_ptr((void *)(PTR))) \
+			return -EINVAL;                         \
+	} while (0)
 
-int syscall_validate_ptr(uintptr_t ptr);
+int syscall_validate_ptr(void *ptr);
 
 /// Initialize the system call tables
 void syscall_init();
@@ -92,6 +95,6 @@ long sys_access(const char *, int); // 21
 /* syscall/sys */
 long sys_brk(unsigned long); // 12
 long sys_uname(void *);
-long sys_getuid(); // 102
+long sys_getuid();	// 102
 long sys_geteuid(); // 107
 long sys_arch_prctl(int, unsigned long);

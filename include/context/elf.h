@@ -152,6 +152,9 @@ struct ELF64_Shdr {
 	uint64_t sh_entsiz;
 };
 
+// Forward declare of process_info (process.h)
+struct process_info;
+
 int elf_load(struct process_info *proc, const char *file_name, struct intr_frame *if_);
 int elf_check_supported(struct ELF64_Ehdr *ehdr);
 int elf_check_segment(struct ELF64_Phdr *phdr);

@@ -5,7 +5,7 @@
 
 SYSCALL_DEFINE1(12, brk, unsigned long, brk) {
 	// BRK can has NULL as an brk to access start_brk
-	if(!mm_is_user(brk)) {
+	if(!mm_is_user((void *)brk)) {
 		return -EINVAL;
 	}
 
@@ -17,7 +17,7 @@ SYSCALL_DEFINE1(12, brk, unsigned long, brk) {
 	} else if(brk > cur_brk) {
 		uintptr_t expend_size = (uintptr_t)brk - cur_brk;
 		size_t page_num = expend_size / PAGE_SIZE + 1;
-		uintptr_t hpage = pmm_alloc_pages(page_num);
+		uintptr_t hpage = (uintptr_t)pmm_alloc_pages(page_num);
 
 		vmm_set_pages(thread_current()->p4,
 		 			  thread_current()->owner->brk_end, 

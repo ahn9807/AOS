@@ -1,4 +1,6 @@
 #include "syscalls.h"
+#include "kmalloc.h"
+#include "memory.h"
 
 struct iovec {
 	void  *iov_base;    /* Starting address */

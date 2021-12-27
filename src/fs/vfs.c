@@ -23,7 +23,7 @@ void vfs_init() {
 // Get mountpoint of the path
 // Mountpoint must be initialized with dev_install
 // Without this it will return / always
-struct vfs_node *vfs_mountpoint(char *path) {
+struct vfs_node *vfs_mountpoint(const char *path) {
     char **file_path = path_tokenize(path);
     if(strlen(*file_path) > 1 && (*file_path)[strlen(*file_path) -1] == PATH_SEPARATOR)
         *(file_path)[strlen(*file_path) -1] = '\0';
@@ -135,7 +135,7 @@ int vfs_install(struct vfs_fs *fs) {
 
 // Get filesystem
 struct vfs_fs *vfs_find(char *name) {
-    for(struct list_elem *e = list_begin(&file_systems); e != list_end(&file_systems); e = list_next(&file_systems)) {
+    for(struct list_elem *e = list_begin(&file_systems); e != list_end(&file_systems); e = list_next(e)) {
         if(!strcmp(list_entry(e, struct vfs_fs, elem)->name, name)) {
             return list_entry(e, struct vfs_fs, elem);
         }
