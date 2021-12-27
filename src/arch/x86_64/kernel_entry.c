@@ -86,6 +86,7 @@ void temp_ls(inode_t *dir_node) {
 }
 
 void temp_cat(file_t *file) {
+    cls();
     printf("cat %s\n", file->name);
     if(file->name == NULL) {
         printf("cat: ?\n");
@@ -103,7 +104,6 @@ void temp_cat(file_t *file) {
 
     kfree(buf);
 }
-
 
 int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
 {

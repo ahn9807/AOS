@@ -6,7 +6,7 @@
 #include "vga_text.h"
 #include "pmm.h"
 
-#define ALIGNMENT 16ul //4ul				///< This is the byte alignment that memory must be allocated on. IMPORTANT for GTK and other stuff.
+#define ALIGNMENT 4ul //4ul				///< This is the byte alignment that memory must be allocated on. IMPORTANT for GTK and other stuff.
 
 #define ALIGN_TYPE char					   ///unsigned char[16] /// unsigned short
 #define ALIGN_INFO sizeof(ALIGN_TYPE) * 16 ///< Alignment information is stored right before the pointer. This is the number of bytes of information stored there.

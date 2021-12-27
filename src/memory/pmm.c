@@ -2,6 +2,7 @@
 #include "pmm.h"
 #include "multiboot2.h"
 #include "string.h"
+#include "debug.h"
 
 // https://github.com/evanw/buddy-malloc/blob/master/buddy-malloc.c
 
@@ -76,6 +77,7 @@ void *pmm_alloc()
 // Must be changed!!!
 void *pmm_alloc_pages(size_t size)
 {
+	ASSERT(size != 0);
 	void *first_addr = pmm_alloc();
 	size -= 1;
 	while (size != 0)
@@ -125,6 +127,8 @@ static void choose_next_area()
 		if (pmm_frame_list.next_free_frame < start_frame)
 		{
 			pmm_frame_list.next_free_frame = start_frame;
+		} else {
+			panic("Out of memory!");
 		}
 	}
 	else

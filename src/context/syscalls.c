@@ -64,29 +64,29 @@ void syscall_handler(struct intr_frame *if_)
 		// debug_syscall(if_);
 		switch (syscall_info->arg_nr)
 		{
-		case 0:
-			ret = syscall_info->syscall_p.syscall_arg0();
-			break;
-		case 1:
-			ret = syscall_info->syscall_p.syscall_arg1(if_->reg.rdi);
-			break;
-		case 2:
-			ret = syscall_info->syscall_p.syscall_arg2(if_->reg.rdi, if_->reg.rsi);
-			break;
-		case 3:
-			ret = syscall_info->syscall_p.syscall_arg3(if_->reg.rdi, if_->reg.rsi, if_->reg.rdx);
-			break;
-		case 4:
-			ret = syscall_info->syscall_p.syscall_arg4(if_->reg.rdi, if_->reg.rsi, if_->reg.rdx, if_->reg.r10);
-			break;
-		case 5:
-			ret = syscall_info->syscall_p.syscall_arg5(if_->reg.rdi, if_->reg.rsi, if_->reg.rdx, if_->reg.r10, if_->reg.r8);
-			break;
-		case 6:
-			ret = syscall_func_table[if_->reg.rax].syscall_arg6(if_->reg.rdi, if_->reg.rsi, if_->reg.rdx, if_->reg.r10, if_->reg.r8, if_->reg.r9);
-			break;
-		default:
-			panic("UNDEFINED SYSTEM CALL!");
+			case 0:
+				ret = syscall_info->syscall_p.syscall_arg0();
+				break;
+			case 1:
+				ret = syscall_info->syscall_p.syscall_arg1(if_->reg.rdi);
+				break;
+			case 2:
+				ret = syscall_info->syscall_p.syscall_arg2(if_->reg.rdi, if_->reg.rsi);
+				break;
+			case 3:
+				ret = syscall_info->syscall_p.syscall_arg3(if_->reg.rdi, if_->reg.rsi, if_->reg.rdx);
+				break;
+			case 4:
+				ret = syscall_info->syscall_p.syscall_arg4(if_->reg.rdi, if_->reg.rsi, if_->reg.rdx, if_->reg.r10);
+				break;
+			case 5:
+				ret = syscall_info->syscall_p.syscall_arg5(if_->reg.rdi, if_->reg.rsi, if_->reg.rdx, if_->reg.r10, if_->reg.r8);
+				break;
+			case 6:
+				ret = syscall_func_table[if_->reg.rax].syscall_arg6(if_->reg.rdi, if_->reg.rsi, if_->reg.rdx, if_->reg.r10, if_->reg.r8, if_->reg.r9);
+				break;
+			default:
+				panic("UNDEFINED SYSTEM CALL!");
 			break;
 		}
 		if_->reg.rax = (uint64_t)ret;
