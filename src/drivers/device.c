@@ -80,9 +80,9 @@ void dev_install(device_t *dev, char* path) {
     strcpy(new_path, DEVICE_ROOT);
     strcat(new_path, dev->name);
 
+    printf("dev path: %s\n", dev->name);
     list_push_back(&device_list, &dev->elem);
     vfs_bind(new_path, root_node);
-
     kfree(new_path);
 }
 

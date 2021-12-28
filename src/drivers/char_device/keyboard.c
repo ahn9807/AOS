@@ -9,7 +9,7 @@
 static uint8_t *kbd_buffer;
 static int cur_offset = 0;
 
-static size_t read_kbd_buffer(void *__attribute__ ((unused)) aux, size_t __attribute__ ((unused)) offset, size_t size, void *buf);
+static size_t read_kbd_buffer(void *__attribute__((unused)) aux, size_t __attribute__((unused)) offset, size_t size, void *buf);
 
 static int8_t get_char(void)
 {
@@ -58,33 +58,23 @@ static int8_t get_char(void)
 static enum irq_handler_result keyboard_handler(struct intr_frame *f)
 {
     char c = (char)get_char();
-    if(c) {
-        printf("%c", c);
+    if (c)
+    {
+        // printf("%c", c);
         kbd_buffer[(cur_offset++) % KBD_BUFFER_LEN] = c;
-    }
-    // For debug
-    if(c == 'p') {
-        printf("\nkbd_buffer\n");
-        char buf[256];
-        memset(buf, 0, 256);
-        read_kbd_buffer(NULL, 0, 256, buf);
-        for(int i=0;i<256;i++) {
-            if(buf[i] == 0) {
-                return OK;
-            } else {
-                printf("%c", buf[i]);
-            }
-        }
-        printf("\n");
     }
 }
 
-static size_t read_kbd_buffer(void *__attribute__ ((unused)) aux, size_t __attribute__ ((unused)) offset, size_t size, void *buf) {
-    size = cur_offset > size ? size : cur_offset;
+static size_t read_kbd_buffer(void *__attribute__((unused)) aux, size_t __attribute__((unused)) offset, size_t size, void *buf)
+{
+    static int read_offset = 0;
+    size = size > cur_offset - read_offset ? cur_offset - read_offset : size;
 
-    memcpy(buf, kbd_buffer, size);
+    int new_size = read_offset + size > KBD_BUFFER_LEN ? (read_offset + size) % KBD_BUFFER_LEN : size;
+    memcpy(buf, &kbd_buffer[read_offset], new_size);
+    memcpy(&((uint8_t *)buf)[new_size], kbd_buffer, size - new_size);
+    read_offset = (read_offset + size) % KBD_BUFFER_LEN;
 
-    cur_offset -= cur_offset;
     return size;
 }
 

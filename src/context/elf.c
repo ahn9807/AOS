@@ -35,7 +35,7 @@ int elf_load(struct process_info *proc, const char *file_name, struct intr_frame
 	{
 		printf("open failed");
 		error_code = -FS_NO_ENTRY;
-		goto done;
+		return error_code;
 	}
 
 	vfs_seek(&file, 0, SEEK_SET);

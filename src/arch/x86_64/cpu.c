@@ -83,6 +83,7 @@ void ap_main() {
 
 	vmm_activate(kernel_P4);
 	ap_end_init = 1;
+	debug_cpu();
 	while(1);
 }
 

@@ -36,9 +36,10 @@ extern uint64_t temp_table;
 
 static int timer_intr = 0;
 
-static char* gatsby_quote = "In my younger . . . years my father gave me some advice . . . Whenever you feel like criticizing any one . . . just remember that all the people in this world haven't had the advantages that you've had. \0";
+static char *gatsby_quote = "In my younger . . . years my father gave me some advice . . . Whenever you feel like criticizing any one . . . just remember that all the people in this world haven't had the advantages that you've had. \0";
 
-enum irq_handler_result timer_interrupt(struct intr_frame *f) {
+enum irq_handler_result timer_interrupt(struct intr_frame *f)
+{
     // if(gatsby_quote[timer_intr] == '\0') {
     //     timer_intr = 0;
     // }
@@ -46,57 +47,94 @@ enum irq_handler_result timer_interrupt(struct intr_frame *f) {
     return YIELD_ON_RETURN;
 }
 
-void temp_thread() {
+void temp_thread()
+{
     uint64_t tick = 0;
-    while(1) {
-        if(tick++ % 100000000 == 0)
+    while (1)
+    {
+        if (tick++ % 100000000 == 0)
             printf("Thread #%d, tick = %d\n", thread_current_s()->tid, tick / 10000);
     }
 }
 
-void temp_thread2() {
+void temp_thread2()
+{
     uint64_t tick = 0;
-    while(1) {
-        if(tick++ % 100000000 == 0)
+    while (1)
+    {
+        if (tick++ % 100000000 == 0)
             printf("Thread #%d, tick = %d\n", thread_current_s()->tid, tick / 10000);
     }
 }
 
-void temp_exec() {
+void temp_exec()
+{
     printf("execute program\n");
-    if(process_exec("/prog_2")) {
-        PANIC("EXEC FAILED");
+    if (process_exec("/prog_2"))
+    {
+        printf("exec failed");
     }
 }
 
 int ap_main();
 
-void temp_ls(inode_t *dir_node) {
-    if(dir_node == NULL) {
+void temp_ls(inode_t *dir_node)
+{
+    if (dir_node == NULL)
+    {
         printf("ls: ?\n");
         return;
     }
     struct dentry dir;
     int cur_offset = 0;
-    while(vfs_readdir(dir_node, cur_offset, &dir) > 0) {
+    while (vfs_readdir(dir_node, cur_offset, &dir) > 0)
+    {
         printf("%s %d ", dir.name, dir.inode->size);
         cur_offset++;
     }
     printf("\n");
 }
 
-void temp_cat(file_t *file) {
+void temp_cat(file_t *file)
+{
     cls();
     printf("cat %s\n", file->name);
-    if(file->name == NULL) {
+    if (file->name == NULL)
+    {
         printf("cat: ?\n");
         return;
     }
-    char* buf = kmalloc(4096);
+    char *buf = kmalloc(4096);
 
-    for(int page = 0; page < vfs_get_size(file); page += 4096) {
+    int line_count = 1;
+
+    for (int page = 0; page < vfs_get_size(file); page += 4096)
+    {
         int read_size = vfs_read(file, buf, 4096);
-        for(int i=0;i<read_size;i++) {
+        for (int i = 0; i < read_size; i++)
+        {
+            if (buf[i] == '\n')
+            {
+                line_count++;
+            }
+
+            if (line_count == VGA_HEIGHT - 1)
+            {
+                printf("\n press kbd to continue (q to quit)...");
+                while (1)
+                {
+                    char buffer[256];
+                    int size = dev_read(vfs_mountpoint("/dev/char0")->inode->device, 0, 1, buffer);
+                    if (size > 0)
+                    {
+                        if (buffer[0] == 'q') {
+                            return;
+                        }
+                        line_count = 0;
+                        break;
+                    }
+                }
+            }
             printf("%c", buf[i]);
         }
     }
@@ -127,12 +165,9 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
     dev_init();
     ext2_init();
 
-    char *dev_path = "/dev/disk0/";
-    inode_t *root_node = kmalloc(sizeof(inode_t));
-    vfs_mount(dev_path, root_node);
-    vfs_bind("/", root_node);
-    file_t file;
+    ASSERT(vfs_mount("/", vfs_mountpoint("/dev/disk0")->inode) == 0);
 
+    file_t file;
     ASSERT(vfs_open_by_path("/a/b/c/test_1", &file) == 0);
     temp_cat(&file);
 

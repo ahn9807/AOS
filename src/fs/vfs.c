@@ -29,7 +29,7 @@ struct vfs_node *vfs_mountpoint(const char *path) {
         *(file_path)[strlen(*file_path) -1] = '\0';
 
     if(!*file_path || *(file_path)[0] == PATH_SEPARATOR)
-        return NULL;
+        return &vfs_tree;
 
     struct vfs_node *cur_node = &vfs_tree;
     struct vfs_node *last_target_node = cur_node;
@@ -69,8 +69,6 @@ next:;
     return last_target_node;
 }
 
-// Bind mountpoint to the vfs tree structure
-// Install Device
 int vfs_bind(const char *path, struct inode *target)
 {
     if (!path ||  !*path || !target)
@@ -79,7 +77,10 @@ int vfs_bind(const char *path, struct inode *target)
     if(!strcmp(path, PATH_SEPARATOR_STRING)) {
         vfs_root = target;
         vfs_tree.inode = target;
-        vfs_tree.children = NULL;
+        vfs_tree.name = strdup(path);
+        vfs_tree.fs = NULL;
+        vfs_tree.aux = NULL;
+        // vfs_tree.children = NULL;
     
         return 0;
     }
