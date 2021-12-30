@@ -17,7 +17,6 @@ int strncmp(const char *s1, const char *s2, size_t n);
 
 char *strcpy_s(char *dst, const char *src, size_t dstSize);
 
-char *strtok(char str[], const char *delims);
 char * strtok_r(char * str, const char * delim, char ** saveptr);
 char * strtok(char * str, const char * delim);
 char * strcat(char *dest, const char *src);

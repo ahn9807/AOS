@@ -67,12 +67,13 @@ void temp_thread2()
     }
 }
 
-void temp_exec()
+void temp_exec(void *path)
 {
-    printf("execute program\n");
-    if (process_exec("/prog_2"))
+    if (process_exec((char *)path))
     {
+        printf("\n");
         printf("exec failed");
+        printf("\n");
     }
 }
 
@@ -82,7 +83,7 @@ void temp_ls(inode_t *dir_node)
 {
     if (dir_node == NULL)
     {
-        printf("ls: ?\n");
+        printf("ls: ?");
         return;
     }
     struct dentry dir;
@@ -92,18 +93,16 @@ void temp_ls(inode_t *dir_node)
         printf("%s %d ", dir.name, dir.inode->size);
         cur_offset++;
     }
-    printf("\n");
 }
 
 void temp_cat(file_t *file)
 {
-    cls();
-    printf("cat %s\n", file->name);
     if (file->name == NULL)
     {
-        printf("cat: ?\n");
+        printf("cat: not found");
         return;
     }
+    cls();
     char *buf = kmalloc(4096);
 
     int line_count = 1;
@@ -127,7 +126,8 @@ void temp_cat(file_t *file)
                     int size = dev_read(vfs_mountpoint("/dev/char0")->inode->device, 0, 1, buffer);
                     if (size > 0)
                     {
-                        if (buffer[0] == 'q') {
+                        if (buffer[0] == 'q')
+                        {
                             return;
                         }
                         line_count = 0;
@@ -138,9 +138,82 @@ void temp_cat(file_t *file)
             printf("%c", buf[i]);
         }
     }
-    printf("\n");
-
     kfree(buf);
+}
+
+void temp_shell()
+{
+    char input_buffer[256];
+    int input_index = 0;
+    char *working_dir = kmalloc(256);
+    strcpy(working_dir, "/");
+    inode_t *work_dir = vfs_mountpoint(working_dir)->inode;
+
+    while (1)
+    {
+        printf("\nminish_monitor> ");
+        while (1)
+        {
+            char buffer;
+            int size = dev_read(vfs_mountpoint("/dev/char0")->inode->device, 0, 1, &buffer);
+            if (size > 0)
+            {
+                printf("%c", buffer);
+                if (buffer == '\n')
+                {
+                    input_buffer[input_index++] = '\0';
+                    input_index = 0;
+                    break;
+                }
+                input_buffer[input_index++] = buffer;
+            }
+        }
+
+        if (!strcmp(input_buffer, "ls"))
+        {
+            temp_ls(work_dir);
+        }
+        else if (!strcmp(input_buffer, "clear"))
+        {
+            cls();
+        }
+        else if (!strncmp(input_buffer, "cat", 3))
+        {
+            char name[128];
+            strcpy(name, &input_buffer[4]);
+            file_t file;
+            char *path = path_absolute(working_dir, name);
+            vfs_open_by_path(path, &file);
+            kfree(path);
+            temp_cat(&file);
+        }
+        else if (!strncmp(input_buffer, "cd", 2))
+        {
+            char name[128];
+            strcpy(name, &input_buffer[3]);
+            char *temp_dir = kmalloc(256);
+            temp_dir = path_absolute(working_dir, name);
+            dentry_t dir;
+            int ret = vfs_lookup(work_dir, name, &dir);
+            if (ret == FS_DIRECTORY) {
+                kfree(working_dir);
+                working_dir = temp_dir;
+                work_dir = dir.inode;
+            } else {
+                printf("cd: no such file or direcotry: %s", name);
+            }
+        }
+        else if (!strncmp(input_buffer, "exec", 4))
+        {
+            char name[128];
+            strcpy(name, &input_buffer[5]);
+            thread_create("exec", &temp_exec, name);
+        }
+        else if (!strcmp(input_buffer, "pwd"))
+        {
+            printf("%s", working_dir);
+        }
+    }
 }
 
 int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
@@ -167,11 +240,8 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
 
     ASSERT(vfs_mount("/", vfs_mountpoint("/dev/disk0")->inode) == 0);
 
-    file_t file;
-    ASSERT(vfs_open_by_path("/a/b/c/test_1", &file) == 0);
-    temp_cat(&file);
+    thread_create("shell", &temp_shell, NULL);
 
-    thread_create("exec", &temp_exec, NULL);
     // Have to call explicitly. Cause without this,
     // rip goes to the end of the bootloader and
     // unrecover kernel panic. Also this changes the current kernel_entry
