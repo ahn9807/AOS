@@ -30,42 +30,11 @@
 #include "acpi.h"
 #include "apic.h"
 #include "cpu.h"
+#include "timer.h"
+#include "sched.h"
 
 extern uint64_t p4_table;
 extern uint64_t temp_table;
-
-static int timer_intr = 0;
-
-static char *gatsby_quote = "In my younger . . . years my father gave me some advice . . . Whenever you feel like criticizing any one . . . just remember that all the people in this world haven't had the advantages that you've had. \0";
-
-enum irq_handler_result timer_interrupt(struct intr_frame *f)
-{
-    // if(gatsby_quote[timer_intr] == '\0') {
-    //     timer_intr = 0;
-    // }
-    // printf("%c", gatsby_quote[timer_intr ++]);
-    return YIELD_ON_RETURN;
-}
-
-void temp_thread()
-{
-    uint64_t tick = 0;
-    while (1)
-    {
-        if (tick++ % 100000000 == 0)
-            printf("Thread #%d, tick = %d\n", thread_current_s()->tid, tick / 10000);
-    }
-}
-
-void temp_thread2()
-{
-    uint64_t tick = 0;
-    while (1)
-    {
-        if (tick++ % 100000000 == 0)
-            printf("Thread #%d, tick = %d\n", thread_current_s()->tid, tick / 10000);
-    }
-}
 
 void temp_exec(void *path)
 {
@@ -195,11 +164,14 @@ void temp_shell()
             temp_dir = path_absolute(working_dir, name);
             dentry_t dir;
             int ret = vfs_lookup(work_dir, name, &dir);
-            if (ret == FS_DIRECTORY) {
+            if (ret == FS_DIRECTORY)
+            {
                 kfree(working_dir);
                 working_dir = temp_dir;
                 work_dir = dir.inode;
-            } else {
+            }
+            else
+            {
                 printf("cd: no such file or direcotry: %s", name);
             }
         }
@@ -213,6 +185,41 @@ void temp_shell()
         {
             printf("%s", working_dir);
         }
+    }
+}
+
+void temp_thread()
+{
+    sched_set_nice(-5);
+    while (1)
+    {
+        for (int i = 0; i < 100000000; i++)
+        {
+        }
+        printf("thread 1");
+    }
+}
+
+void temp_thread2()
+{
+    sched_set_nice(-10);
+    while (1)
+    {
+        for (int i = 0; i < 100000000; i++)
+        {
+        }
+        printf("thread 2");
+    }
+}
+
+void temp_thread3()
+{
+    while (1)
+    {
+        for (int i = 0; i < 100000000; i++)
+        {
+        }
+        printf("thread 3");
     }
 }
 
@@ -230,7 +237,7 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
     gdt_init();
     pic_init();
     interrupt_init();
-    bind_interrupt_with_name(0x20, &timer_interrupt, "Timer");
+    timer_init();
     thread_init();
     intr_enable();
     syscall_init();
@@ -241,6 +248,9 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
     ASSERT(vfs_mount("/", vfs_mountpoint("/dev/disk0")->inode) == 0);
 
     thread_create("shell", &temp_shell, NULL);
+    thread_create("timer", &temp_thread, NULL);
+    thread_create("timer2", &temp_thread2, NULL);
+    thread_create("timer3", &temp_thread3, NULL);
 
     // Have to call explicitly. Cause without this,
     // rip goes to the end of the bootloader and

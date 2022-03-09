@@ -14,6 +14,16 @@
 #define P2E PT(P3E)[P2_OFFSET(addr)]
 #define P1E PT(P2E)[P1_OFFSET(addr)]
 
+struct page {
+	void *va;
+	struct frame *frame;
+};
+
+struct frame {
+	void *kva;
+	struct page *page;
+};
+
 uint64_t vmm_new_p4();
 void vmm_activate(uintptr_t p4);
 uint64_t vmm_get_page(uint64_t P4, uint64_t addr);

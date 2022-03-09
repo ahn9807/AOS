@@ -37,14 +37,6 @@
 
 extern uint64_t kernel_P4;
 
-struct frame {
-
-};
-
-struct page {
-
-};
-
 uintptr_t memory_init(uintptr_t kernel_start, uintptr_t kernel_end, uintptr_t multiboot_start, uintptr_t multiboot_end, uintptr_t multiboot_addr);
 uintptr_t mm_create_p4();
 int mm_is_user(void *ptr);

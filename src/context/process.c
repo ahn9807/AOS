@@ -14,6 +14,7 @@
 #include "msr_flags.h"
 #include "string.h"
 #include "pmm.h"
+#include "semaphore.h"
 
 #define ROUND_UP(X, STEP) (((X) + (STEP)-1) / (STEP) * (STEP))
 
@@ -22,17 +23,22 @@ static int setup_heap(struct process_info *proc, size_t log_heap_size);
 static int argv_length(char **path);
 static char **parse_argv(char *f_name);
 static inline pid_t allocate_pid();
+static void __do_fork(void *aux);
 
 static pid_t current_pid = 0;
+
+struct fork_aux
+{
+	struct thread_info *parent;
+	struct intr_frame if_;
+	struct semaphore dial;
+	bool succ;
+};
 
 void panic_()
 {
 	*(uint16_t *)(0x123123123123) = 0;
 	panic("halt");
-}
-
-int process_run_idle()
-{
 }
 
 int process_exec(char *f_name)
@@ -76,6 +82,46 @@ int process_exec(char *f_name)
 
 	do_iret(&_if);
 	NOT_REACHED();
+}
+
+tid_t process_fork(const char *name, struct intr_frame *if_)
+{
+	/* Clone current thread to new thread.*/
+	struct fork_aux *aux = kmalloc(sizeof(struct fork_aux));
+	if (!aux)
+		return -1;
+
+	aux->parent = thread_current_s();
+	memcpy(&aux->if_, if_, sizeof(struct intr_frame));
+	sema_init(&aux->dial, 0);
+	tid_t tid = thread_create(name, __do_fork, aux);
+
+	if (tid != -1)
+		sema_down(&aux->dial);
+	if (!aux->succ)
+		tid = -1;
+	
+	kfree(aux);
+	
+	return tid;
+}
+
+static void __do_fork(void *aux_) {
+	PANIC("NOT IMPLEMENTED");
+	struct intr_frame if_;
+	struct fork_aux *aux = (struct fork_aux *)aux_;
+	struct thread_info *parent = aux->parent;
+	struct thread_info *current = thread_current_s();
+
+	struct intr_frame *parent_if = &aux->if_;
+	bool succ = false;
+
+	memcpy(&if_, parent_if, sizeof(struct intr_frame));
+
+	current->owner->status = 0;
+	current->p4 = vmm_new_p4();
+
+	return;
 }
 
 static inline pid_t allocate_pid()

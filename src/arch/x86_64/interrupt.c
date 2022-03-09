@@ -114,7 +114,7 @@ void interrupt_handler(struct intr_frame *frame) {
             // do noting
             break;
         case YIELD_ON_RETURN:
-            sched_tick();
+            sched_do();
             break;
         case KILL_ON_RETURN:
             debug_backtrace();

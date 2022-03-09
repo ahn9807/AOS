@@ -9,40 +9,47 @@
 #include "layout.h"
 #include "cpu_flags.h"
 #include "sched.h"
+#include "time.h"
 
-#define THREAD_MAGIC 0xaaaeaa
+#define THREAD_MAGIC 0xdeaddead
 
 extern uint64_t kernel_stack_top;
+struct list thread_list;
 
 static tid_t next_tid = 1;
-
 static void thread_entry(thread_func *, void *aux);
 
-struct {
+struct
+{
     uint16_t len;
     struct idt_entry *addr;
-} __attribute__ ((packed)) gdtr;
+} __attribute__((packed)) gdtr;
 
 // Initialize the caller function to the thread (initd)
 // And start Scheduler and push to the scheduler top
 // Also initialize list and etc...
-void thread_init() {
+void thread_init()
+{
     intr_disable();
     struct thread_info *kernel_entry_th = thread_current();
 
+    list_init(&thread_list);
     sched_init();
 
     initialize_thread(kernel_entry_th, "thread_start");
 
     kernel_entry_th->status = THREAD_RUNNUNG;
     kernel_entry_th->tid = next_tid++;
+    kernel_entry_th->priority = 31;
+    kernel_entry_th->nice = 0;
 
     intr_enable();
-    launch_thread(kernel_entry_th);
+    thread_launch(kernel_entry_th);
 }
 
 // Create new thread
-tid_t thread_create(const char* name, thread_func* func, void * aux) {
+tid_t thread_create(const char *name, thread_func *func, void *aux)
+{
     struct thread_info *th = (struct thread_info *)P2V(pmm_alloc_pages(1));
 
     ASSERT(func != NULL);
@@ -63,25 +70,30 @@ tid_t thread_create(const char* name, thread_func* func, void * aux) {
     th->magic = THREAD_MAGIC;
     th->status = THREAD_READY;
 
-    sched_push(th);
+    sched_push_ready(th);
+    list_push_back(&thread_list, &th->allelem);
 
     return th->tid;
 }
 
-static void initialize_thread(struct thread_info *th, const char *name) {
+static void initialize_thread(struct thread_info *th, const char *name)
+{
     ASSERT(th != NULL);
     ASSERT(name != NULL);
 
     memset(th, 0, sizeof(struct thread_info));
 
-    //This allocate stack pointer to the start of the given stack
+    // This allocate stack pointer to the start of the given stack
     th->thread_frame.rsp = (uint64_t)th + PAGE_SIZE - sizeof(void *);
     strcpy(th->name, name);
     th->status = THREAD_EMBRYO;
     th->magic = THREAD_MAGIC;
+    th->nice = thread_current_s()->nice;
+    th->priority = thread_current_s()->priority;
 }
 
-static void thread_entry(thread_func *func, void* aux) {
+static void thread_entry(thread_func *func, void *aux)
+{
     ASSERT(func != NULL);
 
     intr_enable();
@@ -89,23 +101,28 @@ static void thread_entry(thread_func *func, void* aux) {
     thread_exit();
 }
 
-void thread_exit() {
+void thread_exit()
+{
     // move thread to exit list
     // temp scheduler have to change!!!
     intr_disable();
     thread_current_s()->status = THREAD_EXITED;
+    list_remove(&thread_current_s()->allelem);
     sched_do();
     NOT_REACHED();
 }
 
-void thread_validate() {
-    if(thread_current()->magic != THREAD_MAGIC) {
+void thread_validate()
+{
+    if (thread_current()->magic != THREAD_MAGIC)
+    {
         PANIC("Stack overflow detected!");
     }
 }
 
-void do_iret (struct intr_frame *tf) {
-	__asm __volatile(
+void do_iret(struct intr_frame *tf)
+{
+    __asm __volatile(
         "movq %0, %%rsp\n"
         "movq 0(%%rsp),%%r15\n"
         "movq 8(%%rsp),%%r14\n"
@@ -127,15 +144,17 @@ void do_iret (struct intr_frame *tf) {
         "movw (%%rsp),%%es\n"
         "addq $32, %%rsp\n"
         "iretq"
-        : : "g" ((uint64_t) tf) : "memory"
-    );
+        :
+        : "g"((uint64_t)tf)
+        : "memory");
 }
 
-void launch_thread(struct thread_info *th) {
+void thread_launch(struct thread_info *th)
+{
     uint64_t current_thread = (uint64_t)(&thread_current()->thread_frame);
     uint64_t incomming_thread = (uint64_t)(&th->thread_frame);
 
-    __asm __volatile (
+    __asm __volatile(
         /* Store registers that will be used. */
         "push %%rax\n"
         "push %%rbx\n"
@@ -155,17 +174,17 @@ void launch_thread(struct thread_info *th) {
         "movq %%rdi, 72(%%rax)\n"
         "movq %%rbp, 80(%%rax)\n"
         "movq %%rdx, 88(%%rax)\n"
-        "pop %%rbx\n"              // Saved rcx
+        "pop %%rbx\n" // Saved rcx
         "movq %%rbx, 96(%%rax)\n"
-        "pop %%rbx\n"              // Saved rbx
+        "pop %%rbx\n" // Saved rbx
         "movq %%rbx, 104(%%rax)\n"
-        "pop %%rbx\n"              // Saved rax
+        "pop %%rbx\n" // Saved rax
         "movq %%rbx, 112(%%rax)\n"
         "addq $120, %%rax\n"
         "movw %%es, (%%rax)\n"
         "movw %%ds, 8(%%rax)\n"
         "addq $32, %%rax\n"
-        "call __next\n"         // read the current rip.
+        "call __next\n" // read the current rip.
         "__next:\n"
         "pop %%rbx\n"
         "addq $(out_iret -  __next), %%rbx\n"
@@ -179,47 +198,115 @@ void launch_thread(struct thread_info *th) {
         "mov %%rcx, %%rdi\n"
         "call do_iret\n"
         "out_iret:\n"
-        : : "g"(current_thread), "g" (incomming_thread) : "memory"
-    );
+        :
+        : "g"(current_thread), "g"(incomming_thread)
+        : "memory");
 }
 
 // convert current thread to the idle thread
-void thread_run_idle() {
+void thread_run_idle()
+{
     strcpy(thread_current_s()->name, "idle");
+    thread_set_priority(-1);
     sched_set_idle(thread_current());
-    while(1) {
-        asm volatile ( "sti\n" "hlt\n" );
+    while (1)
+    {
+        asm volatile("sti\n"
+                     "hlt\n");
     }
 }
 
-void thread_block() {
+void thread_block()
+{
     thread_current()->status = THREAD_BLOCKED;
     enum intr_level prev_level = intr_disable();
     sched_do();
     intr_set_level(prev_level);
 }
 
-void thread_unblock(struct thread_info *th) {
+void thread_unblock(struct thread_info *th)
+{
     ASSERT(th->status == THREAD_BLOCKED);
 
     enum intr_level prev_level = intr_disable();
     // push to the shceduler ready list
     th->status = THREAD_READY;
-    sched_push(th);
+    sched_push_ready(th);
     intr_set_level(prev_level);
 }
 
 // Safely get current thread
-struct thread_info* thread_current_s() {
+struct thread_info *thread_current_s()
+{
     ASSERT(thread_current()->magic == THREAD_MAGIC);
     return thread_current();
 }
 
-void thread_yield() {
+void thread_yield()
+{
     ASSERT(!intr_context());
 
     enum intr_level prev_level = intr_disable();
     // schedule to next thread
     sched_do();
     intr_set_level(prev_level);
+}
+
+void thread_set_priority(int priority)
+{
+    enum intr_level old_level = intr_disable();
+    thread_current_s()->priority = priority;
+    intr_set_level(old_level);
+}
+
+int thread_get_priority(int priority)
+{
+    return thread_current_s()->priority;
+}
+
+void thread_ssleep(uint64_t sec)
+{
+    timespec_t tm;
+    tm.tv_sec = sec;
+    tm.tv_nsec = 0;
+    sched_sleep(tm);
+}
+
+/* Invoke function 'func' on all threads, passing along 'aux'.
+   This function must be called with interrupts off. */
+void thread_foreach(thread_action_func *func, void *aux)
+{
+    struct list_elem *e;
+    ASSERT(intr_get_level() == INTR_OFF);
+
+    for (e = list_begin(&thread_list); e != list_end(&thread_list);
+         e = list_next(e))
+    {
+        struct thread_info *t = list_entry(e, struct thread_info, allelem);
+        func(t, aux);
+    }
+}
+
+void thread_msleep(uint64_t ms)
+{
+    timespec_t tm;
+    tm.tv_sec = (ms / 1000);
+    tm.tv_nsec = (ms % 1000) * 1000000;
+    sched_sleep(tm);
+}
+
+void thread_usleep(uint64_t us)
+{
+    timespec_t tm;
+    tm.tv_sec = (us / 1000000);
+    tm.tv_nsec = (us % 1000000) * 1000000000;
+    sched_sleep(tm);
+}
+
+void thread_nsleep(uint64_t ns)
+{
+    timespec_t tm;
+    tm.tv_sec = (ns / 1000000000);
+    tm.tv_nsec = ns % 1000000000;
+    sched_sleep(tm);
 }
