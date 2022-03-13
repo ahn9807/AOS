@@ -201,25 +201,16 @@ void sched_set_idle(struct thread_info *idle)
 void sched_set_nice(int nice)
 {
     intr_disable();
+
     struct thread_info *cur_thread = thread_current_s();
     cur_thread->nice = nice;
-    if (idle_thread != cur_thread)
-    {
-        cur_thread->priority = PRIORITY_MAX - REAL_TO_INT_ROUND((cur_thread->recent_cpu / 4)) - cur_thread->nice * 2;
-    }
+    mlfqs_priority(cur_thread, NULL);
 
-    if (cur_thread->priority > PRIORITY_MAX)
-    {
-        cur_thread->priority = PRIORITY_MAX;
-    }
-    else if (cur_thread->priority < PRIORITY_MIN)
-    {
-        cur_thread->priority = PRIORITY_MIN;
-    }
     if (!list_empty(&ready_list) && cur_thread->priority < list_entry(list_front(&ready_list), struct thread_info, elem)->priority)
     {
         thread_yield();
     }
+
     intr_enable();
 }
 

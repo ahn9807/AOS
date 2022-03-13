@@ -188,41 +188,6 @@ void temp_shell()
     }
 }
 
-void temp_thread()
-{
-    sched_set_nice(-5);
-    while (1)
-    {
-        for (int i = 0; i < 100000000; i++)
-        {
-        }
-        printf("thread 1");
-    }
-}
-
-void temp_thread2()
-{
-    sched_set_nice(-10);
-    while (1)
-    {
-        for (int i = 0; i < 100000000; i++)
-        {
-        }
-        printf("thread 2");
-    }
-}
-
-void temp_thread3()
-{
-    while (1)
-    {
-        for (int i = 0; i < 100000000; i++)
-        {
-        }
-        printf("thread 3");
-    }
-}
-
 int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
 {
     uint64_t kernel_start, kernel_end, multiboot_start, multiboot_end;
@@ -248,10 +213,6 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
     ASSERT(vfs_mount("/", vfs_mountpoint("/dev/disk0")->inode) == 0);
 
     thread_create("shell", &temp_shell, NULL);
-    thread_create("timer", &temp_thread, NULL);
-    thread_create("timer2", &temp_thread2, NULL);
-    thread_create("timer3", &temp_thread3, NULL);
-
     // Have to call explicitly. Cause without this,
     // rip goes to the end of the bootloader and
     // unrecover kernel panic. Also this changes the current kernel_entry
