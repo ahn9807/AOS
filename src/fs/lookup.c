@@ -1,14 +1,12 @@
-#include <stdbool.h>
-#include "vfs.h"
-#include "string.h"
-#include "stat.h"
 #include "kmalloc.h"
+#include "lib/string.h"
+#include "stat.h"
+#include "vfs.h"
 #include "vga_text.h"
 
 int vfs_lookup(inode_t *root_node, const char *path, struct dentry *ret_dir)
 {
-	if (root_node == NULL)
-	{
+	if (root_node == NULL) {
 		return -FS_NO_ENTRY;
 	}
 
@@ -17,15 +15,12 @@ int vfs_lookup(inode_t *root_node, const char *path, struct dentry *ret_dir)
 
 	char **tokenized_path = path_tokenize(path);
 
-	for (int i = 0; i < path_length(tokenized_path); i++)
-	{
+	for (int i = 0; i < path_length(tokenized_path); i++) {
 		int d_idx = 0;
 		found = false;
 
-		while (vfs_readdir(cur_node, d_idx, ret_dir) > 0)
-		{
-			if (!strcmp(ret_dir->name, tokenized_path[i]))
-			{
+		while (vfs_readdir(cur_node, d_idx, ret_dir) > 0) {
+			if (!strcmp(ret_dir->name, tokenized_path[i])) {
 				cur_node = ret_dir->inode;
 				if (ret_dir->inode != NULL)
 					found = true;
@@ -34,23 +29,17 @@ int vfs_lookup(inode_t *root_node, const char *path, struct dentry *ret_dir)
 			d_idx++;
 		}
 
-		if (found == false)
-		{
+		if (found == false) {
 			ret_dir = NULL;
 			return -FS_NO_ENTRY;
 		}
 	}
 
-	if (S_ISDIR(cur_node->type))
-	{
+	if (S_ISDIR(cur_node->type)) {
 		return FS_DIRECTORY;
-	}
-	else if (S_ISREG(cur_node->type))
-	{
+	} else if (S_ISREG(cur_node->type)) {
 		return FS_FILE;
-	}
-	else
-	{
+	} else {
 		return FS_NOT_FILE;
 	}
 }

@@ -1,9 +1,7 @@
 #pragma once
 
-#include <stdint.h>
-#include <stddef.h>
-#include "list.h"
 #include "elf.h"
+#include "lib/list.h"
 #include "vfs.h"
 
 typedef uint32_t pid_t;
@@ -24,10 +22,10 @@ typedef struct process_info {
 	gid_t gid;
 
 	// Opened file descriptors
-	struct list fdescs;
+	struct list_head fdescs;
 
 	// Holding threads
-	struct list threads;
+	struct list_head threads;
 
 	// Elf Informations
 	struct ELF64_Phdr *phdrs;
@@ -38,7 +36,7 @@ typedef struct process_info {
 	uintptr_t brk_end;
 } process_info_t;
 
-int process_exec();
+int process_exec(char *name);
 tid_t process_fork();
 tid_t process_wait();
 tid_t process_exit();

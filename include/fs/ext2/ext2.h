@@ -1,23 +1,22 @@
 #pragma once
 
-#include <stddef.h>
-#include <stdint.h>
+#include "lib/types.h"
 #include "vfs.h"
 
 /* File metadata */
 #define EXT2_MAGIC 0xEF53
 #define EXT2_DIRECT_BLOCKS 12
-#define EXT2_DATE		"95/08/09"
-#define EXT2_VERSION		"0.5b"
+#define EXT2_DATE "95/08/09"
+#define EXT2_VERSION "0.5b"
 
 /* Inode Types */
-#define EXT2_S_IFSOCK	0xC000
-#define EXT2_S_IFLNK	0xA000
-#define EXT2_S_IFREG	0x8000
-#define EXT2_S_IFBLK	0x6000
-#define EXT2_S_IFDIR	0x4000
-#define EXT2_S_IFCHR	0x2000
-#define EXT2_S_IFIFO	0x1000
+#define EXT2_S_IFSOCK 0xC000
+#define EXT2_S_IFLNK 0xA000
+#define EXT2_S_IFREG 0x8000
+#define EXT2_S_IFBLK 0x6000
+#define EXT2_S_IFDIR 0x4000
+#define EXT2_S_IFCHR 0x2000
+#define EXT2_S_IFIFO 0x1000
 
 /* Dentry inode file types */
 #define EXT2_FT_UNKNOWN 0
@@ -30,64 +29,62 @@
 #define EXT2_FT_SYMLINK 7
 
 /* setuid, etc. */
-#define EXT2_S_ISUID	0x0800
-#define EXT2_S_ISGID	0x0400
-#define EXT2_S_ISVTX	0x0200
+#define EXT2_S_ISUID 0x0800
+#define EXT2_S_ISGID 0x0400
+#define EXT2_S_ISVTX 0x0200
 
 /* rights */
-#define EXT2_S_IRUSR	0x0100
-#define EXT2_S_IWUSR	0x0080
-#define EXT2_S_IXUSR	0x0040
-#define EXT2_S_IRGRP	0x0020
-#define EXT2_S_IWGRP	0x0010
-#define EXT2_S_IXGRP	0x0008
-#define EXT2_S_IROTH	0x0004
-#define EXT2_S_IWOTH	0x0002
-#define EXT2_S_IXOTH	0x0001
+#define EXT2_S_IRUSR 0x0100
+#define EXT2_S_IWUSR 0x0080
+#define EXT2_S_IXUSR 0x0040
+#define EXT2_S_IRGRP 0x0020
+#define EXT2_S_IWGRP 0x0010
+#define EXT2_S_IXGRP 0x0008
+#define EXT2_S_IROTH 0x0004
+#define EXT2_S_IWOTH 0x0002
+#define EXT2_S_IXOTH 0x0001
 
 /* File system states */
-#define	EXT2_VALID_FS			0x0001	/* Unmounted cleanly */
-#define	EXT2_ERROR_FS			0x0002	/* Errors detected */
-#define	EFSCORRUPTED			EUCLEAN	/* Filesystem is corrupted */
+#define EXT2_VALID_FS 0x0001 /* Unmounted cleanly */
+#define EXT2_ERROR_FS 0x0002 /* Errors detected */
+#define EFSCORRUPTED EUCLEAN /* Filesystem is corrupted */
 
 /* Mount flags */
-#define EXT2_MOUNT_OLDALLOC		0x000002  /* Don't use the new Orlov allocator */
-#define EXT2_MOUNT_GRPID		0x000004  /* Create files with directory's group */
-#define EXT2_MOUNT_DEBUG		0x000008  /* Some debugging messages */
-#define EXT2_MOUNT_ERRORS_CONT		0x000010  /* Continue on errors */
-#define EXT2_MOUNT_ERRORS_RO		0x000020  /* Remount fs ro on errors */
-#define EXT2_MOUNT_ERRORS_PANIC		0x000040  /* Panic on errors */
-#define EXT2_MOUNT_MINIX_DF		0x000080  /* Mimics the Minix statfs */
-#define EXT2_MOUNT_NOBH			0x000100  /* No buffer_heads */
-#define EXT2_MOUNT_NO_UID32		0x000200  /* Disable 32-bit UIDs */
-#define EXT2_MOUNT_XATTR_USER		0x004000  /* Extended user attributes */
-#define EXT2_MOUNT_POSIX_ACL		0x008000  /* POSIX Access Control Lists */
-#define EXT2_MOUNT_XIP			0x010000  /* Obsolete, use DAX */
-#define EXT2_MOUNT_USRQUOTA		0x020000  /* user quota */
-#define EXT2_MOUNT_GRPQUOTA		0x040000  /* group quota */
-#define EXT2_MOUNT_RESERVATION		0x080000  /* Preallocation */
-#define EXT2_MOUNT_DAX			0x100000  /* Direct Access */
+#define EXT2_MOUNT_OLDALLOC 0x000002 /* Don't use the new Orlov allocator */
+#define EXT2_MOUNT_GRPID 0x000004 /* Create files with directory's group */
+#define EXT2_MOUNT_DEBUG 0x000008 /* Some debugging messages */
+#define EXT2_MOUNT_ERRORS_CONT 0x000010 /* Continue on errors */
+#define EXT2_MOUNT_ERRORS_RO 0x000020 /* Remount fs ro on errors */
+#define EXT2_MOUNT_ERRORS_PANIC 0x000040 /* Panic on errors */
+#define EXT2_MOUNT_MINIX_DF 0x000080 /* Mimics the Minix statfs */
+#define EXT2_MOUNT_NOBH 0x000100 /* No buffer_heads */
+#define EXT2_MOUNT_NO_UID32 0x000200 /* Disable 32-bit UIDs */
+#define EXT2_MOUNT_XATTR_USER 0x004000 /* Extended user attributes */
+#define EXT2_MOUNT_POSIX_ACL 0x008000 /* POSIX Access Control Lists */
+#define EXT2_MOUNT_XIP 0x010000 /* Obsolete, use DAX */
+#define EXT2_MOUNT_USRQUOTA 0x020000 /* user quota */
+#define EXT2_MOUNT_GRPQUOTA 0x040000 /* group quota */
+#define EXT2_MOUNT_RESERVATION 0x080000 /* Preallocation */
+#define EXT2_MOUNT_DAX 0x100000 /* Direct Access */
 
 /* Behaviour when detecting errors */
-#define EXT2_ERRORS_CONTINUE		1	/* Continue execution */
-#define EXT2_ERRORS_RO			2	/* Remount fs read-only */
-#define EXT2_ERRORS_PANIC		3	/* Panic */
-#define EXT2_ERRORS_DEFAULT		EXT2_ERRORS_CONTINUE
+#define EXT2_ERRORS_CONTINUE 1 /* Continue execution */
+#define EXT2_ERRORS_RO 2 /* Remount fs read-only */
+#define EXT2_ERRORS_PANIC 3 /* Panic */
+#define EXT2_ERRORS_DEFAULT EXT2_ERRORS_CONTINUE
 
 /* Special inode numbers */
-#define	EXT2_BAD_INO		 1	/* Bad blocks inode */
-#define EXT2_ROOT_INO		 2	/* Root inode */
-#define EXT2_BOOT_LOADER_INO	 5	/* Boot loader inode */
-#define EXT2_UNDEL_DIR_INO	 6	/* Undelete directory inode */
+#define EXT2_BAD_INO 1 /* Bad blocks inode */
+#define EXT2_ROOT_INO 2 /* Root inode */
+#define EXT2_BOOT_LOADER_INO 5 /* Boot loader inode */
+#define EXT2_UNDEL_DIR_INO 6 /* Undelete directory inode */
 
 #define SINGLE_INDIRECT_POINTER(inode) (inode->block[EXT2_DIRECT_BLOCKS])
 #define DOUBLE_INDIRECT_POINTER(inode) (inode->block[EXT2_DIRECT_BLOCKS + 1])
 #define TRIPLE_INDIRECT_POINTER(inode) (inode->block[EXT2_DIRECT_BLOCKS + 2])
 
-
 /* Super block struct. */
-typedef struct ext2_superblock
-{
+typedef struct ext2_superblock {
 	uint32_t inodes_count; /* Inodes count */
 	uint32_t blocks_count; /* Blocks count */
 	uint32_t r_blocks_count; /* Reserved blocks count */
@@ -147,7 +144,7 @@ typedef struct ext2_superblock
 	 * Performance hints.  Directory preallocation should only
 	 * happen if the EXT2_COMPAT_PREALLOC flag is on.
 	 */
-	uint8_t prealloc_blocks; /* Nr of blocks to try to preallocate*/ 
+	uint8_t prealloc_blocks; /* Nr of blocks to try to preallocate*/
 	uint8_t prealloc_dir_blocks; /* Nr to preallocate for dirs */
 	uint16_t _padding;
 	/*
@@ -172,8 +169,7 @@ typedef struct ext2_superblock
 } __attribute__((packed)) ext2_superblock_t;
 
 /* Block group descriptor on the disk */
-typedef struct ext2_group_desc
-{
+typedef struct ext2_group_desc {
 	uint32_t block_bitmap; /* Blocks bitmap block */
 	uint32_t inode_bitmap; /* Inodes bitmap block */
 	uint32_t inode_table; /* Inodes table block */
@@ -185,11 +181,10 @@ typedef struct ext2_group_desc
 } __attribute__((packed)) ext2_group_desc_t;
 
 /* Inode on the disk */
-typedef struct ext2_inode
-{
+typedef struct ext2_inode {
 	uint16_t mode; /* File mode (Type and Permissions) */
 	uint16_t uid; /* Low 16bits of Owner Uid */
-	uint32_t size;  /*file length in byte. */
+	uint32_t size; /*file length in byte. */
 	uint32_t atime; /* Access time */
 	uint32_t ctime; /* Creation time */
 	uint32_t mtime; /* Modification time */
@@ -207,8 +202,7 @@ typedef struct ext2_inode
 	uint8_t osd2[12]; /* OS dependent 2 */
 } __attribute__((packed)) ext2_inode_t;
 
-typedef struct ext2_dentry
-{
+typedef struct ext2_dentry {
 	uint32_t inode_nr; /* inode number */
 	uint16_t rec_len; /* Directory entry length */
 	uint8_t name_len; /* Name length */
@@ -216,8 +210,7 @@ typedef struct ext2_dentry
 	char name[]; /* Actually a set of characters, at most 255 bytes */
 } __attribute__((packed)) ext2_dentry_t;
 
-typedef struct ext2_disk_cache_entry
-{
+typedef struct ext2_disk_cache_entry {
 	uint32_t block_no;
 	uint32_t last_use;
 	uint8_t dirty;

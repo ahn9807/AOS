@@ -1,5 +1,5 @@
 #include "spin_lock.h"
-#include "debug.h"
+#include "lib/debug.h"
 #include "interrupt.h"
 
 // Lock spinlock

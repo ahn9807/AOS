@@ -1,12 +1,11 @@
 #pragma once
 
-#include "list.h"
-#include "stdbool.h"
+#include "lib/list.h"
+#include "lib/stddef.h"
 #include "semaphore.h"
 
-
 struct mutex {
-    struct semaphore sema;
+	struct semaphore sema;
 };
 
 void mutex_init(struct mutex *);

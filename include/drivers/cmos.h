@@ -13,7 +13,7 @@
 //  0x0A      Status Register A
 //  0x0B      Status Register B
 
-#include "time.h"
+#include "lib/time.h"
 
 #define CMOS_ADDR 0x70
 #define CMOS_DATA 0x71

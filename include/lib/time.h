@@ -1,6 +1,6 @@
 #pragma once
 
-#include <stdint.h>
+#include "lib/types.h"
 
 /* Identifier for system-wide realtime clock.  */
 # define CLOCK_REALTIME			0

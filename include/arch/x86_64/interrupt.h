@@ -1,7 +1,6 @@
 #pragma once
 
-#include <stdint.h>
-#include <stdbool.h>
+#include "lib/types.h"
 #include "vga_text.h"
 
 enum intr_level {
@@ -39,11 +38,11 @@ struct intr_frame {
 	uint32_t __pad4;
 	/* Pushed by intrNN_stub in intr-stubs.S. */
 	uint64_t vec_no; /* Interrupt vector number. */
-/* Sometimes pushed by the CPU,
+	/* Sometimes pushed by the CPU,
    otherwise for consistency pushed as 0 by intrNN_stub.
    The CPU puts it just under `eip', but we move it here. */
 	uint64_t error_code;
-/* Pushed by the CPU.
+	/* Pushed by the CPU.
    These are the interrupted task's saved registers. */
 	uintptr_t rip;
 	uint16_t cs;
@@ -57,15 +56,15 @@ struct intr_frame {
 } __attribute__((packed));
 
 struct idt_entry {
-    unsigned off_lowerbits : 16;   // low 16 bits of offset in segment
-	unsigned selector : 16;         // segment selector
-	unsigned ist : 3;        // # args, 0 for interrupt/trap gates
-	unsigned rsv1 : 5;        // reserved(should be zero I guess)
-	unsigned type : 4;        // type(STS_{TG,IG32,TG32})
-	unsigned s : 1;           // must be 0 (system)
-	unsigned dpl : 2;         // descriptor(meaning new) privilege level
-	unsigned p : 1;           // Present
-	unsigned off_middlebits : 16;  // high bits of offset in segment
+	unsigned off_lowerbits : 16; // low 16 bits of offset in segment
+	unsigned selector : 16; // segment selector
+	unsigned ist : 3; // # args, 0 for interrupt/trap gates
+	unsigned rsv1 : 5; // reserved(should be zero I guess)
+	unsigned type : 4; // type(STS_{TG,IG32,TG32})
+	unsigned s : 1; // must be 0 (system)
+	unsigned dpl : 2; // descriptor(meaning new) privilege level
+	unsigned p : 1; // Present
+	unsigned off_middlebits : 16; // high bits of offset in segment
 	uint32_t off_higherbits;
 	uint32_t rsv2;
 };
@@ -77,22 +76,22 @@ enum irq_handler_result {
 	FAILED,
 };
 
-#define install_idt(idt, function, d, t) \
-{ \
-    *(idt) = (struct idt_entry) { \
-        .off_lowerbits = (uint64_t) (function) & 0xffff, \
-        .selector = 0x8, \
-        .ist = 0, \
-        .rsv1 = 0, \
-        .type = (t), \
-        .s = 0, \
-        .dpl = (d), \
-        .p = 1, \
-        .off_middlebits = ((uint64_t) (function) >> 16) & 0xffff, \
-        .off_higherbits = ((uint64_t) (function) >> 32) & 0xffffffff, \
-        .rsv2 = 0, \
-    }; \
-} \
+#define install_idt(idt, function, d, t)                                                                               \
+	{                                                                                                              \
+		*(idt) = (struct idt_entry){                                                                           \
+			.off_lowerbits = (uint64_t)(function)&0xffff,                                                  \
+			.selector = 0x8,                                                                               \
+			.ist = 0,                                                                                      \
+			.rsv1 = 0,                                                                                     \
+			.type = (t),                                                                                   \
+			.s = 0,                                                                                        \
+			.dpl = (d),                                                                                    \
+			.p = 1,                                                                                        \
+			.off_middlebits = ((uint64_t)(function) >> 16) & 0xffff,                                       \
+			.off_higherbits = ((uint64_t)(function) >> 32) & 0xffffffff,                                   \
+			.rsv2 = 0,                                                                                     \
+		};                                                                                                     \
+	}
 
 #define install_interrupt(idt, function, d) install_idt((idt), (function), (d), 14)
 #define install_trap(idt, function, d) install_idt((idt), (function), (d), 15)
@@ -105,7 +104,7 @@ enum intr_level intr_get_level();
 enum intr_level intr_set_level(enum intr_level irl);
 enum intr_level intr_enable();
 enum intr_level intr_disable();
-bool intr_context();
+int intr_context();
 intr_handler_t bind_interrupt(uint32_t num, intr_handler_t fn);
-intr_handler_t bind_interrupt_with_name(uint32_t num, intr_handler_t fn, const char* name);
+intr_handler_t bind_interrupt_with_name(uint32_t num, intr_handler_t fn, const char *name);
 void intr_debug(struct intr_frame *frame);

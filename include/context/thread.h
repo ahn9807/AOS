@@ -1,12 +1,10 @@
 #pragma once
 
-#include <stddef.h>
-#include <stdint.h>
+#include "lib/list.h"
+#include "lib/time.h"
 #include "interrupt.h"
 #include "intrinsic.h"
-#include "list.h"
 #include "process.h"
-#include "time.h"
 
 #define thread_current() ((struct thread_info *)((rrsp()) & ~((uint64_t)((1 << 12) - 1))))
 
@@ -32,9 +30,9 @@ struct thread_info
     size_t tls_size;
     struct intr_frame thread_frame;
     // list elem for scheduler
-    struct list_elem elem;
+    struct list_head list;
     // list elem for ''all'' thread list
-    struct list_elem allelem;
+    struct list_head allelem;
     uint64_t magic;
     process_info_t *owner;
 
@@ -70,6 +68,6 @@ void thread_usleep(uint64_t us);
 void thread_nsleep(uint64_t ns);
 
 void thread_set_priority(int priority);
-int thread_get_priority();
+int thread_get_priority(void);
 
 void thread_foreach(thread_action_func *func, void *aux);

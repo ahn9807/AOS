@@ -1,10 +1,9 @@
-#include <stdbool.h>
 #include "interrupt.h"
 #include "intrinsic.h"
 #include "pic8259.h"
 #include "string.h"
 #include "sched.h"
-#include "debug.h"
+#include "lib/debug.h"
 #include "layout.h"
 #include "cpu_flags.h"
 
@@ -15,7 +14,7 @@ static intr_handler_t intr_handlers[INTERRUPT_LEN];
 static const char *intr_names[INTERRUPT_LEN];
 extern uintptr_t intr_vectors[];
 
-static bool in_hardware_interrupt = false;
+static bool in_hardware_interrupt = 0;
 
 struct {
     uint16_t len;
@@ -137,7 +136,7 @@ enum intr_level intr_set_level(enum intr_level irl) {
     return irl == INTR_ON ? intr_enable() : intr_disable();
 }
 
-bool intr_context() {
+int intr_context() {
     return in_hardware_interrupt;
 }
 

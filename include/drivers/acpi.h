@@ -23,7 +23,7 @@
 //                                                 +----------------+
 #pragma once
 
-#include <stdint.h>
+#include "lib/types.h"
 
 struct acpi_rsdp {
     uint8_t     signature[8];

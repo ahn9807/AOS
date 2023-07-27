@@ -1,10 +1,9 @@
 #pragma once
-#include <stdint.h>
-#include <stddef.h>
-#include <thread.h>
 
-struct task_state
-{
+#include "lib/types.h"
+#include "thread.h"
+
+struct task_state {
 	uint32_t res1;
 	uint64_t rsp0;
 	uint64_t rsp1;

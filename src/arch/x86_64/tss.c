@@ -1,10 +1,9 @@
-#include <stddef.h>
-#include <stdint.h>
-#include "pmm.h"
 #include "tss.h"
-#include "memory.h"
-#include "debug.h"
 #include "layout.h"
+#include "lib/debug.h"
+#include "lib/types.h"
+#include "memory.h"
+#include "pmm.h"
 
 /* The Task-State Segment (TSS).
  *
@@ -57,8 +56,7 @@ void tss_init(void)
 }
 
 /* Returns the kernel TSS. */
-struct task_state *
-tss_get(void)
+struct task_state *tss_get(void)
 {
 	ASSERT(tss != NULL);
 	return tss;

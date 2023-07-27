@@ -1,6 +1,6 @@
 #pragma once
 
-#include <stdbool.h>
+#include "lib/stddef.h"
 
 typedef struct spinlock {
     // Is locked?

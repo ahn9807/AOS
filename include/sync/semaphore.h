@@ -1,11 +1,10 @@
 #pragma once
 
-#include "list.h"
-#include "stdbool.h"
+#include "lib/list.h"
 
 struct semaphore {
     unsigned int value;
-    struct list waiters;
+    struct list_head waiters;
 };
 
 void sema_init(struct semaphore *, unsigned int value);

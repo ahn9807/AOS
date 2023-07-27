@@ -1,7 +1,8 @@
 #include "thread.h"
-#include "list.h"
+#include "lib/list.h"
+#include "lib/list.h"
 #include "kmalloc.h"
-#include "debug.h"
+#include "lib/debug.h"
 #include "intrinsic.h"
 #include "memory.h"
 #include "string.h"
@@ -9,18 +10,17 @@
 #include "layout.h"
 #include "cpu_flags.h"
 #include "sched.h"
-#include "time.h"
+#include "lib/time.h"
 
 #define THREAD_MAGIC 0xdeaddead
 
 extern uint64_t kernel_stack_top;
-struct list thread_list;
+LIST_HEAD(thread_list);
 
 static tid_t next_tid = 1;
 static void thread_entry(thread_func *, void *aux);
 
-struct
-{
+struct {
     uint16_t len;
     struct idt_entry *addr;
 } __attribute__((packed)) gdtr;
@@ -33,7 +33,6 @@ void thread_init()
     intr_disable();
     struct thread_info *kernel_entry_th = thread_current();
 
-    list_init(&thread_list);
     sched_init();
 
     initialize_thread(kernel_entry_th, "thread_start");
@@ -71,7 +70,7 @@ tid_t thread_create(const char *name, thread_func *func, void *aux)
     th->status = THREAD_READY;
 
     sched_push_ready(th);
-    list_push_back(&thread_list, &th->allelem);
+    list_add_tail(&th->allelem, &thread_list);
 
     return th->tid;
 }
@@ -107,7 +106,7 @@ void thread_exit()
     // temp scheduler have to change!!!
     intr_disable();
     thread_current_s()->status = THREAD_EXITED;
-    list_remove(&thread_current_s()->allelem);
+    list_del_init(&thread_current_s()->allelem);
     sched_do();
     NOT_REACHED();
 }
@@ -259,7 +258,7 @@ void thread_set_priority(int priority)
     intr_set_level(old_level);
 }
 
-int thread_get_priority(int priority)
+int thread_get_priority(void)
 {
     return thread_current_s()->priority;
 }
@@ -276,14 +275,11 @@ void thread_ssleep(uint64_t sec)
    This function must be called with interrupts off. */
 void thread_foreach(thread_action_func *func, void *aux)
 {
-    struct list_elem *e;
+    struct thread_info *th;
     ASSERT(intr_get_level() == INTR_OFF);
 
-    for (e = list_begin(&thread_list); e != list_end(&thread_list);
-         e = list_next(e))
-    {
-        struct thread_info *t = list_entry(e, struct thread_info, allelem);
-        func(t, aux);
+    list_for_each_entry(th, &thread_list, allelem) {
+        func(th, aux);
     }
 }
 

@@ -1,7 +1,6 @@
 #pragma once
 
-#include <stddef.h>
-#include <stdint.h>
+#include "lib/types.h"
 
 #define S_IFMT      0170000UL /* type of file */
 #define S_IFSOCK    0140000UL /* socket */

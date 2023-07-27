@@ -33,9 +33,9 @@ file(GLOB_RECURSE kernel_SRC "./include/*.h" "./src/*.c")
 file(GLOB_RECURSE kernel_ASM "./src/*.asm" "./src/*.S" "./src/*.s")
 
 include_directories(
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
     ${CMAKE_CURRENT_SOURCE_DIR}/include/arch/x86_64
     ${CMAKE_CURRENT_SOURCE_DIR}/include/memory
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/lib
     ${CMAKE_CURRENT_SOURCE_DIR}/include/drivers
     ${CMAKE_CURRENT_SOURCE_DIR}/include/drivers/block_device
     ${CMAKE_CURRENT_SOURCE_DIR}/include/drivers/char_device

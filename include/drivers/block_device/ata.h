@@ -1,11 +1,9 @@
 #pragma once
 
-#include <stdint.h>
-#include <stddef.h>
-#include <stdbool.h>
 #include "device.h"
 #include "spin_lock.h"
-#include "list.h"
+#include "lib/types.h"
+#include "lib/list.h"
 
 // Status Register I/O Base + 7 (R)
 #define ATA_SR_BSY     0x80 // Busy
@@ -142,7 +140,7 @@ struct ata_disk {
     enum ata_disk_type type; // 1 for atapi 0 for ata
     struct ata_identity info;
     spinlock_t lock;
-    struct list_elem elem;
+    struct list_head list;
 };
 
 void ata_init();

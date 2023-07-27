@@ -1,23 +1,23 @@
 #pragma once
 
-#include "list.h"
-#include "thread.h"
-#include "time.h"
 #include "interrupt.h"
+#include "lib/list.h"
+#include "lib/time.h"
+#include "thread.h"
 
 // Helper functions for scheduler (pintos!)
 #define F 16384
 #define REAL_TO_INT(x) ((x) / F)
-#define INT_TO_REAL(n) ((n) * F)
-#define REAL_TO_INT_ROUND(x) ((x) >= 0 ? (((x) + F/2))/F : (((x) - F/2))/F)
-#define ADD_REAL(x,y) ((x) + (y))
-#define SUBTRACT_REAL(x,y) ((x) - (y))
-#define ADD_REAL_INT(x,n) ((x) + (n)*F)
-#define SUBTRACT_REAL_INT(x,n) ((x) - (n)*F)
-#define MUL_REAL(x,y) (((int64_t) (x)) * (y) /F)
-#define MUL_REAL_INT(x,n) ((x) * (n))
-#define DIV_REAL(x,y) (((int64_t) (x)) * F / (y))
-#define DIV_REAL_INT(x,n) ((x)/n)
+#define INT_TO_REAL(n) ((n)*F)
+#define REAL_TO_INT_ROUND(x) ((x) >= 0 ? (((x) + F / 2)) / F : (((x)-F / 2)) / F)
+#define ADD_REAL(x, y) ((x) + (y))
+#define SUBTRACT_REAL(x, y) ((x) - (y))
+#define ADD_REAL_INT(x, n) ((x) + (n)*F)
+#define SUBTRACT_REAL_INT(x, n) ((x) - (n)*F)
+#define MUL_REAL(x, y) (((int64_t)(x)) * (y) / F)
+#define MUL_REAL_INT(x, n) ((x) * (n))
+#define DIV_REAL(x, y) (((int64_t)(x)) * F / (y))
+#define DIV_REAL_INT(x, n) ((x) / n)
 
 #define PRIORITY_MAX 61
 #define PRIORITY_MIN 0
@@ -37,7 +37,7 @@ struct thread_info *sched_next();
 void sched_push_ready(struct thread_info *th);
 void sched_do();
 enum irq_handler_result sched_tick();
-void sched_set_idle(struct thread_info* idle);
+void sched_set_idle(struct thread_info *idle);
 void sched_sleep(timespec_t tm);
 
 void sched_set_nice(int nice);

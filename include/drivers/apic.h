@@ -1,6 +1,6 @@
 #pragma once
 
-#include "msr_flags.h"
+#include "lib/types.h"
 
 extern uintptr_t lapic_base_addr;
 extern uintptr_t ioapic_base_addr;

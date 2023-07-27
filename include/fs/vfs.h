@@ -1,8 +1,6 @@
 #pragma once
 
-#include <stddef.h>
-#include <stdint.h>
-#include "list.h"
+#include "lib/list.h"
 #include "spin_lock.h"
 #include "device.h"
 #include "stat.h"
@@ -184,7 +182,7 @@ struct vfs_fs
     char name[256];
 
     struct fs_operations *fs_op;
-    struct list_elem elem;
+    struct list_head list;
 };
 
 struct vfs_node

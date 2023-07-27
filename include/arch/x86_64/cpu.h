@@ -1,10 +1,10 @@
 #pragma once
 
-#include <stdint.h>
+#include "lib/types.h"
+
 #define MAX_CPU_NUM 128
 
-typedef struct cpu_info
-{
+typedef struct cpu_info {
 	int cpuid;
 	int lapicid;
 	int cpu_model;

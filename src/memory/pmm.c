@@ -2,7 +2,7 @@
 #include "pmm.h"
 #include "multiboot2.h"
 #include "string.h"
-#include "debug.h"
+#include "lib/debug.h"
 
 // https://github.com/evanw/buddy-malloc/blob/master/buddy-malloc.c
 
