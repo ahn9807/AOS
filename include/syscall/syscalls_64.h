@@ -17,9 +17,13 @@
 #define __SYSCALL_64(nr, sym) [nr] = (long int (*)(void))sym,
 
 __SYSCALL_COMMON(1, sys_write)
+__SYSCALL_COMMON(9, sys_mmap)
+__SYSCALL_COMMON(10, sys_mprotect)
+__SYSCALL_COMMON(11, sys_munmap)
 __SYSCALL_COMMON(12, sys_brk)
 __SYSCALL_COMMON(20, sys_writev)
 __SYSCALL_COMMON(21, sys_access)
+__SYSCALL_COMMON(28, sys_madvise)
 __SYSCALL_COMMON(60, sys_exit)
 __SYSCALL_COMMON(63, sys_uname)
 __SYSCALL_COMMON(102, sys_getuid)

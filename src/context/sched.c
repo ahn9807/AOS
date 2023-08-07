@@ -5,6 +5,7 @@
 #include "spin_lock.h"
 #include "thread.h"
 #include "timer.h"
+#include "vmem.h"
 
 LIST_HEAD(ready_list);
 LIST_HEAD(sleep_list);
@@ -135,13 +136,13 @@ enum irq_handler_result sched_tick()
 		mlfqs_priority(cur_thread, NULL);
 	}
 
-	intr_set_level(old_level);
-
 	if (!list_empty(&ready_list) &&
 	    cur_thread->priority < list_entry(&ready_list, struct thread_info, list)->priority)
 		return YIELD_ON_RETURN;
 	else if (ticks % SCHED_TIMER_TICK_INTVAL == 0)
 		return YIELD_ON_RETURN;
+
+	intr_set_level(old_level);
 
 	return OK;
 }

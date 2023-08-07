@@ -11,6 +11,7 @@
 #include "tss.h"
 #include "vfs.h"
 #include "vmm.h"
+#include "errno.h"
 
 #define ALIGN_ADDR(src) ((src) - (src) % (alignment))
 #define ROUND_UP(X, STEP) (((X) + (STEP)-1) / (STEP) * (STEP))
@@ -32,20 +33,20 @@ int elf_load(struct process_info *proc, const char *file_name, struct intr_frame
 
 	if (vfs_open_by_path(file_name, &file)) {
 		printf("open failed");
-		error_code = -FS_NO_ENTRY;
+		error_code = -EINVAL;
 		return error_code;
 	}
 
 	vfs_seek(&file, 0, SEEK_SET);
 	if (vfs_read(&file, &ehdr, sizeof(ehdr)) != sizeof(ehdr)) {
 		printf("read failed");
-		error_code = -FS_INVALID;
+		error_code = -EINVAL;
 		goto done;
 	}
 
 	if (elf_check_supported(&ehdr)) {
 		printf("invalid format\n");
-		error_code = -1;
+		error_code = -EINVAL;
 		goto done;
 	}
 
@@ -55,26 +56,27 @@ int elf_load(struct process_info *proc, const char *file_name, struct intr_frame
 	for (int i = 0; i < ehdr.e_phnum; i++) {
 		if (cur_offset < 0 || cur_offset > vfs_get_size(&file)) {
 			printf("offset error\n");
-			goto done;
+			error_code = -EINVAL;
+			goto done_load;
 		}
 
 		vfs_seek(&file, cur_offset, SEEK_SET);
 		cur_offset += ehdr.e_phentsize;
 		if (vfs_read(&file, &phdrs[i], sizeof(struct ELF64_Phdr)) != sizeof(struct ELF64_Phdr)) {
 			printf("read failed");
-			error_code = -FS_INVALID;
-			goto done;
+			error_code = -EINVAL;
+			goto done_load;
 		}
 
 		switch (phdrs[i].p_type) {
 		case PT_LOAD:
 			if (error_code = pt_load(&phdrs[i], &file)) {
-				goto done;
+				goto done_load;
 			}
 			break;
 		case PT_TLS:
 			if (error_code = pt_tls(&phdrs[i], &file)) {
-				goto done;
+				goto done_load;
 			}
 			break;
 		default:
@@ -89,8 +91,9 @@ int elf_load(struct process_info *proc, const char *file_name, struct intr_frame
 	proc->phdrs = kmalloc(sizeof(struct ELF64_Phdr) * ehdr.e_phnum);
 	memcpy(proc->phdrs, phdrs, ehdr.e_phentsize * ehdr.e_phnum);
 
-done:
+done_load:
 	kfree(phdrs);
+done:
 	return error_code;
 }
 

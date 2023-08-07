@@ -98,3 +98,9 @@ long sys_uname(void *);
 long sys_getuid();	// 102
 long sys_geteuid(); // 107
 long sys_arch_prctl(int, unsigned long);
+
+/* syscall/memory */
+long sys_mmap(void *addr, size_t len, int prot, int flags, int fd, off_t offset);
+long sys_mprotect(void *addr, size_t len, int prot);
+long sys_munmap(void *addr, size_t len);
+long sys_madvise(void *addr, size_t len, int advice);

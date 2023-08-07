@@ -28,6 +28,7 @@
 #include "tss.h"
 #include "vfs.h"
 #include "vga_text.h"
+#include "vmem.h"
 
 extern uint64_t p4_table;
 extern uint64_t temp_table;
@@ -35,13 +36,16 @@ extern uint64_t temp_table;
 void temp_exec(void *path)
 {
 	if (process_exec((char *)path)) {
-		printf("\n");
-		printf("exec failed");
-		printf("\n");
+		printf("exec failed\n");
 	}
 }
 
 int ap_main();
+
+void temp_debug_mm()
+{
+	debug_mm_struct(thread_current()->mm);
+}
 
 void temp_ls(inode_t *dir_node)
 {
@@ -151,6 +155,10 @@ void temp_shell()
 			thread_create("exec", &temp_exec, name);
 		} else if (!strcmp(input_buffer, "pwd")) {
 			printf("%s", working_dir);
+		} else if(!strcmp(input_buffer, "debugmm")) {
+			sys_mmap(0, 0x1000, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
+			temp_debug_mm();
+			*(long *)(0x1000) = 1;
 		}
 	}
 }

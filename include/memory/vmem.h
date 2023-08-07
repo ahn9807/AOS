@@ -1,3 +1,5 @@
+#pragma once
+
 #include "lib/debug.h"
 #include "lib/list.h"
 #include "memory.h"
@@ -78,11 +80,6 @@
 #define POSIX_MADV_SEQUENTIAL 2 /* Expect sequential page references.  */
 #define POSIX_MADV_WILLNEED 3 /* Will need these pages.  */
 #define POSIX_MADV_DONTNEED 4 /* Don't need these pages.  */
-
-/* Flags for `mlockall'.  */
-#define MCL_CURRENT 1 /* Lock all currently mapped pages.  */
-#define MCL_FUTURE 2 /* Lock all additions to address space.  */
-#define MCL_ONFAULT 4 /* Lock all pages that are faulted in.  */
 
 #define VADDR_MAX -1UL
 /** Invalid virtual addres. **/
@@ -187,7 +184,8 @@ int vma_op_plat_unmap(struct vm_area_struct *vma, vaddr_t vaddr, size_t len);
 int vma_op_plat_mmap(struct vm_area_struct *vma);
 int vma_op_plat_set_prot(struct vm_area_struct *vma, unsigned long prot);
 
-const struct vm_operation_struct vma_anon_ops;
+/* defined at the vmops_anon.c */
+extern const struct vm_operation_struct vma_anon_ops;
 
 int vma_map(struct mm_struct *mm, vaddr_t *vaddr, size_t len, unsigned long prot, unsigned long flags,
 	    const char *name);

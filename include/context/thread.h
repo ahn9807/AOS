@@ -5,6 +5,7 @@
 #include "interrupt.h"
 #include "intrinsic.h"
 #include "process.h"
+#include "vmem.h"
 
 #define thread_current() ((struct thread_info *)((rrsp()) & ~((uint64_t)((1 << 12) - 1))))
 
@@ -35,6 +36,8 @@ struct thread_info
     struct list_head allelem;
     uint64_t magic;
     process_info_t *owner;
+
+    struct mm_struct *mm;
 
     // MLFQ Priority scheduler
     time_t sleep_ticks;

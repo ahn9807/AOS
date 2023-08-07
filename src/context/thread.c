@@ -11,6 +11,7 @@
 #include "cpu_flags.h"
 #include "sched.h"
 #include "lib/time.h"
+#include "vmem.h"
 
 #define THREAD_MAGIC 0xdeaddead
 
@@ -34,7 +35,6 @@ void thread_init()
     struct thread_info *kernel_entry_th = thread_current();
 
     sched_init();
-
     initialize_thread(kernel_entry_th, "thread_start");
 
     kernel_entry_th->status = THREAD_RUNNUNG;
@@ -89,6 +89,8 @@ static void initialize_thread(struct thread_info *th, const char *name)
     th->magic = THREAD_MAGIC;
     th->nice = thread_current_s()->nice;
     th->priority = thread_current_s()->priority;
+    th->mm = kmalloc(sizeof(struct mm_struct));
+    mm_init(th->mm);
 }
 
 static void thread_entry(thread_func *func, void *aux)
@@ -104,6 +106,8 @@ void thread_exit()
 {
     // move thread to exit list
     // temp scheduler have to change!!!
+    kfree(thread_current_s()->mm);
+    mm_destory(thread_current_s()->mm);
     intr_disable();
     thread_current_s()->status = THREAD_EXITED;
     list_del_init(&thread_current_s()->allelem);

@@ -53,6 +53,7 @@ typedef unsigned long pteval_t;
 #define PAGE_GLOBAL 0x100
 
 #define PAGE_SIZE 0x1000
+#define PAGE_SHIFT 12
 #define ENTRIES_PER_PT 512
 
 extern uint64_t kernel_P4;

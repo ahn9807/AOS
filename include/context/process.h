@@ -3,6 +3,7 @@
 #include "elf.h"
 #include "lib/list.h"
 #include "vfs.h"
+#include "vmem.h"
 
 typedef uint32_t pid_t;
 typedef uint32_t uid_t;
@@ -34,6 +35,9 @@ typedef struct process_info {
 	// User Heap area (brk)
 	uintptr_t brk_start;
 	uintptr_t brk_end;
+
+	// Memory management struct
+	struct mm_struct *mm;
 } process_info_t;
 
 int process_exec(char *name);

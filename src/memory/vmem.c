@@ -1,21 +1,14 @@
 #include "vmem.h"
-#include "lib/debug.h"
 #include "errno.h"
 #include "kmalloc.h"
 #include "lib/compiler.h"
+#include "lib/debug.h"
 #include "lib/list.h"
 #include "lib/minmax.h"
 #include "lib/string.h"
 #include "memory.h"
 #include "vga_text.h"
 
-/*
- * Pointer to currently active virtual address space.
- * TODO: This should move to a CPU-local variable
- */
-static struct mm_struct *vmem_active_mm = NULL;
-
-/* Forward declarations */
 static void vmem_vma_unmap(struct vm_area_struct *vma, vaddr_t vaddr, size_t len);
 static void vmem_vma_unlink_and_free(struct vm_area_struct *vma);
 
@@ -31,21 +24,9 @@ void debug_mm_struct(struct mm_struct *mm)
 		prefix[1] = cur->vm_page_prot & PROT_WRITE ? 'w' : '-';
 		prefix[2] = cur->vm_page_prot & PROT_EXEC ? 'x' : '-';
 		prefix[3] = cur->vm_flags & MAP_SHARED ? 's' : 'p';
-		printf("%012lx-%012lx %s %08lx %12s\n", cur->vm_start, cur->vm_end, prefix, cur->vm_flags,
+		printf("%x-%x %s %x %s\n", cur->vm_start, cur->vm_end, prefix, cur->vm_flags,
 		       cur->name == NULL ? "ANON" : cur->name);
 	}
-}
-
-struct mm_struct *mm_get_active(void)
-{
-	return vmem_active_mm;
-}
-
-int vas_set_active(struct mm_struct *mm)
-{
-	vmem_active_mm = mm;
-
-	return 0;
 }
 
 int mm_init(struct mm_struct *mm)
@@ -55,8 +36,6 @@ int mm_init(struct mm_struct *mm)
 	mm->vma_base = PAGE_ALIGN(0x1000);
 	mm->flags = 0;
 	INIT_LIST_HEAD(&mm->vma_list);
-
-	vas_set_active(mm);
 
 	return 0;
 }
@@ -71,10 +50,6 @@ void mm_destory(struct mm_struct *mm)
 	}
 
 	ASSERT(list_empty(&mm->vma_list));
-
-	if (vmem_active_mm == mm) {
-		vmem_active_mm = NULL;
-	}
 }
 
 static void vmem_vma_destroy(struct vm_area_struct *vma)
@@ -572,7 +547,7 @@ static void vmem_vma_set_prot(struct vm_area_struct *vma, unsigned long prot)
 		return;
 
 	rc = vma->vm_ops->mprotect(vma, prot);
-//	rc = vma_op_set_prot(vma, prot);
+	//	rc = vma_op_set_prot(vma, prot);
 
 	// for file, dma, etc,....
 	//	rc = VMA_SETATTR(vma, attr);
@@ -637,9 +612,7 @@ int vma_set_prot(struct mm_struct *mm, vaddr_t vaddr, size_t len, unsigned long 
 
 int vma_op_advise(struct vm_area_struct *vma, vaddr_t vaddr, size_t len, unsigned long advice)
 {
-//	plat_madvise((void *)vaddr, len, advice);
-
-	return 0;
+	return -ENOTSUP;
 }
 
 static int vmem_vma_advise(struct vm_area_struct *vma, vaddr_t vaddr, size_t len, unsigned long advice)

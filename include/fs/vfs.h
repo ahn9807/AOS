@@ -11,29 +11,29 @@
 #define PATH_CUR "."
 
 // File system state is invalid
-#define FS_INVALID 0
+#define FS_INVALID 1
 // IO Error
-#define FS_IO_ERROR 1
+#define FS_IO_ERROR 2
 // No such entry in file system
-#define FS_NO_ENTRY 2
+#define FS_NO_ENTRY 3
 // Target is not a file
-#define FS_NOT_FILE 3
+#define FS_NOT_FILE 4
 // Target is not a directory
-#define FS_NOT_DIRECTORY 4
+#define FS_NOT_DIRECTORY 5
 // Directory is not emptry
-#define FS_NOT_EMPTY 5
+#define FS_NOT_EMPTY 6
 // File Exist
-#define FS_EXIST 6
+#define FS_EXIST 7
 // File system is full
-#define FS_FULL 7
+#define FS_FULL 8
 // File system is shutdowned
-#define FS_SHUTDOWN 8
+#define FS_SHUTDOWN 9
 // Unsupported
-#define FS_UNSUPPORTED 9
+#define FS_UNSUPPORTED 10
 // File is busy
-#define FS_BUSY 10
+#define FS_BUSY 11
 // File system request is pending
-#define FS_PENDING 11
+#define FS_PENDING 12
 
 #define O_RDONLY 0x0000
 #define O_WRONLY 0x0001
