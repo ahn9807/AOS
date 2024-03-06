@@ -29,7 +29,7 @@
 
 #define RECENT_CPU_DEFAULT 0
 
-#define SCHED_TIMER_TICK_INTVAL 4
+#define SCHED_TIMER_TICK_INTVAL 100
 #define SCHED_TIMER_MLFQ_INTVAL 100
 
 void sched_init();

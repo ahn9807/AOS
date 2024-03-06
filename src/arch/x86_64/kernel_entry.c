@@ -106,12 +106,13 @@ void temp_shell()
 	char *working_dir = kmalloc(256);
 	strcpy(working_dir, "/");
 	inode_t *work_dir = vfs_mountpoint(working_dir)->inode;
+	device_t *char_device = vfs_mountpoint("/dev/char0")->inode->device;
 
 	while (1) {
 		printf("\nminish_monitor> ");
 		while (1) {
 			char buffer;
-			int size = dev_read(vfs_mountpoint("/dev/char0")->inode->device, 0, 1, &buffer);
+			int size = dev_read(char_device, 0, 1, &buffer);
 			if (size > 0) {
 				printf("%c", buffer);
 				if (buffer == '\n') {
@@ -155,7 +156,7 @@ void temp_shell()
 			thread_create("exec", &temp_exec, name);
 		} else if (!strcmp(input_buffer, "pwd")) {
 			printf("%s", working_dir);
-		} else if(!strcmp(input_buffer, "debugmm")) {
+		} else if (!strcmp(input_buffer, "debugmm")) {
 			sys_mmap(0, 0x1000, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, -1, 0);
 			temp_debug_mm();
 			*(long *)(0x1000) = 1;

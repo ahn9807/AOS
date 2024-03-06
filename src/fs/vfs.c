@@ -29,8 +29,10 @@ struct vfs_node *vfs_mountpoint(const char *path)
 	if (strlen(*file_path) > 1 && (*file_path)[strlen(*file_path) - 1] == PATH_SEPARATOR)
 		*(file_path)[strlen(*file_path) - 1] = '\0';
 
-	if (!*file_path || *(file_path)[0] == PATH_SEPARATOR)
+	if (!*file_path || *(file_path)[0] == PATH_SEPARATOR) {
+		kfree(file_path);
 		return &vfs_tree;
+	}
 
 	struct vfs_node *cur_node = &vfs_tree;
 	struct vfs_node *last_target_node = cur_node;
@@ -67,6 +69,7 @@ struct vfs_node *vfs_mountpoint(const char *path)
 		last_target_node = cur_node;
 	}
 
+	kfree(file_path);
 	return last_target_node;
 }
 

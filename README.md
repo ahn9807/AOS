@@ -5,6 +5,10 @@ osdev project for studying purposes. First target is pintos and second is run gc
 1. Now palloc and malloc is implemented. But, palloc have to be changed to bitmap allocator.
 2. Start Implement ext2 File system!!! First to do! VFS.
 
+# Bugs
+1. While loading elf program, scheduling out triggers deadlock.
+2. After loading simple elf program, kernel panic due to general protection fault.
+
 # Basic Todo List
 ## X86_64
 - [x] GDT

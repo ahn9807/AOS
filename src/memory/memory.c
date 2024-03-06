@@ -1,11 +1,11 @@
 #include "memory.h"
-#include "multiboot2.h"
-#include "vmm.h"
-#include "vga_text.h"
-#include "pmm.h"
 #include "intrinsic.h"
+#include "multiboot2.h"
+#include "pmm.h"
 #include "string.h"
 #include "thread.h"
+#include "vga_text.h"
+#include "vmm.h"
 
 uintptr_t kernel_P4;
 extern uintptr_t _start_bss;
@@ -17,18 +17,18 @@ static void bss_init()
 }
 
 /* Initializing memory */
-uintptr_t memory_init(uintptr_t kernel_start, uintptr_t kernel_end, uintptr_t multiboot_start, uintptr_t multiboot_end, uintptr_t multiboot_addr)
+uintptr_t memory_init(uintptr_t kernel_start, uintptr_t kernel_end, uintptr_t multiboot_start, uintptr_t multiboot_end,
+		      uintptr_t multiboot_addr)
 {
 	kernel_P4 = (uint64_t)&p4_table;
 	uint64_t start, end;
 	uint32_t type, i = 1;
 
-	init_pmm(kernel_start, kernel_end, multiboot_start, multiboot_end, (struct multiboot_tag_mmap *)parse_multiboot(MULTIBOOT_TAG_TYPE_MMAP, multiboot_addr));
+	init_pmm(kernel_start, kernel_end, multiboot_start, multiboot_end,
+		 (struct multiboot_tag_mmap *)parse_multiboot(MULTIBOOT_TAG_TYPE_MMAP, multiboot_addr));
 
-	while (!multiboot_get_memory_area(i++, &start, &end, &type))
-	{
-		for (uint64_t p = start; p < end; p += PAGE_SIZE)
-		{
+	while (!multiboot_get_memory_area(i++, &start, &end, &type)) {
+		for (uint64_t p = start; p < end; p += PAGE_SIZE) {
 			uint16_t flags = PAGE_GLOBAL | PAGE_WRITE;
 
 			if (type != 0x1)
@@ -41,7 +41,10 @@ uintptr_t memory_init(uintptr_t kernel_start, uintptr_t kernel_end, uintptr_t mu
 			uint64_t addr = (uint64_t)P2V(p);
 			vmm_set_page(kernel_P4, addr, p, flags | PAGE_PRESENT);
 		}
+
+		printf("Memory area: 0x%x - 0x%x\n", start, end);
 	}
+
 	bss_init();
 	lcr3((uintptr_t)V2P(kernel_P4));
 
@@ -62,10 +65,11 @@ uintptr_t mm_create_p4()
 	return pml4;
 }
 
-int mm_is_user(void *ptr) {
-	if((uintptr_t)ptr >= KERNEL_OFFSET) {
+int mm_is_user(void *ptr)
+{
+	if ((uintptr_t)ptr >= KERNEL_OFFSET) {
 		return 0;
-	} 
+	}
 
 	return 1;
 }

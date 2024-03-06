@@ -4,3 +4,9 @@ build/
 .*img
 .cache/
 .ccls-cache/
+.clangd/
+CMakeCache.txt
+CMakeFiles/
+Makefile
+cmake_install.cmake
+compile_commands.json
