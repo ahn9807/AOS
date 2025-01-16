@@ -25,9 +25,8 @@ int vfs_open_by_path(const char *path, struct file *file)
 {
 	struct vfs_node *node = vfs_mountpoint(path);
 
-	if (node == NULL || node->inode == NULL) {
+	if (node == NULL || node->inode == NULL)
 		return -FS_NO_ENTRY;
-	}
 
 	inode_t *root_node = node->inode;
 	int error_code = -FS_NO_ENTRY;
@@ -36,9 +35,8 @@ int vfs_open_by_path(const char *path, struct file *file)
 	char *new_path = strdup(path);
 	char *lookup_path = new_path + strlen(node->full_path);
 
-	if ((error_code = vfs_lookup(root_node, path, &dir)) != FS_FILE) {
+	if ((error_code = vfs_lookup(root_node, path, &dir)) != FS_FILE)
 		goto error;
-	}
 
 	if (dir.inode != NULL && !S_ISDIR(dir.inode->type)) {
 		vfs_open(dir.inode, file);

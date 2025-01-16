@@ -164,6 +164,11 @@ void temp_shell()
 	}
 }
 
+void initd(void *arg)
+{
+	process_exec("/minish");
+}
+
 int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
 {
 	uint64_t kernel_start, kernel_end, multiboot_start, multiboot_end;
@@ -190,7 +195,7 @@ int kernel_entry(unsigned long magic, unsigned long multiboot_addr)
 
 	ASSERT(vfs_mount("/", vfs_mountpoint("/dev/disk0")->inode) == 0);
 
-	thread_create("shell", &temp_shell, NULL);
+	thread_create("shell", &initd, NULL);
 	// Have to call explicitly. Cause without this,
 	// rip goes to the end of the bootloader and
 	// unrecover kernel panic. Also this changes the current kernel_entry

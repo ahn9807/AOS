@@ -53,9 +53,9 @@ static enum irq_handler_result keyboard_handler(struct intr_frame *f)
 {
 	char c = (char)get_char();
 	if (c) {
-		// printf("%c", c);
 		kbd_buffer[(cur_offset++) % KBD_BUFFER_LEN] = c;
 	}
+	return OK;
 }
 
 static size_t read_kbd_buffer(void *__attribute__((unused)) aux, size_t __attribute__((unused)) offset, size_t size,
