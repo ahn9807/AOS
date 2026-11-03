@@ -1,8 +1,11 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 4.2)
 
 project(kernell)
 set(PROJECT_VERSION_MAJOR 0)
 set(PROJECT_VERSION_MINOR 1)
+
+set(CMAKE_C_STANDARD 23)
+set(CMAKE_C_STANDARD_REQUIRED ON)
 
 set(CMAKE_CXX_STANDAED 17)
 
@@ -65,14 +68,14 @@ add_custom_command(TARGET ${KERNEL_BIN} POST_BUILD
 )
 
 add_custom_target(run
-    qemu-system-x86_64 -smp 4 -cpu host -enable-kvm -no-reboot -no-shutdown -cdrom kernel.iso -curses -m 4G -drive id=disk,format=raw,file=disk.img
+    qemu-system-x86_64 -smp 4 -cpu host -enable-kvm -no-reboot -no-shutdown -cdrom kernel.iso -display curses -m 4G -drive id=disk,format=raw,file=disk.img
 )
 
 add_custom_target(debug
     COMMAND touch .gdbinit
     COMMAND echo "target remote localhost:1234" > .gdbinit
     COMMAND echo "symbol-file ${KERNEL_BIN}" >> .gdbinit
-    COMMAND qemu-system-x86_64 -cpu host -enable-kvm -smp 4 -no-shutdown -no-reboot -cdrom kernel.iso -curses -m 4G -drive id=disk,format=raw,file=disk.img -s -S
+    COMMAND qemu-system-x86_64 -cpu host -enable-kvm -smp 4 -no-shutdown -no-reboot -cdrom kernel.iso -display curses -m 4G -drive id=disk,format=raw,file=disk.img -s -S
 )
 
 add_custom_target(debug_qemu

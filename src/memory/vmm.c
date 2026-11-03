@@ -26,6 +26,8 @@ static int touch_page(uint64_t P4, uint64_t addr, uint16_t flags)
 	if (!P4)
 		return -1;
 
+	flags &= ~PAGE_GLOBAL;
+
 	if ((!PRESENT(P4E)) && (!(P4E = (uint64_t)pmm_calloc())))
 		return -1;
 	P4E |= flags | PAGE_PRESENT;

@@ -5,6 +5,7 @@ build/
 .cache/
 .ccls-cache/
 .clangd/
+.clangd
 CMakeCache.txt
 CMakeFiles/
 Makefile

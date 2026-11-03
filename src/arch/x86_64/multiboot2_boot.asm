@@ -233,12 +233,12 @@ align 4096
 p4_table:
     dq p3_table - KERNEL_OFFSET + (PAGE_PRESENT | PAGE_WRITEABLE)
     times 510 dq 0
-    dq p3_table - KERNEL_OFFSET + (PAGE_PRESENT | PAGE_WRITEABLE | PAGE_GLOBAL)
+    dq p3_table - KERNEL_OFFSET + (PAGE_PRESENT | PAGE_WRITEABLE)
 p3_table:
-    dq p2_table - KERNEL_OFFSET + (PAGE_PRESENT | PAGE_WRITEABLE | PAGE_GLOBAL)
+    dq p2_table - KERNEL_OFFSET + (PAGE_PRESENT | PAGE_WRITEABLE)
     times 511 dq 0
 p2_table:
-    dq p1_table - KERNEL_OFFSET + (PAGE_PRESENT | PAGE_WRITEABLE | PAGE_GLOBAL)
+    dq p1_table - KERNEL_OFFSET + (PAGE_PRESENT | PAGE_WRITEABLE)
     times 511 dq 0
 p1_table:
 %assign i 0

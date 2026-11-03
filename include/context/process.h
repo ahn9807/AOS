@@ -41,6 +41,6 @@ typedef struct process_info {
 } process_info_t;
 
 int process_exec(char *name);
-tid_t process_fork();
+tid_t process_fork(const char *name, struct intr_frame *if_);
 tid_t process_wait();
 tid_t process_exit();

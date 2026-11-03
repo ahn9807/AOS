@@ -21,11 +21,6 @@ LIST_HEAD(thread_list);
 static tid_t next_tid = 1;
 static void thread_entry(thread_func *, void *aux);
 
-struct {
-    uint16_t len;
-    struct idt_entry *addr;
-} __attribute__((packed)) gdtr;
-
 // Initialize the caller function to the thread (initd)
 // And start Scheduler and push to the scheduler top
 // Also initialize list and etc...

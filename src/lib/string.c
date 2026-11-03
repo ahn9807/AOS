@@ -1,4 +1,5 @@
-#include "string.h"
+#include "lib/stddef.h"
+#include "lib/string.h"
 #include "kmalloc.h"
 #include "vga_text.h"
 

@@ -313,4 +313,4 @@ static uint8_t ctlmap[256] = { NO,
 
 void keyboard_init();
 
-static enum irq_handler_result keyboard_handler();
+static enum irq_handler_result keyboard_handler(struct intr_frame *f);
